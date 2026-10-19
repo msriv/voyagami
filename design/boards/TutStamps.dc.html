@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Voyagami — Your first five stamps</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&amp;family=Instrument+Serif:ital@0;1&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>
+:where(a,button){position:relative}:where(a,button)::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
+body{margin:0}
+a{color:#2D3E8C}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F4F0E6; color: #14161B; font-family: 'Manrope', system-ui, sans-serif; position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 16px; padding: 56px 20px 24px 20px">
+  <div>
+    <div style="font-family: 'Instrument Serif', serif; font-style: italic; font-weight: 400; font-size: 22px; color: #5B6070">You're all set.</div>
+    <h1 style="margin: 4px 0 0 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 32px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.05">Collect your first five stamps</h1>
+    <p style="margin: 8px 0 0 0; font-size: 14px; color: #5B6070; font-weight: 600">Each one teaches a part of the app. Lives on Home until you're done.</p>
+  </div>
+
+  <div style="background: #FFFFFF; border-radius: 24px; padding: 4px 16px; display: flex; flex-direction: column">
+    <div style="display: flex; align-items: center; gap: 14px; min-height: 68px">
+      <span aria-hidden="true" style="width: 44px; height: 44px; border-radius: 9px; background: {{accent}}; color: #FFFFFF; font-size: 20px; font-weight: 700; display: flex; align-items: center; justify-content: center; transform: rotate(-8deg); flex-shrink: 0"><svg viewBox="0 0 24 24" width="66%" height="66%" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M3 11.5 21 3l-5.5 18-4-7z"></path><path d="M11.5 14 21 3"></path></svg></span>
+      <span style="flex: 1"><b style="font-size: 15px">Create a trip</b><span style="display: block; font-size: 12px; color: #0E5A3E; font-weight: 800">Stamped · Hanoi &amp; Ha Long Bay</span></span>
+    </div>
+    <a href="InviteCrew.dc.html" style="display: flex; align-items: center; gap: 14px; min-height: 68px; border-top: 1px solid #ECE6D8; text-decoration: none; color: #14161B">
+      <span style="width: 44px; height: 44px; border-radius: 9px; border: 2px dashed #B9B2A2; box-sizing: border-box; flex-shrink: 0"></span>
+      <span style="flex: 1"><b style="font-size: 15px">Invite your crew</b><span style="display: block; font-size: 12px; color: #5B6070; font-weight: 600">One link, any chat app</span></span><span style="font-weight: 800">›</span>
+    </a>
+    <a href="AddPlace.dc.html" style="display: flex; align-items: center; gap: 14px; min-height: 68px; border-top: 1px solid #ECE6D8; text-decoration: none; color: #14161B">
+      <span style="width: 44px; height: 44px; border-radius: 9px; border: 2px dashed #B9B2A2; box-sizing: border-box; flex-shrink: 0"></span>
+      <span style="flex: 1"><b style="font-size: 15px">Add 3 places</b><span style="display: block; font-size: 12px; color: #5B6070; font-weight: 600">Search, or paste a reel link</span></span><span style="font-weight: 800">›</span>
+    </a>
+    <a href="AddExpense.dc.html" style="display: flex; align-items: center; gap: 14px; min-height: 68px; border-top: 1px solid #ECE6D8; text-decoration: none; color: #14161B">
+      <span style="width: 44px; height: 44px; border-radius: 9px; border: 2px dashed #B9B2A2; box-sizing: border-box; flex-shrink: 0"></span>
+      <span style="flex: 1"><b style="font-size: 15px">Log an expense</b><span style="display: block; font-size: 12px; color: #5B6070; font-weight: 600">Even the airport chai counts</span></span><span style="font-weight: 800">›</span>
+    </a>
+    <a href="Journal.dc.html" style="display: flex; align-items: center; gap: 14px; min-height: 68px; border-top: 1px solid #ECE6D8; text-decoration: none; color: #14161B">
+      <span style="width: 44px; height: 44px; border-radius: 9px; border: 2px dashed #B9B2A2; box-sizing: border-box; flex-shrink: 0"></span>
+      <span style="flex: 1"><b style="font-size: 15px">Write a journal day</b><span style="display: block; font-size: 12px; color: #5B6070; font-weight: 600">One line is enough</span></span><span style="font-weight: 800">›</span>
+    </a>
+  </div>
+
+  <div style="background: #2D3E8C; color: #FFFFFF; border-radius: 20px; padding: 14px 16px; display: flex; gap: 12px; align-items: center">
+    <span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 28px; font-weight: 800">1/5</span>
+    <span style="font-size: 13px; font-weight: 600; line-height: 1.4">Fill all five and get an <b>extra week of Plus</b> on top of the free trial.</span>
+  </div>
+
+  <div style="flex: 1"></div>
+  <a href="Main.dc.html" style="height: 56px; border-radius: 18px; background: #14161B; color: #FFFFFF; font-weight: 800; font-size: 16px; display: flex; align-items: center; justify-content: center; text-decoration: none; flex-shrink: 0">Start exploring</a>
+  <div style="font-size: 12px; color: #5B6070; font-weight: 600; text-align: center">Replay the tour any time from Profile.</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#E5482F","options":["#E5482F","#FFE27A","#F0A898","#D3E4C5"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#E5482F' };
+  }
+}
+</script>
+</body>
+</html>

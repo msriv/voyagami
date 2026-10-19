@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Voyagami — Add expense</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>
+:where(a,button){position:relative}:where(a,button)::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
+body{margin:0}
+a{color:#2D3E8C}a:hover{color:#1F2C6B}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F4F0E6; color: #14161B; font-family: 'Manrope', system-ui, sans-serif; position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 14px; padding: 52px 20px 28px 20px">
+  <div style="display: flex; align-items: center; justify-content: space-between">
+    <a href="Budget.dc.html" aria-label="Close" style="width: 44px; height: 44px; border-radius: 50%; background: #FFFFFF; color: #14161B; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></a>
+    <button style="height: 44px; border-radius: 99px; border: 0; background: #14161B; color: #FFFFFF; padding: 0 16px; font: 800 13px 'Manrope', sans-serif; display: flex; align-items: center; gap: 8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 12h10"></path></svg>Scan receipt</button>
+  </div>
+
+  <div style="text-align: center; display: flex; flex-direction: column; gap: 4px; padding: 8px 0">
+    <label for="amt" style="font-size: 13px; font-weight: 800; color: #5B6070">Amount</label>
+    <div style="display: flex; justify-content: center; align-items: baseline; gap: 6px">
+      <button style="height: 36px; border-radius: 10px; border: 0; background: #FFFFFF; padding: 0 10px; font: 800 14px 'Manrope', sans-serif; color: #14161B">₫ VND ▾</button>
+      <input id="amt" value="540,000" inputmode="decimal" style="width: 210px; border: 0; background: transparent; font: 800 48px 'Bricolage Grotesque', sans-serif; letter-spacing: -0.04em; color: #14161B; outline: none; text-align: left">
+    </div>
+    <div style="font-size: 14px; font-weight: 800">≈ ₹1,820</div>
+    <div style="font-size: 12px; font-weight: 600; color: #5B6070">₹1 = ₫297 · rate saved at 21 Nov, 13:05</div>
+  </div>
+
+  <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 800">What for?</span><input value="Bún chả lunch" style="height: 50px; border-radius: 16px; border: 0; background: #FFFFFF; padding: 0 16px; font: 700 15px 'Manrope', sans-serif; outline: none"></label>
+
+  <div style="display: flex; gap: 8px; flex-wrap: wrap">
+    <button style="height: 40px; border-radius: 99px; border: 0; background: {{accent}}; padding: 0 14px; font: 800 13px 'Manrope', sans-serif; color: #14161B">Food</button>
+    <button style="height: 40px; border-radius: 99px; border: 0; background: #FFFFFF; padding: 0 14px; font: 700 13px 'Manrope', sans-serif; color: #14161B">Transport</button>
+    <button style="height: 40px; border-radius: 99px; border: 0; background: #FFFFFF; padding: 0 14px; font: 700 13px 'Manrope', sans-serif; color: #14161B">Activity</button>
+    <button style="height: 40px; border-radius: 99px; border: 0; background: #FFFFFF; padding: 0 14px; font: 700 13px 'Manrope', sans-serif; color: #14161B">Stay</button>
+    <button style="height: 40px; border-radius: 99px; border: 0; background: #FFFFFF; padding: 0 14px; font: 700 13px 'Manrope', sans-serif; color: #14161B">Shopping</button>
+  </div>
+
+  <div style="background: #FFFFFF; border-radius: 20px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 13px; font-weight: 800">Paid by</span><span role="group" aria-label="Paid by" style="display: flex; gap: 6px"><button aria-pressed="true" style="height: 32px; border-radius: 99px; border: 0; background: #14161B; color: #FFFFFF; padding: 0 12px; font: 800 12px 'Manrope', sans-serif">You</button><button aria-pressed="false" style="height: 32px; border-radius: 99px; border: 0; background: #F4F0E6; color: #14161B; padding: 0 12px; font: 700 12px 'Manrope', sans-serif">Someone else</button></span></div>
+    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #ECE6D8; padding-top: 12px"><span style="font-size: 13px; font-weight: 800">Split</span>
+      <div style="display: flex; background: #F4F0E6; border-radius: 99px; padding: 3px">
+        <button style="height: 32px; border-radius: 99px; border: 0; background: #14161B; color: #FFFFFF; padding: 0 10px; font: 800 12px 'Manrope', sans-serif">Equally</button>
+        <button style="height: 32px; border-radius: 99px; border: 0; background: transparent; padding: 0 10px; font: 700 12px 'Manrope', sans-serif; color: #14161B">Amounts</button>
+        <button style="height: 32px; border-radius: 99px; border: 0; background: transparent; padding: 0 10px; font: 700 12px 'Manrope', sans-serif; color: #14161B">Shares</button>
+      </div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; text-align: center">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: 700"><span style="width: 40px; height: 40px; border-radius: 50%; background: {{accent}}; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px">M</span>₹455</div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: 700"><span style="width: 40px; height: 40px; border-radius: 50%; background: #FFE27A; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px">A</span>₹455</div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: 700"><span style="width: 40px; height: 40px; border-radius: 50%; background: #D3E4C5; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px">R</span>₹455</div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: 700"><span style="width: 40px; height: 40px; border-radius: 50%; background: #E4E8F7; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px">S</span>₹455</div>
+    </div>
+  </div>
+
+  <div style="flex: 1"></div>
+  <div style="font-size: 12px; font-weight: 700; color: #5B6070; text-align: center">No signal? It saves on your phone and syncs later.</div>
+  <a href="Budget.dc.html" style="height: 56px; border-radius: 18px; background: #14161B; color: #FFFFFF; font-weight: 800; font-size: 16px; display: flex; align-items: center; justify-content: center; text-decoration: none">Save expense</a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#E5482F","options":["#E5482F","#FFE27A","#F0A898","#D3E4C5"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#E5482F' };
+  }
+}
+</script>
+</body>
+</html>

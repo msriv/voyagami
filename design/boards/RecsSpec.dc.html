@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Voyagami — Recommendations, data and ads</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&amp;family=Instrument+Serif:ital@0;1&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>
+body{margin:0;background:#F4F0E6}
+a{color:#2D3E8C}
+td,th{vertical-align:top}
+</style>
+</helmet>
+<div style="background: #F4F0E6; color: #14161B; font-family: 'Manrope', system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 56px 20px 72px 20px">
+<div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px">
+
+  <header style="display: flex; flex-direction: column; gap: 10px">
+    <div style="font-size: 12px; font-weight: 800; letter-spacing: 0.1em; color: #5B6070">RECOMMENDATIONS · DATA · ADS</div>
+    <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: clamp(36px, 5vw, 54px); font-weight: 800; letter-spacing: -0.04em; line-height: 1">Good picks, no scraping, <span style="font-family: 'Instrument Serif', serif; font-style: italic; font-weight: 400; letter-spacing: -0.01em">honest</span> money.</h1>
+    <p style="margin: 0; max-width: 820px; font-size: 17px; color: #3B3F4A">Every recommendation comes from a licensed source or from what Voyagami crews do in the app. Money comes from bookings people already want to make, never from paying to rank. Where our data is thin (events in Vietnam, say), the app says so instead of padding the list.</p>
+  </header>
+
+  <section style="display: flex; flex-direction: column; gap: 14px">
+    <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">How a pick gets to the screen</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 10px; align-items: stretch">
+      <div style="background: #FFFFFF; border-radius: 20px; padding: 16px; font-size: 13px; color: #3B3F4A"><div style="font-size: 12px; font-weight: 800; letter-spacing: 0.08em; color: #2D3E8C">1 · SOURCES</div><b style="color: #14161B; font-size: 15px">Open place data + partner APIs</b><br>Foursquare open places, OpenStreetMap, Wikivoyage, Google Places, Agoda, Booking.com, GetYourGuide, Klook, holiday calendars.</div>
+      <div style="background: #FFFFFF; border-radius: 20px; padding: 16px; font-size: 13px; color: #3B3F4A"><div style="font-size: 12px; font-weight: 800; letter-spacing: 0.08em; color: #2D3E8C">2 · OUR PLACE INDEX</div><b style="color: #14161B; font-size: 15px">One record per place</b><br>Loaded monthly into BigQuery, matched across sources, linked to the Google place ID. Split into a small file per city for the app and search.</div>
+      <div style="background: #FFFFFF; border-radius: 20px; padding: 16px; font-size: 13px; color: #3B3F4A"><div style="font-size: 12px; font-weight: 800; letter-spacing: 0.08em; color: #2D3E8C">3 · CANDIDATES</div><b style="color: #14161B; font-size: 15px">Only what fits this trip</b><br>In the trip's cities, open on its dates, within reach of the stay and each day's stops, inside the crew's budget.</div>
+      <div style="background: #FFFFFF; border-radius: 20px; padding: 16px; font-size: 13px; color: #3B3F4A"><div style="font-size: 12px; font-weight: 800; letter-spacing: 0.08em; color: #2D3E8C">4 · RANKING</div><b style="color: #14161B; font-size: 15px">Scored on fit, not fees</b><br>Crew style, saves and votes, distance, timing, weather, quality, variety. Commission is never an input.</div>
+      <div style="background: #2D3E8C; color: #FFFFFF; border-radius: 20px; padding: 16px; font-size: 13px"><div style="font-size: 12px; font-weight: 800; letter-spacing: 0.08em; color: #FFE27A">5 · THE "WHY"</div><b style="font-size: 15px">Two strongest reasons, in plain words</b><br>"Quiet before 9 am, which suits your slow mornings." Built from the signals, never invented.</div>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 14px">
+    <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">Where each kind of pick comes from</h2>
+    <div style="overflow-x: auto; background: #FFFFFF; border-radius: 20px">
+      <table style="width: 100%; min-width: 980px; border-collapse: collapse; font-size: 14px; line-height: 1.45">
+        <thead><tr style="text-align: left; font-size: 12px; letter-spacing: 0.06em; color: #5B6070"><th style="padding: 14px 16px">WHAT</th><th style="padding: 14px 8px">SOURCE</th><th style="padding: 14px 8px">WHAT WE GET</th><th style="padding: 14px 8px">COST / LICENCE</th><th style="padding: 14px 16px">RULES WE FOLLOW</th></tr></thead>
+        <tbody>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Every place (base layer)</td><td style="padding: 12px 8px">Foursquare Open Source Places, OpenStreetMap</td><td style="padding: 12px 8px">Names, coordinates, categories, addresses; 100M+ places, updated monthly</td><td style="padding: 12px 8px">Free. Apache 2.0 / ODbL</td><td style="padding: 12px 16px">Credit both. Can be cached, shown on any map and saved offline.</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Sights</td><td style="padding: 12px 8px">Wikivoyage, Wikidata, Wikimedia Commons</td><td style="padding: 12px 8px">"See / Do" lists, short descriptions, what's notable, photos</td><td style="padding: 12px 8px">Free. CC BY-SA / CC0 / per-photo licence</td><td style="padding: 12px 16px">Credit and link every text and photo. Text we adapt stays CC BY-SA.</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Sights &amp; food details</td><td style="padding: 12px 8px">Google Places</td><td style="padding: 12px 8px">Ratings, review counts, hours, price level, photos</td><td style="padding: 12px 8px">Paid per call (already in the stack)</td><td style="padding: 12px 16px">Online only, shown on a Google map, "Google Maps" credit and photo authors. Only the place ID is stored long-term.</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Stays</td><td style="padding: 12px 8px">Agoda and Booking.com partner programmes</td><td style="padding: 12px 8px">Live prices, rooms, cancellation rules, deep links</td><td style="padding: 12px 8px">Free; they pay us. Agoda commonly 4–7% of a completed stay</td><td style="padding: 12px 16px">Approval needed for API access. Disclose commission next to the links.</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Tours &amp; tickets</td><td style="padding: 12px 8px">GetYourGuide, Viator, Klook (or one aggregator such as Travelpayouts)</td><td style="padding: 12px 8px">Bookable experiences, shows, day trips, prices</td><td style="padding: 12px 8px">Free; roughly 2–8% commission depending on partner</td><td style="padding: 12px 16px">Same disclosure. Klook is strongest for Vietnam and India.</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Events</td><td style="padding: 12px 8px">Holiday calendars, Wikidata festivals, Ticketmaster where it has coverage, partner tickets, crew-added</td><td style="padding: 12px 8px">Holidays, festivals, recurring markets, bookable shows</td><td style="padding: 12px 8px">Mostly free; PredictHQ (paid) only if events prove popular</td><td style="padding: 12px 16px">Our weakest category. Say so in the app; Eventbrite no longer offers public event search.</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Context</td><td style="padding: 12px 8px">Open-Meteo, directions</td><td style="padding: 12px 8px">Weather, travel times between stops</td><td style="padding: 12px 8px">Already in the stack</td><td style="padding: 12px 16px">Used for timing ("indoors on the rainy afternoon").</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8; background: #FBF8F1"><td style="padding: 12px 16px; font-weight: 800">Our own signal</td><td style="padding: 12px 8px">Voyagami crews</td><td style="padding: 12px 8px">Saves, adds to day plans, votes, "how was today", journal mentions</td><td style="padding: 12px 8px">Free, and the long-term moat</td><td style="padding: 12px 16px">Aggregated only. "Saved by N crews" shows from 20 crews up. Users can opt out.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section style="background: #FFE27A; border-radius: 28px; padding: clamp(20px, 4vw, 32px); display: flex; flex-direction: column; gap: 10px">
+    <div style="font-size: 12px; font-weight: 800; letter-spacing: 0.1em">A CATCH IN THE LOCKED STACK</div>
+    <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: clamp(24px, 3vw, 30px); font-weight: 800; letter-spacing: -0.02em; line-height: 1.15">Google's rules say Places results shown on a map must be on a Google map. We planned Mapbox.</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 12px; font-size: 14px">
+      <div style="background: #FFFFFF; border-radius: 18px; padding: 14px 16px"><b>Online maps → Google Maps SDK.</b> Google lists mobile Maps SDK usage as unlimited; confirm it's $0 on your account before switching. Places data then sits on a Google map, as required.</div>
+      <div style="background: #FFFFFF; border-radius: 18px; padding: 14px 16px"><b>Offline maps stay on Mapbox,</b> but only with our open base data (Foursquare, OpenStreetMap) and what people typed in. No Google ratings, photos or hours offline.</div>
+      <div style="background: #FFFFFF; border-radius: 18px; padding: 14px 16px"><b>Bonus: cheaper.</b> Search hits our own place index first and calls Google only when someone opens a place. This is most of the "Places tuned" saving on the pricing spec.</div>
+    </div>
+  </section>
+
+  <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr)); gap: 16px">
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 22px; font-weight: 800">What the ranking looks at</h3>
+      <ul style="margin: 0; padding-left: 18px; font-size: 14px; color: #3B3F4A; display: flex; flex-direction: column; gap: 4px">
+        <li><b>Fit to the crew's style</b> from onboarding: food first, slow mornings, budget</li>
+        <li><b>The crew itself:</b> saves, votes, what's already planned</li>
+        <li><b>Where and when:</b> distance to the stay and that day's stops, opening hours on trip dates, weather, holidays and crowds</li>
+        <li><b>Quality:</b> rating weighted by how many reviews it has</li>
+        <li><b>Variety:</b> not five temples in a row</li>
+        <li><b>Never:</b> commission, or whether the place pays us</li>
+        <li><b>Free vs Plus:</b> free shows the top 5 per category; Plus shows the full crew-ranked list and smart filters (open on your days, fits a free slot, near your stay)</li>
+      </ul>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 22px; font-weight: 800">Day one, before we have any users</h3>
+      <div style="font-size: 14px; color: #3B3F4A">No crew signals yet, so picks lean on Wikivoyage's "must see" lists, Google ratings and the crew's style answers. The "saved by N crews" line stays hidden until it's true. Launch with hand-checked lists for the top 25 cities Indians travel to, at home and abroad, and widen from there.</div>
+      <div style="font-size: 14px; color: #3B3F4A">The "why" sentence is filled from templates with real numbers. Gemini only rewrites it more naturally and is never allowed to add a fact.</div>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 14px">
+    <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">Ads: yes, but only one kind</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 14px">
+      <div style="background: #14161B; color: #E4E6EC; border-radius: 22px; padding: 22px; font-size: 14px; display: flex; flex-direction: column; gap: 8px">
+        <b style="color: #FFFFFF; font-size: 17px">No ad network (no AdMob, no banners)</b>
+        <div>At Indian ad rates, one hotel booked through us earns about what thousands of banner views would. Ad SDKs also add tracking consent screens, slow the app and make Plus look like "pay to remove junk".</div>
+      </div>
+      <div style="background: #FFFFFF; border-radius: 22px; padding: 22px; font-size: 14px; color: #3B3F4A; display: flex; flex-direction: column; gap: 8px">
+        <b style="color: #14161B; font-size: 17px">One sponsored card, done like a recommendation</b>
+        <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px">
+          <li>Only in Explore and recommendation lists, at most one per list, never first</li>
+          <li>Must fit the trip (city, dates, a free slot in the plan)</li>
+          <li>Labelled <b>SPONSORED</b>, dashed border, "Why am I seeing this?"</li>
+          <li>At launch it's simply a bookable partner tour; sold direct to brands later</li>
+          <li>Shown on every plan, Plus included, so it must be useful: anyone can hide a sponsor for 30 days</li>
+        </ul>
+      </div>
+      <div style="background: #FFFFFF; border-radius: 22px; padding: 22px; font-size: 14px; color: #3B3F4A; display: flex; flex-direction: column; gap: 8px">
+        <b style="color: #8A1C12; font-size: 17px">Never</b>
+        <div>In the day plan, the money screens, the journal, live location, onboarding, the tour, notifications, or any error screen. No pop-ups, no video ads, no "watch an ad to unlock".</div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 14px">
+    <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">What bookings could earn at 50k users</h2>
+    <div style="font-size: 14px; color: #3B3F4A; max-width: 880px">Assumes 3 in 10 users plan a trip each month, an average stay booking of ₹10,000 at 5% commission and tours averaging ₹2,500 at 7%. Commission arrives after the stay is completed; cancelled stays pay nothing. Rates come from partner catalogues and third-party reviews, so treat them as estimates.</div>
+    <div style="overflow-x: auto; background: #FFFFFF; border-radius: 20px">
+      <table style="width: 100%; min-width: 760px; border-collapse: collapse; font-size: 14px; text-align: right">
+        <thead><tr style="font-size: 12px; letter-spacing: 0.06em; color: #5B6070"><th style="padding: 14px 16px; text-align: left">SCENARIO</th><th style="padding: 14px 8px">PLANNERS BOOKING A STAY</th><th style="padding: 14px 8px">BOOKING A TOUR</th><th style="padding: 14px 16px">PER MONTH</th></tr></thead>
+        <tbody>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; text-align: left; font-weight: 800">Cautious</td><td style="padding: 12px 8px">1% (150 stays)</td><td style="padding: 12px 8px">0.5% (75 tours)</td><td style="padding: 12px 16px; font-weight: 800">≈ ₹88,000 · $1,000</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; text-align: left; font-weight: 800">Base</td><td style="padding: 12px 8px">3% (450 stays)</td><td style="padding: 12px 8px">2% (300 tours)</td><td style="padding: 12px 16px; font-weight: 800">≈ ₹2,77,500 · $3,150</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="font-size: 14px; color: #3B3F4A">Even the cautious row is a third of the infrastructure bill, which is why affiliate links stay free for everyone instead of hiding behind Plus.</div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 14px">
+    <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">How bookings work, and when we get paid</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 12px; font-size: 14px; color: #3B3F4A">
+      <div style="background: #FFFFFF; border-radius: 20px; padding: 18px"><b style="color: #14161B; font-size: 16px">Launch: we hand off, we don't sell</b><br>"Book on Agoda ↗" opens the partner's app or site with our partner ID and a trip tag. They take the payment, send the confirmation and handle refunds. We hold no money and run no support desk.</div>
+      <div style="background: #FFFFFF; border-radius: 20px; padding: 18px"><b style="color: #14161B; font-size: 16px">When commission is paid</b><br>Only when someone books through our link within the partner's cookie window (often ~30 days, shorter at some), and for stays only after the stay is completed. Cancelled bookings pay nothing. Payouts arrive monthly.</div>
+      <div style="background: #FFFFFF; border-radius: 20px; padding: 18px"><b style="color: #14161B; font-size: 16px">What earns nothing</b><br>Sights, restaurants and free events from Google, Wikivoyage or OpenStreetMap have no booking, so no commission. They're there to make the plan good, which keeps people coming back to the screens that do earn.</div>
+      <div style="background: #FFFFFF; border-radius: 20px; padding: 18px"><b style="color: #14161B; font-size: 16px">Closing the loop</b><br>The partner's confirmation email is forwarded or auto-imported like any booking, so it lands in the plan with a "Booked" tick. That's also how we see which picks actually turn into bookings.</div>
+      <div style="background: #14161B; color: #E4E6EC; border-radius: 20px; padding: 18px"><b style="color: #FFFFFF; font-size: 16px">Later: in-app checkout for tours only</b><br>Viator, GetYourGuide and Klook offer booking APIs where the partner stays the seller. That keeps people in the app, but we'd own more support. Worth it once tours sell well. Hotels stay as hand-offs.</div>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: #3B3F4A">
+    <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 22px; font-weight: 800; color: #14161B">Sources</h2>
+    <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px">
+      <li><a href="https://developers.google.com/maps/documentation/places/web-service/policies">Google Places API policies</a> (map display, caching, attribution) · <a href="https://developers.google.com/maps/documentation/ios-sdk/usage-and-billing">Maps SDK for iOS usage and billing</a></li>
+      <li><a href="https://foursquare.com/resources/blog/products/foursquare-open-source-places-a-new-foundational-dataset-for-the-geospatial-community/">Foursquare Open Source Places</a></li>
+      <li><a href="https://track360.io/blog/agoda-affiliate-program-operator-teardown-2026">Agoda affiliate terms (third-party review)</a> · <a href="https://track360.io/blog/tours-activities-experiences-affiliate-programs-operator-guide-2026">Tours and activities affiliate rates (third-party review)</a> · <a href="https://docs.viator.com/partner-api/">Viator Partner API</a> · <a href="https://support.travelpayouts.com/hc/en-us/articles/203955763">Travelpayouts programmes</a></li>
+      <li><a href="https://developer.ticketmaster.com/products-and-docs/apis/getting-started/">Ticketmaster Discovery API</a></li>
+    </ul>
+    <h2 style="margin: 10px 0 0 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 22px; font-weight: 800; color: #14161B">Photo credits (mockups)</h2>
+    <div>All photos in these screens are from Wikimedia Commons, used under their own licences; authors are credited on each file page: <a href="https://commons.wikimedia.org/wiki/File:Hanoi_Temple_of_Literature.jpg">Temple of Literature</a>, <a href="https://commons.wikimedia.org/wiki/File:Hoa_Lo_Prison_Museum,_Hanoi_(5)_(26720612699).jpg">Hỏa Lò</a>, <a href="https://commons.wikimedia.org/wiki/File:Halong_Bay_-_Vietnam_01.JPG">Ha Long Bay</a>, <a href="https://commons.wikimedia.org/wiki/File:Ha_Long_Bay_-_Bah%C3%ADa_de_Ha_Long.JPG">Ha Long sunrise</a>, <a href="https://commons.wikimedia.org/wiki/File:Sailing_in_Ha_Long_Bay_2,_Vietnam.jpg">Ha Long sailing</a>, <a href="https://commons.wikimedia.org/wiki/File:Ha_Long_Bay_2014_IV.jpg">Ha Long 2014</a>, <a href="https://commons.wikimedia.org/wiki/File:Hanoi_-_Tr%E1%BA%A7n_Nh%E1%BA%ADt_Du%E1%BA%ADt_Street_and_Long_Bien_Bridge_at_dusk_-_2.jpg">Long Biên Bridge</a>, <a href="https://commons.wikimedia.org/wiki/File:B%C3%BAn_ch%E1%BA%A3_Vietnamese_food.jpg">Bún chả</a>, <a href="https://commons.wikimedia.org/wiki/File:Egg_Coffee_at_Cafe_Gi%E1%BA%A3ng,_H%C3%A0_N%E1%BB%99i,_Vietnam.jpg">Egg coffee</a>, <a href="https://commons.wikimedia.org/wiki/File:Ph%E1%BB%9F_b%C3%B2_(39425047901).jpg">Phở</a>, <a href="https://commons.wikimedia.org/wiki/File:Hanoi_Night_Market_1.jpg">Night market</a>, <a href="https://commons.wikimedia.org/wiki/File:Hanoi_Vietnam_Thang-Long-Water-Puppet-Theatre-01.jpg">Water puppets</a>, <a href="https://commons.wikimedia.org/wiki/File:Hoan_Kiem_Lake_-_Hanoi,_Vietnam_-_DSC03695.JPG">Hoàn Kiếm Lake</a>, <a href="https://commons.wikimedia.org/wiki/File:Dao_Duy_Tu_%26_Ma_May,_Old_Quarter,_Hanoi_(28456369447).jpg">Mã Mây street</a>, <a href="https://commons.wikimedia.org/wiki/File:Old_Quarter,_Hanoi_(6923121168).jpg">Old Quarter</a>, <a href="https://commons.wikimedia.org/wiki/File:Abbey_falls-_Coorg%E2%9D%A4.jpg">Abbey Falls, Coorg</a>, <a href="https://commons.wikimedia.org/wiki/File:Om_beach_Gokarna.JPG">Om Beach</a>, <a href="https://commons.wikimedia.org/wiki/File:Chembra_peak.jpg">Chembra Peak</a>, <a href="https://commons.wikimedia.org/wiki/File:French_Quarter,_Pondicherry_(9)_(37482956992).jpg">Pondicherry</a>. Stay names on the stays screen are made up.</div>
+  </section>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3672}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

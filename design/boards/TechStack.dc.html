@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Voyagami — Tech stack and system design</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>
+body{margin:0;background:#F4F0E6}
+a{color:#2D3E8C}a:hover{color:#1F2C6B}
+</style>
+</helmet>
+<div style="background: #F4F0E6; color: #14161B; font-family: 'Manrope', system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 56px 20px 72px 20px">
+<div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 48px">
+
+  <header style="display: flex; flex-direction: column; gap: 12px">
+    <div style="font-size: 12px; font-weight: 800; letter-spacing: 0.1em; color: #5B6070">SYSTEM DESIGN · MOBILE ONLY (iOS + ANDROID) · NO WEBSITE</div>
+    <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: clamp(36px, 5vw, 56px); font-weight: 800; letter-spacing: -0.04em; line-height: 1">Tech stack, CAP &amp; how data moves</h1>
+    <p style="margin: 0; max-width: 780px; font-size: 17px; color: #3B3F4A">The one decision everything hangs on: <b>Voyagami is local-first.</b> Travellers lose signal all the time: on planes, roaming abroad, in basements, on Ha Long boats. So the phone's own database is the first copy of the trip, and the cloud is where the group's copies meet. The rest of this page follows from that.</p>
+  </header>
+
+  <section style="background: #14161B; color: #FFFFFF; border-radius: 28px; padding: clamp(20px, 4vw, 36px); display: flex; flex-direction: column; gap: 18px">
+    <div style="font-size: 12px; font-weight: 800; letter-spacing: 0.1em; color: #FFB89E">CAP THEOREM · WHAT WE PRIORITISE</div>
+    <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: clamp(26px, 3.5vw, 36px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.1">Partitions are guaranteed, so we choose availability for trip content and consistency for permissions and money.</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 12px">
+      <div style="background: #23262E; border-radius: 18px; padding: 16px 18px"><div style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 22px; font-weight: 800">P · a given</div><div style="font-size: 14px; color: #D9D3C4">A phone with no signal is a network partition. In travel that's normal, not an edge case. Any design that stops working offline fails the core use.</div></div>
+      <div style="background: #23262E; border-radius: 18px; padding: 16px 18px"><div style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 22px; font-weight: 800; color: #A9B4E6">A · default (AP)</div><div style="font-size: 14px; color: #D9D3C4">Plans, places, notes, journal, expenses and votes can always be read and written. Copies converge later through merge rules that never lose data.</div></div>
+      <div style="background: #23262E; border-radius: 18px; padding: 16px 18px"><div style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 22px; font-weight: 800; color: #FFB89E">C · where it matters (CP)</div><div style="font-size: 14px; color: #D9D3C4">Who can edit, invites, account deletion and "marked as paid" need the server. Offline, those buttons say "needs signal" instead of guessing.</div></div>
+    </div>
+    <p style="margin: 0; font-size: 14px; color: #D9D3C4"><b style="color: #FFFFFF">With a connection (the PACELC "else" case)</b> we still pick low latency over strict consistency for trip content: your edit shows up on your screen instantly and reaches the crew in about a second. Nobody needs a global lock to move a café to 13:00.</p>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 16px">
+    <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">CAP choice for each kind of data</h2>
+    <div style="overflow-x: auto; background: #FFFFFF; border-radius: 20px">
+      <table style="width: 100%; min-width: 880px; border-collapse: collapse; font-size: 14px; line-height: 1.45">
+        <thead><tr style="text-align: left; font-size: 12px; letter-spacing: 0.06em; color: #5B6070"><th style="padding: 14px 16px">DATA</th><th style="padding: 14px 8px">CHOICE</th><th style="padding: 14px 8px">WITH NO SIGNAL</th><th style="padding: 14px 16px">HOW CONFLICTS RESOLVE</th></tr></thead>
+        <tbody>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Stops, times, places, bookings</b></td><td style="padding: 12px 8px"><span style="background: #E4E8F7; color: #2D3E8C; padding: 3px 8px; border-radius: 99px; font-weight: 800">AP</span></td><td style="padding: 12px 8px">Full edit</td><td style="padding: 12px 16px">Last writer wins <i>per field</i> (not per row), using a hybrid logical clock. Order of stops uses fractional indexes, so two people inserting never clash. Overwritten values stay in the activity feed with one-tap restore (E2).</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Journal text, place notes</b></td><td style="padding: 12px 8px"><span style="background: #E4E8F7; color: #2D3E8C; padding: 3px 8px; border-radius: 99px; font-weight: 800">AP</span></td><td style="padding: 12px 8px">Full edit</td><td style="padding: 12px 16px">CRDT (Yjs). Both people's words survive, merged character by character.</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Comments, reactions, to-do ticks</b></td><td style="padding: 12px 8px"><span style="background: #E4E8F7; color: #2D3E8C; padding: 3px 8px; border-radius: 99px; font-weight: 800">AP</span></td><td style="padding: 12px 8px">Full edit</td><td style="padding: 12px 16px">Append-only rows, so there's nothing to conflict. Ticks are last writer wins.</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Expenses</b></td><td style="padding: 12px 8px"><span style="background: #E4E8F7; color: #2D3E8C; padding: 3px 8px; border-radius: 99px; font-weight: 800">AP</span></td><td style="padding: 12px 8px">Add, edit (this is when you need it most)</td><td style="padding: 12px 16px">Each expense has a UUID made on the phone, so a retry can't create a duplicate. Edits are last writer wins per field. <b>Balances are never stored</b>: they're recomputed from the expense list, so they always add up once everyone has synced.</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Votes</b></td><td style="padding: 12px 8px"><span style="background: #E4E8F7; color: #2D3E8C; padding: 3px 8px; border-radius: 99px; font-weight: 800">AP</span> to vote, <span style="background: #FFE9DF; color: #9A3412; padding: 3px 8px; border-radius: 99px; font-weight: 800">CP</span> to close</td><td style="padding: 12px 8px">Vote, shown as "pending"</td><td style="padding: 12px 16px">One row per (poll, person), so voting twice just updates. The server alone closes the vote at the deadline, using the votes it has. Late votes show as "arrived after close".</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Roles, invites, removals</b></td><td style="padding: 12px 8px"><span style="background: #FFE9DF; color: #9A3412; padding: 3px 8px; border-radius: 99px; font-weight: 800">CP</span></td><td style="padding: 12px 8px">Read only</td><td style="padding: 12px 16px">The server decides. Every upload is re-checked against the current role. If an editor was removed while offline, their queued edits are rejected and undone on their phone, with a note saying why.</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Settle-up "marked as paid"</b></td><td style="padding: 12px 8px"><span style="background: #FFE9DF; color: #9A3412; padding: 3px 8px; border-radius: 99px; font-weight: 800">CP</span></td><td style="padding: 12px 8px">Needs signal</td><td style="padding: 12px 16px">Server transaction with an idempotency key, so a payment can't be marked twice or against a stale balance. Voyagami never moves money; UPI does.</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Account, sign-in, deletion</b></td><td style="padding: 12px 8px"><span style="background: #FFE9DF; color: #9A3412; padding: 3px 8px; border-radius: 99px; font-weight: 800">CP</span></td><td style="padding: 12px 8px">Stay signed in; can't delete</td><td style="padding: 12px 16px">Handled by the auth provider and the server.</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Presence, live location</b></td><td style="padding: 12px 8px"><span style="background: #E4E8F7; color: #2D3E8C; padding: 3px 8px; border-radius: 99px; font-weight: 800">AP</span>, throwaway</td><td style="padding: 12px 8px">Your dot fades out</td><td style="padding: 12px 16px">Kept in Redis with a 2-minute expiry and never written to Postgres. Stale is fine; wrong-but-old dots grey out.</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Imported bookings</b></td><td style="padding: 12px 8px">Eventual</td><td style="padding: 12px 8px">Queued</td><td style="padding: 12px 16px">Two people forwarding the same email gives one booking: duplicates are caught by a hash of (provider, booking ref, trip) (E1).</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 16px">
+    <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">The stack</h2>
+    <div style="overflow-x: auto; background: #FFFFFF; border-radius: 20px">
+      <table style="width: 100%; min-width: 880px; border-collapse: collapse; font-size: 14px; line-height: 1.45">
+        <thead><tr style="text-align: left; font-size: 12px; letter-spacing: 0.06em; color: #5B6070"><th style="padding: 14px 16px">LAYER</th><th style="padding: 14px 8px">CHOICE</th><th style="padding: 14px 8px">WHY</th><th style="padding: 14px 16px">SWAP IF NEEDED</th></tr></thead>
+        <tbody>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">App</td><td style="padding: 12px 8px">Expo (React Native) + TypeScript</td><td style="padding: 12px 8px">One codebase for iOS + Android, over-the-air fixes, fits a frontend background</td><td style="padding: 12px 16px">Flutter</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">On-device data</td><td style="padding: 12px 8px">SQLite via the PowerSync SDK</td><td style="padding: 12px 8px">The whole trip lives on the phone; reads never wait on the network</td><td style="padding: 12px 16px">WatermelonDB</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Sync</td><td style="padding: 12px 8px">PowerSync (Postgres ↔ SQLite)</td><td style="padding: 12px 8px">Per-trip sync rules, upload queue, works with plain Postgres. Hosted to start, self-host on Cloud Run later</td><td style="padding: 12px 16px">ElectricSQL; Firestore offline</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Text merging</td><td style="padding: 12px 8px">Yjs</td><td style="padding: 12px 8px">Proven CRDT; stored as binary updates in Postgres</td><td style="padding: 12px 16px">Automerge</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Sign-in</td><td style="padding: 12px 8px">Firebase Auth</td><td style="padding: 12px 8px">Phone OTP in India, Google and Apple sign-in. App Store rules expect a privacy-friendly option like Apple's when you offer Google</td><td style="padding: 12px 16px">Supabase Auth</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">API + workers</td><td style="padding: 12px 8px">Cloud Run, Go (net/http or chi, pgx + sqlc)</td><td style="padding: 12px 8px">The work is mostly waiting on the database and outside APIs, where Go is plenty fast. Small binaries, quick cold starts on Cloud Run, mature Google Cloud libraries, quick to build in. App types generated from an OpenAPI spec</td><td style="padding: 12px 16px">Rust (Axum), only for a CPU-heavy worker if one appears</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Database</td><td style="padding: 12px 8px">Cloud SQL Postgres, regional HA, Mumbai</td><td style="padding: 12px 8px">Trips, members and splits are relational; JSONB for loose bits; logical replication feeds sync</td><td style="padding: 12px 16px">Firestore to start (see Free-first); AlloyDB at scale</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Events</td><td style="padding: 12px 8px">Outbox table → Pub/Sub</td><td style="padding: 12px 8px">An event is written in the same transaction as the change, so none are lost</td><td style="padding: 12px 16px">Cloud Tasks</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Files</td><td style="padding: 12px 8px">Cloud Storage + Cloud CDN</td><td style="padding: 12px 8px">Phone uploads straight to a signed URL; a worker makes thumbnails</td><td style="padding: 12px 16px">Cloudflare R2</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Cache, presence</td><td style="padding: 12px 8px">Memorystore Redis</td><td style="padding: 12px 8px">Places/routes cache, rate limits, who's online</td><td style="padding: 12px 16px">Upstash</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Maps</td><td style="padding: 12px 8px">Google Maps SDK (online maps) + Mapbox offline packs + Google Places (data)</td><td style="padding: 12px 8px">Google's SDK doesn't allow offline tile packs; Mapbox does. Google's terms also require its place data to sit on a Google map, so online maps use Google's mobile SDK and offline packs carry only open place data (Foursquare, OpenStreetMap). Google's place data is the best in India and Vietnam, but its terms only let you keep place IDs long-term, so cache IDs, not details</td><td style="padding: 12px 16px">Google-only, online maps</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">AI</td><td style="padding: 12px 8px">Vertex AI (Claude or Gemini models)</td><td style="padding: 12px 8px">Booking/receipt extraction to strict JSON with confidence per field; Ask Voyagami drafts</td><td style="padding: 12px 16px">Direct model APIs</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">On-device ML</td><td style="padding: 12px 8px">ML Kit text recognition; EXIF photo matching</td><td style="padding: 12px 8px">Receipts read offline; photos never leave the phone until picked</td><td style="padding: 12px 16px">—</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Email in</td><td style="padding: 12px 8px">Inbound-parse webhook (Postmark or SendGrid) for plans@ addresses; Gmail API + Pub/Sub watch later</td><td style="padding: 12px 8px">Forwarding needs no Google security review, so it ships first</td><td style="padding: 12px 16px">Mailgun</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Push</td><td style="padding: 12px 8px">Firebase Cloud Messaging</td><td style="padding: 12px 8px">One API for Android and iOS (via APNs)</td><td style="padding: 12px 16px">Expo push</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Analytics</td><td style="padding: 12px 8px">Datastream (CDC) → BigQuery; PostHog for app events</td><td style="padding: 12px 8px">Your home turf; no load on the live database</td><td style="padding: 12px 16px">Firebase Analytics</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Ops</td><td style="padding: 12px 8px">Terraform, GitHub Actions, EAS Build/Submit, Sentry, Cloud Monitoring</td><td style="padding: 12px 8px">Repeatable infra; crash reports from phones</td><td style="padding: 12px 16px">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr)); gap: 16px">
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 10px">
+      <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 24px; font-weight: 800">Write path: moving a stop</h2>
+      <ol style="margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 8px">
+        <li>You drag Train Street to 13:00. SQLite updates and the screen changes instantly.</li>
+        <li>The change joins the upload queue with a clock stamp and an idempotency key.</li>
+        <li>When there's signal, the API checks your token, your role in this trip, and the rules (e.g. a stop can't end before it starts).</li>
+        <li>One Postgres transaction writes the change <i>and</i> an outbox event.</li>
+        <li>Sync streams the change to every member's phone, usually in under a second.</li>
+        <li>The outbox goes to Pub/Sub: the Enricher re-runs travel times, the Notifier decides whether anyone needs a push.</li>
+        <li>If the API rejects it (say your role changed), your phone rolls back and tells you why.</li>
+      </ol>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 10px">
+      <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 24px; font-weight: 800">Core tables</h2>
+      <div style="font-size: 14px; color: #3B3F4A; display: flex; flex-direction: column; gap: 6px">
+        <div><b style="color: #14161B">users</b> · phone, home city, currency, UPI ID</div>
+        <div><b style="color: #14161B">trips</b> · destinations, dates, intl flag, budget</div>
+        <div><b style="color: #14161B">trip_members</b> · trip, user, role (owner / edit / view)</div>
+        <div><b style="color: #14161B">days, stops</b> · fractional position, times, place_id</div>
+        <div><b style="color: #14161B">bookings</b> · type, times, ref (KMS-encrypted), source</div>
+        <div><b style="color: #14161B">expenses, expense_shares</b> · amount, currency, saved rate</div>
+        <div><b style="color: #14161B">settlements</b> · from, to, amount, status (CP)</div>
+        <div><b style="color: #14161B">polls, votes, tasks, comments</b></div>
+        <div><b style="color: #14161B">journal_entries</b> · Yjs doc, mood, visibility</div>
+        <div><b style="color: #14161B">media</b> · storage path, taken_at, lat/lng</div>
+        <div><b style="color: #14161B">outbox, activity_log</b> · events + undo history</div>
+      </div>
+      <div style="font-size: 13px; color: #5B6070">Every trip-owned row carries <b>trip_id</b>. That one key drives sync rules, access checks, and sharding if it's ever needed.</div>
+    </div>
+  </section>
+
+  <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 16px">
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 800">Privacy &amp; security</h3>
+      <ul style="margin: 0; padding-left: 20px; font-size: 14px; display: flex; flex-direction: column; gap: 6px">
+        <li>Data stored in Mumbai; consent asked per permission, in line with India's DPDP Act, 2023.</li>
+        <li>Booking refs and inbox tokens encrypted with Cloud KMS.</li>
+        <li>Access checked twice: sync rules decide what reaches a phone, the API decides what's written.</li>
+        <li>Short-lived signed URLs for photos and tickets.</li>
+        <li>Export everything and delete account from Profile (E4).</li>
+      </ul>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 800">"No website" still needs a domain</h3>
+      <ul style="margin: 0; padding-left: 20px; font-size: 14px; display: flex; flex-direction: column; gap: 6px">
+        <li>Invite links need iOS Universal Links and Android App Links, which means two small files on voyagami.app.</li>
+        <li>Someone without the app who taps an invite needs a one-screen page that sends them to the App Store or Play Store.</li>
+        <li>Privacy policy and terms URLs are required for store listing.</li>
+        <li>Recaps share as a video file, not a web page.</li>
+      </ul>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 800">What will cost money first</h3>
+      <ul style="margin: 0; padding-left: 20px; font-size: 14px; display: flex; flex-direction: column; gap: 6px">
+        <li>Places, Routes, flight status, FX: paid per call. Cache by trip, batch route requests.</li>
+        <li>LLM calls: parse once per document, keep the result, never re-parse.</li>
+        <li>Cloud SQL HA is the one always-on bill; everything else scales to zero.</li>
+        <li>Gmail sync: yearly security assessment, which is why it's phase 3.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 16px">
+    <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">Free-first: start at ₹0, upgrade when it hurts</h2>
+    <p style="margin: 0; max-width: 780px; color: #3B3F4A">Every paid service above has a free stand-in for launch. The app talks to each one through a small adapter, so switching later means changing one adapter, not rewriting screens.</p>
+    <div style="overflow-x: auto; background: #FFFFFF; border-radius: 20px">
+      <table style="width: 100%; min-width: 880px; border-collapse: collapse; font-size: 14px; line-height: 1.45">
+        <thead><tr style="text-align: left; font-size: 12px; letter-spacing: 0.06em; color: #5B6070"><th style="padding: 14px 16px">PAID PIECE</th><th style="padding: 14px 8px">FREE START</th><th style="padding: 14px 8px">THE CATCH</th><th style="padding: 14px 16px">SWITCH WHEN</th></tr></thead>
+        <tbody>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Phone OTP sign-in</td><td style="padding: 12px 8px">Google + Apple sign-in only</td><td style="padding: 12px 8px">SMS codes cost per message everywhere; invites match by contact instead of number</td><td style="padding: 12px 16px">Users ask for it</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Cloud SQL (HA)</td><td style="padding: 12px 8px"><b>Firestore (recommended).</b> Free tier, with offline sync and live updates built in, so it replaces Postgres + PowerSync + Redis at launch</td><td style="padding: 12px 8px">Billed per read (keep listeners narrow); weak at reports, so export to BigQuery; offline needs React Native Firebase in an Expo dev build</td><td style="padding: 12px 16px">Read bill climbs, or you need SQL-style queries</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">PowerSync hosted</td><td style="padding: 12px 8px">Not needed while on Firestore</td><td style="padding: 12px 8px">Only comes back if you move to Postgres</td><td style="padding: 12px 16px">Moving off Firestore</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Google Places &amp; Routes</td><td style="padding: 12px 8px">OpenStreetMap: Photon search, OpenRouteService routing (free tier)</td><td style="padding: 12px 8px">Weaker on small cafés and opening hours in India and Vietnam</td><td style="padding: 12px 16px">Users complain about search</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Mapbox offline maps</td><td style="padding: 12px 8px">MapLibre + OpenFreeMap tiles; one PMTiles file per city on Cloud Storage for offline</td><td style="padding: 12px 8px">You build the "download this area" flow yourself</td><td style="padding: 12px 16px">Can stay free</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Weather</td><td style="padding: 12px 8px">Open-Meteo</td><td style="padding: 12px 8px">Free only for non-commercial use</td><td style="padding: 12px 16px">The day Voyagami earns money</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Exchange rates</td><td style="padding: 12px 8px">Free tier of an FX API that covers VND</td><td style="padding: 12px 8px">ECB-based free feeds (e.g. Frankfurter) don't include VND; daily rates only</td><td style="padding: 12px 16px">More currencies needed</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Flight status</td><td style="padding: 12px 8px">Skip; times come from the booking, changes from airline emails</td><td style="padding: 12px 8px">No live delay alerts</td><td style="padding: 12px 16px">Phase 3</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">LLM extraction</td><td style="padding: 12px 8px">ML Kit on the phone first, then a free model tier for hard cases</td><td style="padding: 12px 8px">Rate limits; more "please check" fields</td><td style="padding: 12px 16px">Imports grow</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Gmail sync</td><td style="padding: 12px 8px">Forward-to-email via Cloudflare Email Routing + a Worker</td><td style="padding: 12px 8px">One extra step for the user</td><td style="padding: 12px 16px">After Google verification</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Redis</td><td style="padding: 12px 8px">Skip: presence as small Firestore docs with a TTL, cache in Firestore</td><td style="padding: 12px 8px">Slightly slower lookups</td><td style="padding: 12px 16px">Load shows it</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Already free at small scale</td><td style="padding: 12px 8px" colspan="3">Cloud Run, Pub/Sub, FCM push, BigQuery free tier, Sentry and PostHog free plans, EAS free tier</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 16px">
+    <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">Build order</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 12px">
+      <div style="background: #2D3E8C; color: #FFFFFF; border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 6px"><div style="font-size: 12px; font-weight: 800; letter-spacing: 0.1em; opacity: 0.9">PHASE 1 · MVP</div><div style="font-size: 14px; line-height: 1.6">Sign-in, trips, invites + roles, day plans + map, places search, expenses + split + UPI links, offline sync, forward-to-email import, push. Screens: O1–O5, D1–D5, D7, D2b, 01–04, C1, E2–E4.</div></div>
+      <div style="background: #FFFFFF; border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 6px"><div style="font-size: 12px; font-weight: 800; letter-spacing: 0.1em; color: #5B6070">PHASE 2 · DELIGHT</div><div style="font-size: 14px; line-height: 1.6">Upload + receipt reading, journal + photo matching, votes, to-dos, comments, Ask Voyagami, reel → places, offline map packs, dark mode. Screens: 05, 06, D6, C2–C4, E1, 08.</div></div>
+      <div style="background: #FFFFFF; border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 6px"><div style="font-size: 12px; font-weight: 800; letter-spacing: 0.1em; color: #5B6070">PHASE 3 · ON THE ROAD</div><div style="font-size: 14px; line-height: 1.6">Gmail sync (after Google verification), Live mode + location, flight status alerts, recap video. Screens: C5, E5, 07.</div></div>
+    </div>
+  </section>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":5230}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

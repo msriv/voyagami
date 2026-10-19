@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Voyagami —Explore</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>
+:where(a,button){position:relative}:where(a,button)::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
+body{margin:0}
+a{color:#2D3E8C}a:hover{color:#1F2C6B}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F4F0E6; color: #14161B; font-family: 'Manrope', system-ui, sans-serif; position: relative; overflow: hidden; display: flex; flex-direction: column">
+  <div style="flex: 1; display: flex; flex-direction: column; gap: 18px; padding: 56px 20px 0 20px">
+    <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 36px; font-weight: 800; letter-spacing: -0.035em; line-height: 1">Explore</h1>
+
+    <label style="height: 52px; border-radius: 18px; background: #FFFFFF; display: flex; align-items: center; gap: 10px; padding: 0 16px; color: #5B6070">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <input type="search" placeholder="Cities, places, guides…" aria-label="Search places" style="flex: 1; border: 0; outline: none; background: transparent; font: 600 15px 'Manrope', sans-serif; color: #14161B">
+    </label>
+
+    <div style="background: #2D3E8C; color: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14px"><span style="width: 30px; height: 30px; border-radius: 10px; background: {{accent}}; color: #14161B; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"></path></svg></span>Ask Voyagami</div>
+      <div style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2">Plan a whole trip from one sentence — dates, budget, vibe.</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px">
+        <a href="AskJaunt.dc.html" style="height: 36px; border-radius: 99px; background: rgba(255,255,255,0.16); color: #FFFFFF; padding: 0 12px; font-weight: 700; font-size: 12px; display: flex; align-items: center; text-decoration: none">Rainy-day Hanoi for 4</a>
+        <a href="AskJaunt.dc.html" style="height: 36px; border-radius: 99px; background: rgba(255,255,255,0.16); color: #FFFFFF; padding: 0 12px; font-weight: 700; font-size: 12px; display: flex; align-items: center; text-decoration: none">Long weekend, under ₹15k</a>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 19px; font-weight: 800; letter-spacing: -0.02em">Weekend escapes</h2>
+        <div style="display: flex; background: #FFFFFF; border-radius: 99px; padding: 3px">
+          <button style="height: 32px; border-radius: 99px; border: 0; background: #14161B; color: #FFFFFF; padding: 0 12px; font: 800 12px 'Manrope', sans-serif">Domestic</button>
+          <button style="height: 32px; border-radius: 99px; border: 0; background: transparent; color: #14161B; padding: 0 12px; font: 700 12px 'Manrope', sans-serif">Abroad</button>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+        <a href="Trip.dc.html" style="height: 128px; border-radius: 22px; background: #2D3E8C; color: #FFFFFF; position: relative; overflow: hidden; text-decoration: none; padding: 14px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between"><img src="/_blob/929552c7ad3f702a0444c392906403d1" alt="Abbey Falls in Coorg" loading="lazy" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"><span aria-hidden="true" style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,22,27,0) 35%, rgba(20,22,27,0.72) 100%)"></span>
+          <span style="position: relative; color: #14161B; align-self: flex-start; font-size: 11px; font-weight: 800; background: #FFFFFF; padding: 4px 8px; border-radius: 99px">~5h drive</span>
+          <span style="position: relative; font-family: 'Bricolage Grotesque', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -0.02em">Coorg</span>
+        </a>
+        <a href="Trip.dc.html" style="height: 128px; border-radius: 22px; background: #2D3E8C; color: #FFFFFF; position: relative; overflow: hidden; text-decoration: none; padding: 14px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between"><img src="/_blob/25ab17ccaf0f44c60735bc8b616e27f6" alt="Om Beach, Gokarna" loading="lazy" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"><span aria-hidden="true" style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,22,27,0) 35%, rgba(20,22,27,0.72) 100%)"></span>
+          <span style="position: relative; color: #14161B; align-self: flex-start; font-size: 11px; font-weight: 800; background: #FFFFFF; padding: 4px 8px; border-radius: 99px">Overnight bus</span>
+          <span style="position: relative; font-family: 'Bricolage Grotesque', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -0.02em">Gokarna</span>
+        </a>
+        <a href="Trip.dc.html" style="height: 128px; border-radius: 22px; background: #2D3E8C; color: #FFFFFF; position: relative; overflow: hidden; text-decoration: none; padding: 14px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between"><img src="/_blob/055c8071eba00dde9efc99be35cf46dd" alt="Chembra Peak, Wayanad" loading="lazy" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"><span aria-hidden="true" style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,22,27,0) 35%, rgba(20,22,27,0.72) 100%)"></span>
+          <span style="position: relative; color: #14161B; align-self: flex-start; font-size: 11px; font-weight: 800; background: #FFFFFF; padding: 4px 8px; border-radius: 99px">Ride-friendly</span>
+          <span style="position: relative; font-family: 'Bricolage Grotesque', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -0.02em">Wayanad</span>
+        </a>
+        <a href="Trip.dc.html" style="height: 128px; border-radius: 22px; background: #2D3E8C; color: #FFFFFF; position: relative; overflow: hidden; text-decoration: none; padding: 14px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between"><img src="/_blob/973c5bef214debd6eb27e2117a200a7e" alt="French Quarter street, Pondicherry" loading="lazy" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"><span aria-hidden="true" style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,22,27,0) 35%, rgba(20,22,27,0.72) 100%)"></span>
+          <span style="position: relative; color: #14161B; align-self: flex-start; font-size: 11px; font-weight: 800; background: #FFFFFF; color: #14161B; padding: 4px 8px; border-radius: 99px">Beach + cafés</span>
+          <span style="position: relative; font-family: 'Bricolage Grotesque', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -0.02em">Pondicherry</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <nav style="margin: 0 16px 24px 16px; height: 68px; border-radius: 24px; background: #14161B; display: flex; align-items: center; justify-content: space-around">
+    <a href="Main.dc.html" aria-label="Trips" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; color: #C4C8D2"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg></a>
+    <a href="Explore.dc.html" aria-label="Explore" style="width: 48px; height: 48px; border-radius: 16px; background: #FFFFFF; color: #14161B; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M15.5 8.5l-2 5-5 2 2-5z"></path></svg></a>
+    <a href="Journal.dc.html" aria-label="Journal" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; color: #C4C8D2"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"></path><path d="M5 17a3 3 0 0 1 3-3h11"></path></svg></a>
+    <a href="GroupHub.dc.html" aria-label="Crew activity" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; color: #C4C8D2"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"></circle><path d="M2 21v-1a6 6 0 0 1 12 0v1M16 4a4 4 0 0 1 0 8M22 21v-1a6 6 0 0 0-3-5"></path></svg></a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#E5482F","options":["#E5482F","#FFE27A","#F0A898","#D3E4C5"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#E5482F' };
+  }
+}
+</script>
+</body>
+</html>

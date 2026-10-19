@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Voyagami — Plans</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&amp;family=Instrument+Serif:ital@0;1&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>
+:where(a,button){position:relative}:where(a,button)::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
+body{margin:0}
+a{color:#2D3E8C}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F4F0E6; color: #14161B; font-family: 'Manrope', system-ui, sans-serif; position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 12px; padding: 52px 20px 24px 20px">
+  <div style="display: flex; justify-content: space-between; align-items: center">
+    <a href="Profile.dc.html" aria-label="Close" style="width: 44px; height: 44px; border-radius: 50%; background: #FFFFFF; color: #14161B; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></a>
+    <button style="height: 44px; border: 0; background: transparent; font: 800 13px 'Manrope', sans-serif; color: #2D3E8C">Restore purchase</button>
+  </div>
+
+  <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px">
+    <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 34px; font-weight: 800; letter-spacing: -0.035em; line-height: 1">Travel lighter<br>with <span style="font-family: 'Instrument Serif', serif; font-style: italic; font-weight: 400; letter-spacing: -0.01em">Plus</span></h1>
+    <span aria-hidden="true" style="width: 52px; height: 52px; border-radius: 10px; background: {{accent}}; color: #FFFFFF; display: flex; align-items: center; justify-content: center; transform: rotate(-8deg); flex-shrink: 0"><svg viewBox="0 0 24 24" width="66%" height="66%" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M3 11.5 21 3l-5.5 18-4-7z"></path><path d="M11.5 14 21 3"></path></svg></span>
+  </div>
+
+  <div role="group" aria-label="Choose a plan" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; background: #FFFFFF; border-radius: 99px; padding: 4px">
+    <button onClick="{{pickPlus}}" aria-pressed="{{plusPressed}}" style="height: 40px; border-radius: 99px; border: 0; font: 800 13px 'Manrope', sans-serif; background: {{plusBg}}; color: {{plusFg}}">Plus · yearly</button>
+    <button onClick="{{pickPass}}" aria-pressed="{{passPressed}}" style="height: 40px; border-radius: 99px; border: 0; font: 800 13px 'Manrope', sans-serif; background: {{passBg}}; color: {{passFg}}">Trip Pass</button>
+  </div>
+
+  <div style="display: {{plusShow}}; flex-direction: column; gap: 14px">
+    <div style="background: #2D3E8C; color: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 12px; position: relative; overflow: hidden">
+      <span style="position: absolute; right: 14px; top: 14px; height: 28px; border-radius: 99px; background: {{accent}}; color: #14161B; padding: 0 10px; display: flex; align-items: center; font-size: 12px; font-weight: 800">7 days free</span>
+      <div><div style="font-size: 12px; font-weight: 800; letter-spacing: 0.08em; opacity: 0.9">VOYAGAMI PLUS</div><div style="display: flex; align-items: baseline; gap: 6px; margin-top: 4px"><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 40px; font-weight: 800; letter-spacing: -0.03em">₹999</span><span style="font-size: 14px; font-weight: 700">/ year</span></div><div style="font-size: 13px; font-weight: 600; opacity: 0.9">About ₹83 a month · $29.99/yr outside India</div></div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; font-size: 13px; font-weight: 600">
+        <span>✓ Offline maps, every city</span><span>✓ Best order, unlimited</span>
+        <span>✓ ₫, $ and ₹ on one trip</span><span>✓ Gmail import, flight alerts</span>
+        <span>✓ Unlimited trips &amp; photos</span><span>✓ Full HD recap</span>
+      </div>
+      <div style="font-size: 12px; font-weight: 700; background: rgba(255,255,255,0.14); border-radius: 12px; padding: 8px 10px">Best order, currencies and the live map unlock for your whole crew.</div>
+    </div>
+    <button onClick="{{pickPass}}" style="background: #FFFFFF; border: 0; border-radius: 20px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; text-align: left; font-family: 'Manrope', sans-serif; color: #14161B">
+      <span style="flex: 1"><span style="display: block; font-weight: 800; font-size: 15px">Just one trip this year?</span><span style="display: block; font-size: 12px; color: #5B6070; font-weight: 600">Trip Pass from ₹199 per traveller, priced by trip length.</span></span>
+      <span aria-hidden="true" style="font-weight: 800; font-size: 18px">→</span>
+    </button>
+  </div>
+
+  <div style="display: {{passShow}}; flex-direction: column; gap: 14px">
+    <div style="background: #FFFFFF; border-radius: 24px; padding: 20px 18px 16px 18px; display: flex; flex-direction: column; gap: 12px; position: relative; overflow: hidden">
+      <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 0; height: 6px; background: repeating-linear-gradient(-45deg, #E5482F 0 9px, #FFFFFF 9px 14px, #2D3E8C 14px 23px, #FFFFFF 23px 28px)"></div>
+      <div><div style="font-size: 12px; font-weight: 800; letter-spacing: 0.08em; color: #5B6070">TRIP PASS · HANOI &amp; HA LONG BAY</div><div style="font-size: 13px; font-weight: 600; color: #3B3F4A; margin-top: 2px">9 days, so the Week pass. Priced per traveller.</div></div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px">
+        <div style="border-radius: 14px; background: #F4F0E6; padding: 8px; text-align: center; color: #5B6070"><div style="font-size: 12px; font-weight: 800">Weekend</div><div style="font-size: 11px; font-weight: 600">up to 4 days</div><div style="font-weight: 800; font-size: 15px; margin-top: 2px">₹199</div></div>
+        <div style="border-radius: 14px; background: #14161B; color: #FFFFFF; padding: 8px; text-align: center"><div style="font-size: 12px; font-weight: 800">Week</div><div style="font-size: 11px; font-weight: 600; opacity: 0.8">5–10 days</div><div style="font-weight: 800; font-size: 15px; margin-top: 2px">₹349</div></div>
+        <div style="border-radius: 14px; background: #F4F0E6; padding: 8px; text-align: center; color: #5B6070"><div style="font-size: 12px; font-weight: 800">Long</div><div style="font-size: 11px; font-weight: 600">11–30 days</div><div style="font-weight: 800; font-size: 15px; margin-top: 2px">₹499</div></div>
+      </div>
+      <div role="group" aria-label="Who is it for" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; background: #F4F0E6; border-radius: 14px; padding: 4px">
+        <button onClick="{{pickMe}}" aria-pressed="{{mePressed}}" style="height: 40px; border-radius: 11px; border: 0; font: 800 13px 'Manrope', sans-serif; background: {{meBg}}; color: #14161B">Just me</button>
+        <button onClick="{{pickCrew}}" aria-pressed="{{crewPressed}}" style="height: 40px; border-radius: 11px; border: 0; font: 800 13px 'Manrope', sans-serif; background: {{crewBg}}; color: #14161B">Whole crew</button>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; border-top: 2px dashed #E2DCCD; padding-top: 10px">
+        <div style="font-size: 13px; font-weight: 600; color: #3B3F4A">{{breakdown}}</div>
+        <div style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 30px; font-weight: 800; letter-spacing: -0.03em; flex-shrink: 0">{{total}}</div>
+      </div>
+    </div>
+    <div style="font-size: 12px; color: #3B3F4A; font-weight: 600; line-height: 1.5; background: #FFFFFF; border-radius: 16px; padding: 12px 14px">Start yearly Plus within 60 days of getting home and your pass price comes off the first year.</div>
+  </div>
+
+  <div style="flex: 1"></div>
+  <div style="display: {{plusShow}}; font-size: 12px; color: #5B6070; font-weight: 600; text-align: center; line-height: 1.45">Joining trips, settling up and meet points are always free.</div>
+  <a href="{{ctaHref}}" style="height: 56px; border-radius: 18px; background: #14161B; color: #FFFFFF; font-weight: 800; font-size: 16px; display: flex; align-items: center; justify-content: center; text-decoration: none; flex-shrink: 0">{{cta}}</a>
+  <div style="font-size: 12px; color: #5B6070; font-weight: 600; text-align: center; line-height: 1.45">{{fine}}</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#E5482F","options":["#E5482F","#FFE27A","#F0A898","#D3E4C5"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { plus: true, crew: true };
+  }
+  renderVals() {
+    const p = this.state.plus, c = this.state.crew;
+    const ink = '#14161B', white = '#FFFFFF';
+    return {
+      accent: this.props.accent ?? '#E5482F',
+      plusShow: p ? 'flex' : 'none',
+      passShow: p ? 'none' : 'flex',
+      pickPlus: () => this.setState({ plus: true }),
+      pickPass: () => this.setState({ plus: false }),
+      pickMe: () => this.setState({ crew: false }),
+      pickCrew: () => this.setState({ crew: true }),
+      plusPressed: p ? 'true' : 'false',
+      passPressed: p ? 'false' : 'true',
+      plusBg: p ? ink : 'transparent',
+      plusFg: p ? white : ink,
+      passBg: p ? 'transparent' : ink,
+      passFg: p ? ink : white,
+      mePressed: c ? 'false' : 'true',
+      crewPressed: c ? 'true' : 'false',
+      meBg: c ? 'transparent' : white,
+      crewBg: c ? white : 'transparent',
+      breakdown: c ? '3 travellers × ₹349. One of you already has Plus.' : '1 traveller × ₹349',
+      total: c ? '₹1,047' : '₹349',
+      cta: p ? 'Start my 7-day free trial' : (c ? 'Get passes for the crew · ₹1,047' : 'Get my Trip Pass · ₹349'),
+      ctaHref: p ? 'Trial.dc.html' : 'Trip.dc.html',
+      fine: p ? 'No charge today. We remind you on 24 Oct. Then ₹999/year from 26 Oct unless you cancel.' : 'One payment, no renewal. Plus for this trip until 30 days after it ends. Can go on the trip’s expense split.'
+    };
+  }
+}
+</script>
+</body>
+</html>
