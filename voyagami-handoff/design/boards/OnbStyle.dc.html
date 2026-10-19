@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Voyagami — Travel style</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>
+:where(a,button){position:relative}:where(a,button)::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
+body{margin:0}
+a{color:#2D3E8C}a:hover{color:#1F2C6B}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F4F0E6; color: #14161B; font-family: 'Manrope', system-ui, sans-serif; position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 20px; padding: 52px 24px 32px 24px">
+  <div style="display: flex; align-items: center; justify-content: space-between">
+    <div style="display: flex; gap: 6px" aria-label="Step 1 of 2">
+      <span style="width: 32px; height: 6px; border-radius: 99px; background: #14161B"></span>
+      <span style="width: 32px; height: 6px; border-radius: 99px; background: #E2DCCD"></span>
+    </div>
+    <a href="OnbConnect.dc.html" style="font-size: 14px; font-weight: 800; text-decoration: none; min-height: 44px; display: flex; align-items: center">Skip</a>
+  </div>
+
+  <div>
+    <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 34px; font-weight: 800; letter-spacing: -0.035em; line-height: 1">How do you<br>like to travel?</h1>
+    <p style="margin: 8px 0 0 0; font-size: 14px; color: #5B6070; font-weight: 600">Pick a few. This tunes Explore and Ask Voyagami.</p>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 8px">
+    <button aria-pressed="true" style="height: 44px; border-radius: 99px; border: 0; background: #14161B; color: #FFFFFF; padding: 0 16px; font: 800 14px 'Manrope', sans-serif">Mountains</button>
+    <button aria-pressed="false" style="height: 44px; border-radius: 99px; border: 0; background: #FFFFFF; color: #14161B; padding: 0 16px; font: 700 14px 'Manrope', sans-serif">Beaches</button>
+    <button aria-pressed="true" style="height: 44px; border-radius: 99px; border: 0; background: #14161B; color: #FFFFFF; padding: 0 16px; font: 800 14px 'Manrope', sans-serif">Food trails</button>
+    <button aria-pressed="true" style="height: 44px; border-radius: 99px; border: 0; background: #14161B; color: #FFFFFF; padding: 0 16px; font: 800 14px 'Manrope', sans-serif">Road trips</button>
+    <button aria-pressed="false" style="height: 44px; border-radius: 99px; border: 0; background: #FFFFFF; color: #14161B; padding: 0 16px; font: 700 14px 'Manrope', sans-serif">Culture &amp; history</button>
+    <button aria-pressed="false" style="height: 44px; border-radius: 99px; border: 0; background: #FFFFFF; color: #14161B; padding: 0 16px; font: 700 14px 'Manrope', sans-serif">Nightlife</button>
+    <button aria-pressed="false" style="height: 44px; border-radius: 99px; border: 0; background: #FFFFFF; color: #14161B; padding: 0 16px; font: 700 14px 'Manrope', sans-serif">Wildlife</button>
+    <button aria-pressed="false" style="height: 44px; border-radius: 99px; border: 0; background: #FFFFFF; color: #14161B; padding: 0 16px; font: 700 14px 'Manrope', sans-serif">Slow cafés</button>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <div style="font-size: 13px; font-weight: 800">Pace</div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; background: #FFFFFF; border-radius: 16px; padding: 4px">
+      <button style="height: 44px; border-radius: 12px; border: 0; background: transparent; font: 700 14px 'Manrope', sans-serif; color: #14161B">Slow</button>
+      <button style="height: 44px; border-radius: 12px; border: 0; background: {{accent}}; font: 800 14px 'Manrope', sans-serif; color: #14161B">Balanced</button>
+      <button style="height: 44px; border-radius: 12px; border: 0; background: transparent; font: 700 14px 'Manrope', sans-serif; color: #14161B">Packed</button>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <div style="font-size: 13px; font-weight: 800">Spend style</div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; background: #FFFFFF; border-radius: 16px; padding: 4px">
+      <button style="height: 44px; border-radius: 12px; border: 0; background: transparent; font: 700 14px 'Manrope', sans-serif; color: #14161B">Shoestring</button>
+      <button style="height: 44px; border-radius: 12px; border: 0; background: {{accent}}; font: 800 14px 'Manrope', sans-serif; color: #14161B">Comfort</button>
+      <button style="height: 44px; border-radius: 12px; border: 0; background: transparent; font: 700 14px 'Manrope', sans-serif; color: #14161B">Splurge</button>
+    </div>
+  </div>
+
+  <div style="background: #FFFFFF; border-radius: 18px; padding: 14px 16px; display: flex; align-items: center; gap: 12px">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2D3E8C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+    <div style="flex: 1"><div style="font-size: 12px; font-weight: 700; color: #5B6070">Home base · from your phone's region</div><div style="font-weight: 800; font-size: 15px">Bengaluru · ₹ INR</div></div>
+    <button style="height: 44px; border: 0; background: transparent; font: 800 14px 'Manrope', sans-serif; color: #2D3E8C">Change</button>
+  </div>
+
+  <div style="flex: 1"></div>
+  <a href="OnbConnect.dc.html" style="height: 56px; border-radius: 18px; background: #14161B; color: #FFFFFF; font-weight: 800; font-size: 16px; display: flex; align-items: center; justify-content: center; text-decoration: none">Continue</a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#E5482F","options":["#E5482F","#FFE27A","#F0A898","#D3E4C5"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#E5482F' };
+  }
+}
+</script>
+</body>
+</html>

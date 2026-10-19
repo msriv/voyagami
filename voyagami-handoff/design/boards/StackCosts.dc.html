@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Locked stack and costs</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>
+body{margin:0;background:#F4F0E6}
+a{color:#2D3E8C}a:hover{color:#1F2C6B}
+</style>
+</helmet>
+<div style="background: #F4F0E6; color: #14161B; font-family: 'Manrope', system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 56px 20px 72px 20px">
+<div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 44px">
+
+  <header style="display: flex; flex-direction: column; gap: 12px">
+    <div style="font-size: 12px; font-weight: 800; letter-spacing: 0.1em; color: #5B6070">LOCKED STACK V1 · LIST PRICES CHECKED 19 OCT 2026 · USD (₹ AT ~₹88/$)</div>
+    <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: clamp(36px, 5vw, 56px); font-weight: 800; letter-spacing: -0.04em; line-height: 1">What to pay for, what to keep free, and what it costs</h1>
+    <p style="margin: 0; max-width: 800px; font-size: 17px; color: #3B3F4A">Rule used: <b>pay where users would notice the difference</b> (place quality, maps, offline, sign-in, reading bookings). <b>Stay free where they wouldn't</b> (servers at small scale, email intake, analytics). These are estimates from list prices and the usage assumptions at the bottom; real bills depend mostly on how much people search for places.</p>
+  </header>
+
+  <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 12px">
+    <div style="background: #14161B; color: #FFFFFF; border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 4px"><div style="font-size: 12px; font-weight: 800; letter-spacing: 0.08em; color: #FFB89E">YEAR 1 · BUILD → 1K USERS</div><div style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 38px; font-weight: 800; letter-spacing: -0.03em">≈ $1,100</div><div style="font-size: 14px; color: #D9D3C4">≈ ₹97,000 · incl. one-time setup</div></div>
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 4px"><div style="font-size: 12px; font-weight: 800; letter-spacing: 0.08em; color: #5B6070">YEAR 2 · ~10K MONTHLY USERS</div><div style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 38px; font-weight: 800; letter-spacing: -0.03em">≈ $7,000</div><div style="font-size: 14px; color: #5B6070">≈ ₹6.2 lakh · ~$575 a month</div></div>
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 4px"><div style="font-size: 12px; font-weight: 800; letter-spacing: 0.08em; color: #5B6070">YEAR 3 · ~50K MONTHLY USERS</div><div style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 38px; font-weight: 800; letter-spacing: -0.03em">≈ $36,900</div><div style="font-size: 14px; color: #5B6070">≈ ₹32 lakh · ~$3,070 a month</div></div>
+    <div style="background: #2D3E8C; color: #FFFFFF; border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 4px"><div style="font-size: 12px; font-weight: 800; letter-spacing: 0.08em; opacity: 0.9">PER ACTIVE USER AT SCALE</div><div style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 38px; font-weight: 800; letter-spacing: -0.03em">≈ $0.06</div><div style="font-size: 14px">≈ ₹5 per user per month</div></div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 14px">
+    <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">Pay for these: don't compromise</h2>
+    <div style="overflow-x: auto; background: #FFFFFF; border-radius: 20px">
+      <table style="width: 100%; min-width: 880px; border-collapse: collapse; font-size: 14px; line-height: 1.45">
+        <thead><tr style="text-align: left; font-size: 12px; letter-spacing: 0.06em; color: #5B6070"><th style="padding: 14px 16px">SERVICE</th><th style="padding: 14px 8px">USED FOR</th><th style="padding: 14px 8px">WHY PAY</th><th style="padding: 14px 16px">PRICE BASIS</th></tr></thead>
+        <tbody>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Apple Developer + Google Play</td><td style="padding: 12px 8px">Publishing the app</td><td style="padding: 12px 8px">Required, no alternative</td><td style="padding: 12px 16px">$99/yr · $25 once</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Google Places API (New)</td><td style="padding: 12px 8px">Place search, details, hours, photos</td><td style="padding: 12px 8px">Best place data for India and Vietnam; bad places = bad plans. This is the product.</td><td style="padding: 12px 16px">Free caps per SKU, then $2.83/1k autocomplete, $5–17/1k details, $7/1k photos</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Mapbox</td><td style="padding: 12px 8px">Offline city packs and directions (online maps use Google's mobile SDK)</td><td style="padding: 12px 8px">Offline maps are core for travellers abroad; Google's SDK can't do offline packs</td><td style="padding: 12px 16px">Free to 25k MAU, then $4/1k MAU; directions free to 100k/mo, then $2/1k</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Firebase (Blaze plan)</td><td style="padding: 12px 8px">Firestore, sign-in, file storage, push, hosting</td><td style="padding: 12px 8px">Offline sync + live updates out of the box; you pay only past generous free quotas</td><td style="padding: 12px 16px">Reads $0.03/100k, writes $0.09/100k after daily free quota; auth free to 50k MAU</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Phone OTP: MSG91 for +91, Firebase SMS for others</td><td style="padding: 12px 8px">Sign-in by phone; invites match the right person</td><td style="padding: 12px 8px">Phone is how Indian groups find each other. MSG91 is ~40× cheaper than Firebase SMS for Indian numbers</td><td style="padding: 12px 16px">~₹0.15/OTP India; ~$0.01–0.10 abroad; ₹11,800 one-time DLT registration</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Gemini Flash / Flash-Lite (Vertex AI)</td><td style="padding: 12px 8px">Reading bookings &amp; receipts, Ask Voyagami drafts</td><td style="padding: 12px 8px">Cheap and accurate enough; free tiers have rate limits that would break imports</td><td style="padding: 12px 16px">2.5 Flash $0.30 in / $2.50 out per 1M tokens; ≈ $0.002 per booking read</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Open-Meteo Standard</td><td style="padding: 12px 8px">Weather &amp; month averages</td><td style="padding: 12px 8px">Free tier is non-commercial only; $29 keeps you legal</td><td style="padding: 12px 16px">$29/mo, 1M calls</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Expo EAS</td><td style="padding: 12px 8px">Builds, store submission, over-the-air fixes</td><td style="padding: 12px 8px">Fast builds and instant bug fixes without waiting for store review</td><td style="padding: 12px 16px">Starter $19/mo (+$0.005/MAU past 3k); Production $199/mo incl. 50k MAU</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Exchange rates (Open Exchange Rates)</td><td style="padding: 12px 8px">₫ → ₹ and other currencies</td><td style="padding: 12px 8px">Covers VND and 150+ currencies; ECB-based free feeds don't</td><td style="padding: 12px 16px">Budgeted ~$12/mo; confirm plan terms</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">AeroDataBox <span style="font-weight: 700; color: #5B6070">(phase 3)</span></td><td style="padding: 12px 8px">Flight delay alerts</td><td style="padding: 12px 8px">Cheapest decent flight-status source</td><td style="padding: 12px 16px">Starter $19/mo (40k units) → Growth $99</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Google CASA assessment <span style="font-weight: 700; color: #5B6070">(phase 3)</span></td><td style="padding: 12px 8px">Permission to read Gmail</td><td style="padding: 12px 8px">Required by Google for Gmail sync, every year</td><td style="padding: 12px 16px">~$540–1,800 per assessment; budgeted $1,000/yr</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px; font-weight: 800">Domain + trademark</td><td style="padding: 12px 8px">voyagami.app; brand protection</td><td style="padding: 12px 8px">Cheap insurance before you build an audience</td><td style="padding: 12px 16px">~$15/yr · ~₹9,000 once (India, classes 9 + 39)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 14px">
+    <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">Free on purpose</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 10px">
+      <div style="background: #FFFFFF; border-radius: 18px; padding: 16px 18px"><b>Go API + workers on Cloud Run, Pub/Sub, Scheduler</b><div style="font-size: 14px; color: #3B3F4A">Free tier covers launch; a few dollars a month at 10k users.</div></div>
+      <div style="background: #FFFFFF; border-radius: 18px; padding: 16px 18px"><b>Booking-email intake</b><div style="font-size: 14px; color: #3B3F4A">Cloudflare Email Routing + Workers for plans@ addresses. Also forwards hello@ to your Gmail.</div></div>
+      <div style="background: #FFFFFF; border-radius: 18px; padding: 16px 18px"><b>"Best order" for a day</b><div style="font-size: 14px; color: #3B3F4A">Worked out on the phone from distances; only the final route asks Mapbox. Saves a paid route-matrix bill.</div></div>
+      <div style="background: #FFFFFF; border-radius: 18px; padding: 16px 18px"><b>Receipt &amp; photo smarts</b><div style="font-size: 14px; color: #3B3F4A">ML Kit on the phone reads receipts; photo matching uses EXIF. No server cost.</div></div>
+      <div style="background: #FFFFFF; border-radius: 18px; padding: 16px 18px"><b>Analytics</b><div style="font-size: 14px; color: #3B3F4A">Firebase Analytics + BigQuery export inside the free tier. Your home turf.</div></div>
+      <div style="background: #FFFFFF; border-radius: 18px; padding: 16px 18px"><b>Crash reports</b><div style="font-size: 14px; color: #3B3F4A">Sentry free plan until ~10k users, then Team at $26/mo.</div></div>
+      <div style="background: #FFFFFF; border-radius: 18px; padding: 16px 18px"><b>Invite fallback page</b><div style="font-size: 14px; color: #3B3F4A">Firebase Hosting serves the app-link files and the "get the app" page.</div></div>
+      <div style="background: #FFFFFF; border-radius: 18px; padding: 16px 18px"><b>CI, infra, journal merging</b><div style="font-size: 14px; color: #3B3F4A">GitHub Actions free minutes, Terraform, Yjs: all free.</div></div>
+    </div>
+    <div style="font-size: 13px; color: #5B6070">Changed from the earlier tech page: Firestore instead of Postgres + PowerSync, and Mapbox directions instead of Google Routes. Both cut the launch bill to near zero.</div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 14px">
+    <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">Monthly projection by stage (USD)</h2>
+    <div style="overflow-x: auto; background: #FFFFFF; border-radius: 20px">
+      <table style="width: 100%; min-width: 820px; border-collapse: collapse; font-size: 14px; line-height: 1.45; text-align: right">
+        <thead><tr style="font-size: 12px; letter-spacing: 0.06em; color: #5B6070"><th style="padding: 14px 16px; text-align: left">ITEM</th><th style="padding: 14px 8px">BUILD<br>~50 testers</th><th style="padding: 14px 8px">LAUNCH<br>1k MAU</th><th style="padding: 14px 8px">TRACTION<br>10k MAU</th><th style="padding: 14px 16px">SCALE<br>50k MAU</th></tr></thead>
+        <tbody>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 10px 16px; text-align: left; font-weight: 700">Google Places</td><td style="padding: 10px 8px">0</td><td style="padding: 10px 8px">1</td><td style="padding: 10px 8px">240</td><td style="padding: 10px 16px; font-weight: 800; color: #9A3412">1,850</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 10px 16px; text-align: left; font-weight: 700">Mapbox maps + directions</td><td style="padding: 10px 8px">0</td><td style="padding: 10px 8px">0</td><td style="padding: 10px 8px">0</td><td style="padding: 10px 16px">300</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 10px 16px; text-align: left; font-weight: 700">Expo EAS</td><td style="padding: 10px 8px">19</td><td style="padding: 10px 8px">19</td><td style="padding: 10px 8px">54</td><td style="padding: 10px 16px">199</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 10px 16px; text-align: left; font-weight: 700">Phone OTP (MSG91 + Firebase SMS)</td><td style="padding: 10px 8px">0</td><td style="padding: 10px 8px">9</td><td style="padding: 10px 8px">44</td><td style="padding: 10px 16px">148</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 10px 16px; text-align: left; font-weight: 700">Gemini (Vertex AI)</td><td style="padding: 10px 8px">0</td><td style="padding: 10px 8px">2</td><td style="padding: 10px 8px">21</td><td style="padding: 10px 16px">105</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 10px 16px; text-align: left; font-weight: 700">Flight status (AeroDataBox)</td><td style="padding: 10px 8px">0</td><td style="padding: 10px 8px">0</td><td style="padding: 10px 8px">19</td><td style="padding: 10px 16px">99</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 10px 16px; text-align: left; font-weight: 700">Photo &amp; file storage + CDN</td><td style="padding: 10px 8px">0</td><td style="padding: 10px 8px">2</td><td style="padding: 10px 8px">20</td><td style="padding: 10px 16px">90</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 10px 16px; text-align: left; font-weight: 700">Firestore</td><td style="padding: 10px 8px">0</td><td style="padding: 10px 8px">0</td><td style="padding: 10px 8px">11</td><td style="padding: 10px 16px">60</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 10px 16px; text-align: left; font-weight: 700">Cloud Run, Pub/Sub, BigQuery</td><td style="padding: 10px 8px">0</td><td style="padding: 10px 8px">0</td><td style="padding: 10px 8px">15</td><td style="padding: 10px 16px">65</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 10px 16px; text-align: left; font-weight: 700">Weather (Open-Meteo)</td><td style="padding: 10px 8px">0</td><td style="padding: 10px 8px">29</td><td style="padding: 10px 8px">29</td><td style="padding: 10px 16px">29</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 10px 16px; text-align: left; font-weight: 700">Sentry</td><td style="padding: 10px 8px">0</td><td style="padding: 10px 8px">0</td><td style="padding: 10px 8px">26</td><td style="padding: 10px 16px">26</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 10px 16px; text-align: left; font-weight: 700">Exchange rates</td><td style="padding: 10px 8px">0</td><td style="padding: 10px 8px">12</td><td style="padding: 10px 8px">12</td><td style="padding: 10px 16px">12</td></tr>
+          <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 10px 16px; text-align: left; font-weight: 700">Gmail CASA (yearly ÷ 12)</td><td style="padding: 10px 8px">0</td><td style="padding: 10px 8px">0</td><td style="padding: 10px 8px">83</td><td style="padding: 10px 16px">83</td></tr>
+          <tr style="border-top: 2px solid #14161B; font-weight: 800"><td style="padding: 12px 16px; text-align: left">Total per month</td><td style="padding: 12px 8px">≈ 19</td><td style="padding: 12px 8px">≈ 74</td><td style="padding: 12px 8px">≈ 574</td><td style="padding: 12px 16px">≈ 3,066</td></tr>
+          <tr style="color: #5B6070; font-weight: 700"><td style="padding: 4px 16px 14px 16px; text-align: left">In rupees (~₹88/$)</td><td style="padding: 4px 8px 14px 8px">₹1,700</td><td style="padding: 4px 8px 14px 8px">₹6,500</td><td style="padding: 4px 8px 14px 8px">₹50,500</td><td style="padding: 4px 16px 14px 16px">₹2.7 lakh</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr)); gap: 16px">
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 10px">
+      <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 24px; font-weight: 800">One-time &amp; yearly</h2>
+      <div style="display: flex; flex-direction: column; font-size: 14px">
+        <div style="display: flex; justify-content: space-between; padding: 8px 0"><span>Apple Developer Program</span><b>$99 / year</b></div>
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid #ECE6D8"><span>voyagami.app domain</span><b>~$15 / year</b></div>
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid #ECE6D8"><span>Google Play Console</span><b>$25 once</b></div>
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid #ECE6D8"><span>SMS DLT registration (entity + sender ID)</span><b>₹11,800 once</b></div>
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid #ECE6D8"><span>Trademark, India, 2 classes</span><b>~₹9,000 once</b></div>
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid #ECE6D8"><span>Gmail CASA assessment (phase 3)</span><b>~$1,000 / year</b></div>
+      </div>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 10px">
+      <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 24px; font-weight: 800">How the yearly numbers add up</h2>
+      <div style="font-size: 14px; display: flex; flex-direction: column; gap: 8px; color: #3B3F4A">
+        <div><b style="color: #14161B">Year 1 ≈ $1,100:</b> 3 months build ($19) + 9 months at ~1k users ($74) + yearly fees ($114) + one-time setup (~$260).</div>
+        <div><b style="color: #14161B">Year 2 ≈ $7,000:</b> ~10k users all year ($491 + CASA) + yearly fees.</div>
+        <div><b style="color: #14161B">Year 3 ≈ $36,900:</b> ~50k users all year ($2,983 + CASA) + yearly fees.</div>
+      </div>
+    </div>
+  </section>
+
+  <section style="background: #14161B; color: #FFFFFF; border-radius: 28px; padding: clamp(20px, 4vw, 32px); display: flex; flex-direction: column; gap: 12px">
+    <div style="font-size: 12px; font-weight: 800; letter-spacing: 0.1em; color: #FFB89E">WHERE THE MONEY GOES</div>
+    <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: clamp(24px, 3vw, 32px); font-weight: 800; letter-spacing: -0.02em; line-height: 1.15">At scale, about 60% of the bill is Google Places. Everything else is small.</h2>
+    <ul style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; color: #D9D3C4; font-size: 14px">
+      <li><b style="color: #FFFFFF">Cut it without hurting quality:</b> debounce search (300 ms, 3+ letters), fetch hours and photos only when someone opens a place, keep place IDs per trip so the same place isn't looked up twice by the crew.</li>
+      <li><b style="color: #FFFFFF">Pays for itself:</b> Yearly Plus (₹999) plus per-traveller Trip Passes cover the bill from roughly 3% on Plus and 1.5% buying a pass each month; tuning Places matters more than price. Scenarios are in the Plans &amp; pricing spec.</li>
+      <li><b style="color: #FFFFFF">Watch:</b> set budget alerts on Google Cloud and Mapbox at 50% and 90% of each month's expected spend.</li>
+    </ul>
+  </section>
+
+  <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr)); gap: 16px">
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 800">Assumptions behind the numbers</h3>
+      <ul style="margin: 0; padding-left: 20px; font-size: 14px; display: flex; flex-direction: column; gap: 5px; color: #3B3F4A">
+        <li>40% of monthly users plan in a given month; each does ~8 place searches, opens ~7 places, sees ~3 photos.</li>
+        <li>~15 route lookups per planner, half served from cache.</li>
+        <li>New sign-ups: 60% of MAU at launch, 30% at 10k, 20% at 50k; 40% choose phone; 80% of those are Indian numbers.</li>
+        <li>30% of users use AI each month: 2 booking reads + 1 Ask.</li>
+        <li>Firestore: ~3,000 reads and ~300 writes per user per month.</li>
+        <li>Prices are list prices at the first paid tier; volume discounts not counted.</li>
+      </ul>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 800">Price sources</h3>
+      <ul style="margin: 0; padding-left: 20px; font-size: 14px; display: flex; flex-direction: column; gap: 5px">
+        <li><a href="https://openplacesapi.com/blog/google-places-api-pricing">Google Places API (New) prices</a>, <a href="https://developers.google.com/maps/billing-and-pricing/pricing">Google Maps Platform pricing</a></li>
+        <li><a href="https://www.mapbox.com/pricing">Mapbox pricing</a></li>
+        <li><a href="https://cloud.google.com/firestore/pricing">Firestore pricing</a>, <a href="https://blog.logto.io/it/firebase-authentication-pricing">Firebase Auth &amp; SMS</a></li>
+        <li><a href="https://www.messagecentral.com/en-in/blog/sms-otp-pricing-india">India OTP rates &amp; DLT fees</a></li>
+        <li><a href="https://www.morphllm.com/gemini-api-pricing">Gemini API prices</a></li>
+        <li><a href="https://expo.dev/pricing">Expo EAS plans</a>, <a href="https://openmeteo.substack.com/p/api-subscriptions-for-commercial">Open-Meteo plans</a>, <a href="https://www.aerodatabox.com/pricing">AeroDataBox plans</a></li>
+        <li><a href="https://www.switchlabs.dev/post/casa-tier-2-tier-3-security-review-providers-pricing-and-the-cheapest-option">CASA assessment providers</a></li>
+      </ul>
+    </div>
+  </section>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3895}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

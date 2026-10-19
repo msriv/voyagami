@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Voyagami — System architecture</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 1760px; height: 960px; background: #F4F0E6; color: #14161B; font-family: 'Manrope', system-ui, sans-serif; font-size: 14px; line-height: 18px">
+<div style="position: absolute; left: 40px; top: 152px; width: 336px; height: 568px; border-radius: 24px; background: #FBE9E1"></div>
+<div style="position: absolute; left: 416px; top: 152px; width: 1304px; height: 568px; border-radius: 24px; background: #E4E8F7"></div>
+<div style="position: absolute; left: 40px; top: 760px; width: 1680px; height: 160px; border-radius: 24px; background: #E2DCCD"></div>
+
+<svg width="95" height="8" viewBox="0 0 95 8" preserveAspectRatio="none" style="position: absolute; left: 344px; top: 240px; width: 95px; height: 8px; overflow: visible; fill: none; stroke: #3B3F4A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-1" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#3B3F4A" stroke="none" style="stroke: none; fill: #3B3F4A; fill: context-stroke"/></marker></defs><path d="M 0 4 L 91 4" marker-end="url(#dc-arrow-head-filled-1)"></path></svg>
+<svg width="95" height="8" viewBox="0 0 95 8" preserveAspectRatio="none" style="position: absolute; left: 680px; top: 225px; width: 95px; height: 8px; overflow: visible; fill: none; stroke: #3B3F4A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-2" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#3B3F4A" stroke="none" style="stroke: none; fill: #3B3F4A; fill: context-stroke"/></marker></defs><path d="M 0 4 L 91 4" marker-end="url(#dc-arrow-head-filled-2)"></path></svg>
+<svg width="95" height="8" viewBox="0 0 95 8" preserveAspectRatio="none" style="position: absolute; left: 1016px; top: 240px; width: 95px; height: 8px; overflow: visible; fill: none; stroke: #3B3F4A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-3" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#3B3F4A" stroke="none" style="stroke: none; fill: #3B3F4A; fill: context-stroke"/></marker></defs><path d="M 0 4 L 91 4" marker-end="url(#dc-arrow-head-filled-3)"></path></svg>
+<svg width="48" height="8" viewBox="0 0 48 8" preserveAspectRatio="none" style="position: absolute; left: 728px; top: 255px; width: 48px; height: 8px; overflow: visible; fill: none; stroke: #2D3E8C; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 48 4"></path></svg>
+<svg width="8" height="145" viewBox="0 0 8 145" preserveAspectRatio="none" style="position: absolute; left: 724px; top: 259px; width: 8px; height: 145px; overflow: visible; fill: none; stroke: #2D3E8C; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 4 0 L 4 145"></path></svg>
+<svg width="47" height="8" viewBox="0 0 47 8" preserveAspectRatio="none" style="position: absolute; left: 681px; top: 400px; width: 47px; height: 8px; overflow: visible; fill: none; stroke: #2D3E8C; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-4" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#2D3E8C" stroke="none" style="stroke: none; fill: #2D3E8C; fill: context-stroke"/></marker></defs><path d="M 47 4 L 4 4" marker-end="url(#dc-arrow-head-filled-4)"></path></svg>
+<svg width="236" height="8" viewBox="0 0 236 8" preserveAspectRatio="none" style="position: absolute; left: 204px; top: 400px; width: 236px; height: 8px; overflow: visible; fill: none; stroke: #2D3E8C; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 236 4"></path></svg>
+<svg width="8" height="115" viewBox="0 0 8 115" preserveAspectRatio="none" style="position: absolute; left: 200px; top: 289px; width: 8px; height: 115px; overflow: visible; fill: none; stroke: #2D3E8C; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-5" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#2D3E8C" stroke="none" style="stroke: none; fill: #2D3E8C; fill: context-stroke"/></marker></defs><path d="M 4 115 L 4 4" marker-end="url(#dc-arrow-head-filled-5)"></path></svg>
+<svg width="95" height="8" viewBox="0 0 95 8" preserveAspectRatio="none" style="position: absolute; left: 1352px; top: 240px; width: 95px; height: 8px; overflow: visible; fill: none; stroke: #3B3F4A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-6" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#3B3F4A" stroke="none" style="stroke: none; fill: #3B3F4A; fill: context-stroke"/></marker></defs><path d="M 0 4 L 91 4" marker-end="url(#dc-arrow-head-filled-6)"></path></svg>
+<svg width="8" height="360" viewBox="0 0 8 360" preserveAspectRatio="none" style="position: absolute; left: 1396px; top: 244px; width: 8px; height: 360px; overflow: visible; fill: none; stroke: #3B3F4A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 4 0 L 4 360"></path></svg>
+<svg width="47" height="8" viewBox="0 0 47 8" preserveAspectRatio="none" style="position: absolute; left: 1400px; top: 360px; width: 47px; height: 8px; overflow: visible; fill: none; stroke: #3B3F4A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-7" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#3B3F4A" stroke="none" style="stroke: none; fill: #3B3F4A; fill: context-stroke"/></marker></defs><path d="M 0 4 L 43 4" marker-end="url(#dc-arrow-head-filled-7)"></path></svg>
+<svg width="47" height="8" viewBox="0 0 47 8" preserveAspectRatio="none" style="position: absolute; left: 1400px; top: 480px; width: 47px; height: 8px; overflow: visible; fill: none; stroke: #3B3F4A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-8" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#3B3F4A" stroke="none" style="stroke: none; fill: #3B3F4A; fill: context-stroke"/></marker></defs><path d="M 0 4 L 43 4" marker-end="url(#dc-arrow-head-filled-8)"></path></svg>
+<svg width="47" height="8" viewBox="0 0 47 8" preserveAspectRatio="none" style="position: absolute; left: 1400px; top: 600px; width: 47px; height: 8px; overflow: visible; fill: none; stroke: #3B3F4A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-9" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#3B3F4A" stroke="none" style="stroke: none; fill: #3B3F4A; fill: context-stroke"/></marker></defs><path d="M 0 4 L 43 4" marker-end="url(#dc-arrow-head-filled-9)"></path></svg>
+
+<div style="position: absolute; left: 64px; top: 40px; font-family: 'Bricolage Grotesque', sans-serif; font-size: 34px; line-height: 40px; font-weight: 800; letter-spacing: -0.03em">System architecture</div>
+<div style="position: absolute; left: 64px; top: 88px; width: 1400px; font-size: 16px; line-height: 22px; color: #3B3F4A; font-weight: 600">Local-first. Every phone keeps its trips in SQLite and works with no signal. Postgres in Mumbai is where the group's copies meet; the sync service keeps each trip's members in step. This is the design at scale: launch runs on Firestore's built-in offline sync (see Locked stack).</div>
+
+<div style="position: absolute; left: 56px; top: 164px; font-size: 12px; font-weight: 800; letter-spacing: 0.1em; color: #9A3412">ON THE PHONE</div>
+<div style="position: absolute; left: 432px; top: 164px; font-size: 12px; font-weight: 800; letter-spacing: 0.1em; color: #2D3E8C">GOOGLE CLOUD · asia-south1 (MUMBAI)</div>
+<div style="position: absolute; left: 56px; top: 772px; font-size: 12px; font-weight: 800; letter-spacing: 0.1em; color: #3B3F4A">SHARED PLATFORM</div>
+
+<div style="position: absolute; left: 64px; top: 200px; width: 280px; height: 88px; box-sizing: border-box; padding: 12px 16px; display: flex; align-items: center; background: #14161B; color: #FFFFFF; border-radius: 16px"><span><b>Voyagami app</b> · Expo (React Native)<br>local SQLite is the first copy</span></div>
+<div style="position: absolute; left: 64px; top: 496px; width: 280px; height: 172px; box-sizing: border-box; padding: 14px 16px; display: flex; align-items: center; background: #FFFFFF; border-radius: 16px"><span><b>Also on the phone</b><br>Upload queue (works offline)<br>Yjs docs for journal &amp; notes<br>ML Kit receipt reading<br>Photo match by date + GPS<br>Offline map packs</span></div>
+
+<div style="position: absolute; left: 440px; top: 200px; width: 240px; height: 88px; box-sizing: border-box; padding: 12px 16px; display: flex; align-items: center; background: #FFFFFF; border: 2px solid #B7C0E8; border-radius: 16px"><span><b>API</b> · Cloud Run<br>checks token, role, rules</span></div>
+<div style="position: absolute; left: 440px; top: 360px; width: 240px; height: 88px; box-sizing: border-box; padding: 12px 16px; display: flex; align-items: center; background: #FFFFFF; border: 2px solid #2D3E8C; border-radius: 16px"><span><b>Sync service</b> · PowerSync<br>one stream per trip</span></div>
+
+<div style="position: absolute; left: 776px; top: 200px; width: 240px; height: 88px; box-sizing: border-box; padding: 12px 16px; display: flex; align-items: center; background: #2D3E8C; color: #FFFFFF; border-radius: 16px"><span><b>Postgres</b> · Cloud SQL (HA)<br>source of truth</span></div>
+<div style="position: absolute; left: 776px; top: 360px; width: 240px; height: 88px; box-sizing: border-box; padding: 12px 16px; display: flex; align-items: center; background: #FFFFFF; border-radius: 16px"><span><b>Cloud Storage + CDN</b><br>photos, PDFs · signed URLs</span></div>
+<div style="position: absolute; left: 776px; top: 480px; width: 240px; height: 88px; box-sizing: border-box; padding: 12px 16px; display: flex; align-items: center; background: #FFFFFF; border-radius: 16px"><span><b>Memorystore Redis</b><br>cache · presence · rate limits</span></div>
+<div style="position: absolute; left: 776px; top: 600px; width: 240px; height: 88px; box-sizing: border-box; padding: 12px 16px; display: flex; align-items: center; background: #FFFFFF; border-radius: 16px"><span><b>BigQuery</b><br>analytics via Datastream</span></div>
+
+<div style="position: absolute; left: 1112px; top: 208px; width: 240px; height: 72px; box-sizing: border-box; padding: 10px 16px; display: flex; align-items: center; background: #FFFFFF; border: 2px solid #B7C0E8; border-radius: 16px"><span><b>Pub/Sub</b> · outbox events</span></div>
+<div style="position: absolute; left: 1112px; top: 448px; width: 240px; height: 176px; box-sizing: border-box; padding: 14px 16px; display: flex; align-items: center; background: #F1F3FA; border: 2px dashed #B7C0E8; border-radius: 16px"><span><b>Outside services</b><br>Places · Routes (Google)<br>Maps: Google SDK online · Mapbox offline<br>Weather · Flight status · FX<br>Gmail API · inbound email<br>LLM on Vertex AI</span></div>
+
+<div style="position: absolute; left: 1448px; top: 208px; width: 248px; height: 72px; box-sizing: border-box; padding: 8px 14px; display: flex; align-items: center; background: #FFFFFF; border-radius: 16px"><span><b>Parser</b> · emails, PDFs, receipts<br>→ LLM extraction</span></div>
+<div style="position: absolute; left: 1448px; top: 328px; width: 248px; height: 72px; box-sizing: border-box; padding: 8px 14px; display: flex; align-items: center; background: #FFFFFF; border-radius: 16px"><span><b>Enricher</b> · places, routes,<br>weather, map packs</span></div>
+<div style="position: absolute; left: 1448px; top: 448px; width: 248px; height: 72px; box-sizing: border-box; padding: 8px 14px; display: flex; align-items: center; background: #FFFFFF; border-radius: 16px"><span><b>Notifier</b> · FCM → iOS + Android</span></div>
+<div style="position: absolute; left: 1448px; top: 568px; width: 248px; height: 72px; box-sizing: border-box; padding: 8px 14px; display: flex; align-items: center; background: #FFFFFF; border-radius: 16px"><span><b>Schedulers</b> · FX, flights,<br>vote closing, digests</span></div>
+<div style="position: absolute; left: 1448px; top: 656px; width: 248px; font-size: 12px; line-height: 16px; color: #3B3F4A; font-weight: 600">Workers write results back through the API</div>
+
+<div style="position: absolute; left: 64px; top: 808px; width: 384px; height: 80px; box-sizing: border-box; padding: 12px 16px; display: flex; align-items: center; background: #FFFFFF; border-radius: 16px"><span><b>Firebase Auth</b><br>phone OTP · Google · Apple</span></div>
+<div style="position: absolute; left: 480px; top: 808px; width: 384px; height: 80px; box-sizing: border-box; padding: 12px 16px; display: flex; align-items: center; background: #FFFFFF; border-radius: 16px"><span><b>Secret Manager + Cloud KMS</b><br>encrypts booking refs &amp; inbox tokens</span></div>
+<div style="position: absolute; left: 896px; top: 808px; width: 384px; height: 80px; box-sizing: border-box; padding: 12px 16px; display: flex; align-items: center; background: #FFFFFF; border-radius: 16px"><span><b>Cloud Logging + Sentry</b><br>errors, traces, alerts</span></div>
+<div style="position: absolute; left: 1312px; top: 808px; width: 384px; height: 80px; box-sizing: border-box; padding: 12px 16px; display: flex; align-items: center; background: #FFFFFF; border-radius: 16px"><span><b>Terraform · GitHub Actions · EAS</b><br>infra as code, app builds, OTA updates</span></div>
+
+<div style="position: absolute; left: 364px; top: 216px; width: 56px; text-align: center; font-size: 13px; line-height: 16px; font-weight: 700; color: #3B3F4A">writes</div>
+<div style="position: absolute; left: 700px; top: 200px; width: 56px; text-align: center; font-size: 13px; line-height: 16px; font-weight: 700; color: #3B3F4A">commit</div>
+<div style="position: absolute; left: 1036px; top: 216px; width: 56px; text-align: center; font-size: 13px; line-height: 16px; font-weight: 700; color: #3B3F4A">events</div>
+<div style="position: absolute; left: 740px; top: 316px; width: 64px; font-size: 13px; line-height: 16px; font-weight: 700; color: #2D3E8C">changes</div>
+<div style="position: absolute; left: 262px; top: 416px; width: 120px; text-align: center; font-size: 13px; line-height: 16px; font-weight: 700; color: #2D3E8C">live, to each phone</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1760,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Voyagami — Invite crew</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>
+:where(a,button){position:relative}:where(a,button)::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
+body{margin:0}
+a{color:#2D3E8C}a:hover{color:#1F2C6B}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F4F0E6; color: #14161B; font-family: 'Manrope', system-ui, sans-serif; position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 16px; padding: 52px 20px 28px 20px">
+  <div style="display: flex; align-items: center; justify-content: space-between">
+    <a href="NewTrip.dc.html" aria-label="Back" style="width: 44px; height: 44px; border-radius: 50%; background: #FFFFFF; color: #14161B; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></a>
+    <span style="font-size: 13px; font-weight: 800; color: #5B6070">New trip · 2 of 3</span>
+    <span style="width: 44px"></span>
+  </div>
+
+  <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 32px; font-weight: 800; letter-spacing: -0.035em; line-height: 1">Who's coming?</h1>
+
+  <div style="background: #2D3E8C; color: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+    <div style="font-size: 12px; font-weight: 800; letter-spacing: 0.08em; opacity: 0.9">TRIP INVITE LINK</div>
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px"><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px">voyagami.app/j/[CODE]</span><button style="height: 36px; border-radius: 12px; border: 0; background: #FFFFFF; color: #14161B; padding: 0 12px; font: 800 13px 'Manrope', sans-serif">Copy</button></div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+      <button style="height: 44px; border-radius: 14px; border: 0; background: rgba(255,255,255,0.16); color: #FFFFFF; font: 800 13px 'Manrope', sans-serif">WhatsApp</button>
+      <button style="height: 44px; border-radius: 14px; border: 0; background: rgba(255,255,255,0.16); color: #FFFFFF; font: 800 13px 'Manrope', sans-serif">Contacts</button>
+      <button style="height: 44px; border-radius: 14px; border: 0; background: rgba(255,255,255,0.16); color: #FFFFFF; font: 800 13px 'Manrope', sans-serif">QR code</button>
+    </div>
+    <div style="font-size: 12px; font-weight: 600">New joiners get: <b>Can edit</b> · link expires when the trip ends</div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <div style="display: flex; justify-content: space-between; align-items: baseline"><h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 19px; font-weight: 800">Crew · 4</h2><span style="font-size: 12px; font-weight: 700; color: #5B6070">Tap a role to change it</span></div>
+    <div style="background: #FFFFFF; border-radius: 20px; padding: 2px 14px; display: flex; flex-direction: column">
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 60px">
+        <span style="width: 38px; height: 38px; border-radius: 50%; background: {{accent}}; display: flex; align-items: center; justify-content: center; font-weight: 800">M</span>
+        <div style="flex: 1"><div style="font-weight: 800; font-size: 15px">Mihir (you)</div><div style="font-size: 12px; color: #5B6070; font-weight: 600">Organiser</div></div>
+        <span style="font-size: 12px; font-weight: 800; color: #5B6070">Owner</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 60px; border-top: 1px solid #ECE6D8">
+        <span style="width: 38px; height: 38px; border-radius: 50%; background: #FFE27A; display: flex; align-items: center; justify-content: center; font-weight: 800">A</span>
+        <div style="flex: 1"><div style="font-weight: 800; font-size: 15px">Ananya</div><div style="font-size: 12px; color: #0E5A3E; font-weight: 700">Joined</div></div>
+        <button style="height: 36px; border-radius: 10px; border: 0; background: #F4F0E6; padding: 0 10px; font: 800 12px 'Manrope', sans-serif; color: #14161B">Can edit ▾</button>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 60px; border-top: 1px solid #ECE6D8">
+        <span style="width: 38px; height: 38px; border-radius: 50%; background: #D3E4C5; display: flex; align-items: center; justify-content: center; font-weight: 800">R</span>
+        <div style="flex: 1"><div style="font-weight: 800; font-size: 15px">Rohan</div><div style="font-size: 12px; color: #0E5A3E; font-weight: 700">Joined</div></div>
+        <button style="height: 36px; border-radius: 10px; border: 0; background: #F4F0E6; padding: 0 10px; font: 800 12px 'Manrope', sans-serif; color: #14161B">Can edit ▾</button>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 60px; border-top: 1px solid #ECE6D8">
+        <span style="width: 38px; height: 38px; border-radius: 50%; border: 2px dashed #B9B2A2; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #5B6070">S</span>
+        <div style="flex: 1"><div style="font-weight: 800; font-size: 15px">Sid</div><div style="font-size: 12px; color: #9A3412; font-weight: 700">Invited on WhatsApp · not joined</div></div>
+        <button style="height: 36px; border-radius: 10px; border: 0; background: #F4F0E6; padding: 0 10px; font: 800 12px 'Manrope', sans-serif; color: #14161B">Nudge</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="font-size: 12px; color: #5B6070; font-weight: 600; line-height: 1.5"><b style="color: #14161B">Can edit</b> — change plans, add expenses. <b style="color: #14161B">Can view</b> — see everything, comment and vote. Parents tagging along? Give them view.</div>
+
+  <div style="flex: 1"></div>
+  <a href="TripBudget.dc.html" style="height: 56px; border-radius: 18px; background: #14161B; color: #FFFFFF; font-weight: 800; font-size: 16px; display: flex; align-items: center; justify-content: center; text-decoration: none">Next: budget (optional)</a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#E5482F","options":["#E5482F","#FFE27A","#F0A898","#D3E4C5"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#E5482F' };
+  }
+}
+</script>
+</body>
+</html>

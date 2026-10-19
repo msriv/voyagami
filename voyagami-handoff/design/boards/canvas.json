@@ -1,0 +1,711 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "AddExpense.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "D7 Add expense",
+      "w": 390,
+      "x": 2820,
+      "y": 2528
+    },
+    "AddPlace.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "D5 Add place / paste link",
+      "w": 390,
+      "x": 1880,
+      "y": 2528
+    },
+    "AskJaunt.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "D6 Ask Voyagami draft",
+      "w": 390,
+      "x": 2350,
+      "y": 2528
+    },
+    "BookingReview.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "D4 Review parsed booking",
+      "w": 390,
+      "x": 1410,
+      "y": 2528
+    },
+    "Brand.dc.html": {
+      "h": 1280,
+      "title": "Brand refresh",
+      "w": 1600,
+      "x": 0,
+      "y": -1600
+    },
+    "Budget.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "04 Budget & split",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "Comments.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "C3 Place + comments",
+      "w": 390,
+      "x": 940,
+      "y": 3792
+    },
+    "DataMap.dc.html": {
+      "expand": "fill",
+      "h": 2094,
+      "title": "Data source map",
+      "w": 1280,
+      "x": 1360,
+      "y": 9500
+    },
+    "Evaluation.dc.html": {
+      "expand": "fill",
+      "h": 3531,
+      "title": "Design evaluation",
+      "w": 1280,
+      "x": 0,
+      "y": 9500
+    },
+    "Explore.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "06 Explore & Ask",
+      "w": 390,
+      "x": 2350,
+      "y": 0
+    },
+    "FlowBookings.dc.html": {
+      "h": 800,
+      "title": "Flow 2 · Bookings",
+      "w": 1760,
+      "x": 1840,
+      "y": 6320
+    },
+    "FlowCrew.dc.html": {
+      "h": 800,
+      "title": "Flow 6 · Crew & real-time sync",
+      "w": 1760,
+      "x": 1840,
+      "y": 8160
+    },
+    "FlowExpenses.dc.html": {
+      "h": 800,
+      "title": "Flow 4 · Expenses & settle up",
+      "w": 1760,
+      "x": 1840,
+      "y": 7240
+    },
+    "FlowJournal.dc.html": {
+      "h": 800,
+      "title": "Flow 5 · Journal & recap",
+      "w": 1760,
+      "x": 0,
+      "y": 8160
+    },
+    "FlowOnboarding.dc.html": {
+      "h": 800,
+      "title": "Flow 1 · Onboarding & trip setup",
+      "w": 1760,
+      "x": 0,
+      "y": 6320
+    },
+    "FlowPlaces.dc.html": {
+      "h": 800,
+      "title": "Flow 3 · Places & day plans",
+      "w": 1760,
+      "x": 0,
+      "y": 7240
+    },
+    "GroupHub.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "C1 Crew hub",
+      "w": 390,
+      "x": 0,
+      "y": 3792
+    },
+    "HomeDark.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "08 Home · dark mode",
+      "w": 390,
+      "x": 3290,
+      "y": 0
+    },
+    "HomeMulti.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "07 Home · several trips",
+      "w": 390,
+      "x": 2820,
+      "y": 0
+    },
+    "ImportBookings.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "D3 Add bookings",
+      "w": 390,
+      "x": 940,
+      "y": 2528
+    },
+    "ImportError.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "E1 Couldn't read a booking",
+      "w": 390,
+      "x": 0,
+      "y": 5056
+    },
+    "InviteCrew.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "D2 Invite crew",
+      "w": 390,
+      "x": 470,
+      "y": 2528
+    },
+    "Itinerary.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "03 Day plan + map",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "Journal.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "05 Journal",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
+    "LiveTrip.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "C5 Live trip (Today)",
+      "w": 390,
+      "x": 1880,
+      "y": 3792
+    },
+    "LocalePreview.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "L1 Trip money, by home country (switch in Tweaks)",
+      "w": 390,
+      "x": 0,
+      "y": 29821
+    },
+    "LocaleSpec.dc.html": {
+      "expand": "fill",
+      "h": 2900,
+      "title": "Region & locale spec",
+      "w": 1280,
+      "x": 470,
+      "y": 29821
+    },
+    "Main.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "01 Home · Trips",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "ManageSub.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "S3 Your plan (trial active)",
+      "w": 390,
+      "x": 940,
+      "y": 20440
+    },
+    "NewTrip.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "D1 New trip",
+      "w": 390,
+      "x": 0,
+      "y": 2528
+    },
+    "Notifications.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "E3 Notifications",
+      "w": 390,
+      "x": 940,
+      "y": 5056
+    },
+    "OfflineGate.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "S4 Plus moment: offline maps",
+      "w": 390,
+      "x": 1410,
+      "y": 20440
+    },
+    "OfflineSync.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "E2 Offline & sync",
+      "w": 390,
+      "x": 470,
+      "y": 5056
+    },
+    "OnbConnect.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "O4 Connect & permissions",
+      "w": 390,
+      "x": 1410,
+      "y": 1264
+    },
+    "OnbEmpty.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "O5 First home (empty)",
+      "w": 390,
+      "x": 1880,
+      "y": 1264
+    },
+    "OnbSignIn.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "O2 Sign in",
+      "w": 390,
+      "x": 470,
+      "y": 1264
+    },
+    "OnbStyle.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "O3 Travel style",
+      "w": 390,
+      "x": 940,
+      "y": 1264
+    },
+    "OnbWelcome.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "O1 Welcome",
+      "w": 390,
+      "x": 0,
+      "y": 1264
+    },
+    "PayCurrency.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "S6 Paywall moment: second currency",
+      "w": 390,
+      "x": 470,
+      "y": 21444
+    },
+    "PayRoute.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "S5 Paywall moment: best order",
+      "w": 390,
+      "x": 0,
+      "y": 21444
+    },
+    "PlaceDetail.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "R2 Place detail",
+      "w": 390,
+      "x": 470,
+      "y": 25821
+    },
+    "Plans.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 36,
+      "title": "S1 Plans (paywall)",
+      "w": 390,
+      "x": 0,
+      "y": 20440
+    },
+    "PlansSpec.dc.html": {
+      "expand": "fill",
+      "h": 4981,
+      "title": "Plans & pricing spec",
+      "w": 1280,
+      "x": 1880,
+      "y": 20440
+    },
+    "Poll.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 36,
+      "title": "C2 Group vote",
+      "w": 390,
+      "x": 470,
+      "y": 3792
+    },
+    "Profile.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "E4 Profile & privacy",
+      "w": 390,
+      "x": 1410,
+      "y": 5056
+    },
+    "Recap.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "E5 Trip recap",
+      "w": 390,
+      "x": 1880,
+      "y": 5056
+    },
+    "RecapPlayer.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "E5b Recap video (auto-made)",
+      "w": 390,
+      "x": 2350,
+      "y": 5056
+    },
+    "RecsEvents.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "R4 While you're there (events)",
+      "w": 390,
+      "x": 1410,
+      "y": 25821
+    },
+    "RecsForYou.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 36,
+      "title": "R1 Picked for your crew (sights / food)",
+      "w": 390,
+      "x": 0,
+      "y": 25821
+    },
+    "RecsSpec.dc.html": {
+      "expand": "fill",
+      "h": 3672,
+      "title": "Recommendations, data & ads spec",
+      "w": 1280,
+      "x": 1880,
+      "y": 25821
+    },
+    "RecsStays.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "R3 Stays near your plan",
+      "w": 390,
+      "x": 940,
+      "y": 25821
+    },
+    "StackCosts.dc.html": {
+      "expand": "fill",
+      "h": 3895,
+      "title": "Locked stack & costs",
+      "w": 1284,
+      "x": 3196,
+      "y": 13431
+    },
+    "SysArch.dc.html": {
+      "h": 1009,
+      "title": "System architecture",
+      "w": 1760,
+      "x": 0,
+      "y": 13431
+    },
+    "Tasks.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "C4 Who's on it",
+      "w": 390,
+      "x": 1410,
+      "y": 3792
+    },
+    "TechStack.dc.html": {
+      "expand": "fill",
+      "h": 5230,
+      "title": "Tech stack, CAP & system design",
+      "w": 1305,
+      "x": 1815,
+      "y": 13431
+    },
+    "Trial.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "S2 How the 7-day trial works",
+      "w": 390,
+      "x": 470,
+      "y": 20440
+    },
+    "TrialEnd.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "S7 Trial ending: honest summary",
+      "w": 390,
+      "x": 940,
+      "y": 21444
+    },
+    "Trip.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "02 Trip overview",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "TripBudget.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "D2b Group budget (optional)",
+      "w": 390,
+      "x": 3290,
+      "y": 2528
+    },
+    "Tut1.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "T1 Tour · your trip",
+      "w": 390,
+      "x": 0,
+      "y": 19176
+    },
+    "Tut2.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "T2 Tour · day plans",
+      "w": 390,
+      "x": 470,
+      "y": 19176
+    },
+    "Tut3.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "T3 Tour · crew",
+      "w": 390,
+      "x": 940,
+      "y": 19176
+    },
+    "Tut4.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "T4 Tour · money",
+      "w": 390,
+      "x": 1410,
+      "y": 19176
+    },
+    "Tut5.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "T5 Tour · journal",
+      "w": 390,
+      "x": 1880,
+      "y": 19176
+    },
+    "TutStamps.dc.html": {
+      "h": 844,
+      "radius": 36,
+      "title": "T6 First five stamps",
+      "w": 390,
+      "x": 2350,
+      "y": 19176
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-19T15:30:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "personaNote": {
+      "fill": "orange",
+      "text": "All screens show one sample user: Mihir, home in Bengaluru (₹, UPI, km). Currency, formats, payment apps and more follow each user. See the 'Every detail follows the user' row at the bottom.",
+      "w": 340,
+      "x": 3760,
+      "y": -300
+    },
+    "rowBrand": {
+      "kind": "title1",
+      "maxW": 1600,
+      "text": "Brand refresh · Voyagami",
+      "w": 240,
+      "x": 0,
+      "y": -1900
+    },
+    "rowCrew": {
+      "kind": "title1",
+      "maxW": 2270,
+      "text": "Travelling together",
+      "w": 240,
+      "x": 0,
+      "y": 3492
+    },
+    "rowData": {
+      "kind": "title1",
+      "maxW": 3680,
+      "text": "Getting data in",
+      "w": 240,
+      "x": 0,
+      "y": 2228
+    },
+    "rowEdge": {
+      "kind": "title1",
+      "maxW": 2740,
+      "text": "Edge cases, account & the ending",
+      "w": 240,
+      "x": 0,
+      "y": 4756
+    },
+    "rowEval": {
+      "kind": "title1",
+      "maxW": 2640,
+      "text": "Evaluation & data map",
+      "w": 240,
+      "x": 0,
+      "y": 9200
+    },
+    "rowFlows": {
+      "kind": "title1",
+      "maxW": 3600,
+      "text": "Where every piece of data comes from",
+      "w": 240,
+      "x": 0,
+      "y": 6020
+    },
+    "rowLocale": {
+      "kind": "title1",
+      "maxW": 1750,
+      "text": "Every detail follows the user",
+      "w": 240,
+      "x": 0,
+      "y": 29521
+    },
+    "rowOnb": {
+      "kind": "title1",
+      "maxW": 2270,
+      "text": "Onboarding",
+      "w": 240,
+      "x": 0,
+      "y": 964
+    },
+    "rowRecs": {
+      "kind": "title1",
+      "maxW": 3160,
+      "text": "Recommendations, ads & the free line",
+      "w": 240,
+      "x": 0,
+      "y": 25521
+    },
+    "rowSubs": {
+      "kind": "title1",
+      "maxW": 3160,
+      "text": "Plans & the honest 7-day trial",
+      "w": 240,
+      "x": 0,
+      "y": 20140
+    },
+    "rowTech": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Tech stack, system design & costs",
+      "w": 240,
+      "x": 0,
+      "y": 13131
+    },
+    "rowTour": {
+      "kind": "title1",
+      "maxW": 2740,
+      "text": "App tour (after first trip, replay from Profile)",
+      "w": 240,
+      "x": 0,
+      "y": 18876
+    },
+    "title": {
+      "kind": "title1",
+      "maxW": 3680,
+      "text": "Voyagami — plan it, live it, keep it",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    }
+  },
+  "order": [
+    "Brand.dc.html",
+    "Main.dc.html",
+    "Trip.dc.html",
+    "Itinerary.dc.html",
+    "Budget.dc.html",
+    "Journal.dc.html",
+    "Explore.dc.html",
+    "HomeMulti.dc.html",
+    "HomeDark.dc.html",
+    "OnbWelcome.dc.html",
+    "OnbSignIn.dc.html",
+    "OnbStyle.dc.html",
+    "OnbConnect.dc.html",
+    "OnbEmpty.dc.html",
+    "NewTrip.dc.html",
+    "InviteCrew.dc.html",
+    "ImportBookings.dc.html",
+    "BookingReview.dc.html",
+    "AddPlace.dc.html",
+    "AskJaunt.dc.html",
+    "AddExpense.dc.html",
+    "TripBudget.dc.html",
+    "GroupHub.dc.html",
+    "Poll.dc.html",
+    "Comments.dc.html",
+    "Tasks.dc.html",
+    "LiveTrip.dc.html",
+    "ImportError.dc.html",
+    "OfflineSync.dc.html",
+    "Notifications.dc.html",
+    "Profile.dc.html",
+    "Recap.dc.html",
+    "RecapPlayer.dc.html",
+    "FlowOnboarding.dc.html",
+    "FlowBookings.dc.html",
+    "FlowPlaces.dc.html",
+    "FlowExpenses.dc.html",
+    "FlowJournal.dc.html",
+    "FlowCrew.dc.html",
+    "Evaluation.dc.html",
+    "DataMap.dc.html",
+    "SysArch.dc.html",
+    "TechStack.dc.html",
+    "StackCosts.dc.html",
+    "Tut1.dc.html",
+    "Tut2.dc.html",
+    "Tut3.dc.html",
+    "Tut4.dc.html",
+    "Tut5.dc.html",
+    "TutStamps.dc.html",
+    "Plans.dc.html",
+    "Trial.dc.html",
+    "ManageSub.dc.html",
+    "OfflineGate.dc.html",
+    "PayRoute.dc.html",
+    "PayCurrency.dc.html",
+    "TrialEnd.dc.html",
+    "PlansSpec.dc.html",
+    "RecsForYou.dc.html",
+    "PlaceDetail.dc.html",
+    "RecsStays.dc.html",
+    "RecsEvents.dc.html",
+    "RecsSpec.dc.html",
+    "LocalePreview.dc.html",
+    "LocaleSpec.dc.html"
+  ],
+  "pages": [],
+  "title": "Voyagami — Travel Planner & Journal"
+}

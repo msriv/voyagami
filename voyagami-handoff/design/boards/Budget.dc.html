@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Voyagami — Budget and split</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>
+:where(a,button){position:relative}:where(a,button)::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
+body{margin:0}
+a{color:#2D3E8C}a:hover{color:#1F2C6B}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F4F0E6; color: #14161B; font-family: 'Manrope', system-ui, sans-serif; position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 18px; padding: 52px 20px 24px 20px">
+  <div style="display: flex; justify-content: space-between; align-items: center">
+    <a href="Trip.dc.html" aria-label="Back to trip" style="width: 44px; height: 44px; border-radius: 50%; background: #FFFFFF; color: #14161B; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></a>
+    <button style="height: 40px; border-radius: 99px; border: 0; background: #FFFFFF; padding: 0 14px; font: 800 13px 'Manrope', sans-serif; color: #14161B; display: flex; align-items: center; gap: 8px">₹ INR<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h13l-4-4M17 17H4l4 4"></path></svg>₫ VND</button>
+  </div>
+
+  <div style="background: #14161B; color: #FFFFFF; border-radius: 28px; padding: 22px; display: flex; flex-direction: column; gap: 16px">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start">
+      <div>
+        <div style="font-size: 13px; font-weight: 700; color: #C4C8D2">Spent so far</div>
+        <div style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 40px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.05">₹96,400</div>
+        <div style="font-size: 13px; font-weight: 600; color: #C4C8D2">of ₹1,60,000 group budget</div>
+      </div>
+      <span style="background: {{accent}}; color: #14161B; font-weight: 800; font-size: 12px; padding: 6px 10px; border-radius: 99px">₹24.1k / head</span>
+    </div>
+    <div style="display: flex; height: 14px; border-radius: 99px; overflow: hidden; gap: 3px; background: #2A2D35">
+      <div style="width: 32.5%; background: #6E7FC8"></div>
+      <div style="width: 15.5%; background: #FFE27A"></div>
+      <div style="width: 6%; background: {{accent}}"></div>
+      <div style="width: 4%; background: #D3E4C5"></div>
+      <div style="width: 2%; background: #FFFFFF"></div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; font-size: 13px; font-weight: 600">
+      <div style="display: flex; align-items: center; gap: 8px"><span style="width: 10px; height: 10px; border-radius: 3px; background: #6E7FC8"></span><span style="flex: 1">Flights</span><span style="font-weight: 800">52,000</span></div>
+      <div style="display: flex; align-items: center; gap: 8px"><span style="width: 10px; height: 10px; border-radius: 3px; background: #FFE27A"></span><span style="flex: 1">Stays</span><span style="font-weight: 800">24,800</span></div>
+      <div style="display: flex; align-items: center; gap: 8px"><span style="width: 10px; height: 10px; border-radius: 3px; background: {{accent}}"></span><span style="flex: 1">Food</span><span style="font-weight: 800">9,600</span></div>
+      <div style="display: flex; align-items: center; gap: 8px"><span style="width: 10px; height: 10px; border-radius: 3px; background: #D3E4C5"></span><span style="flex: 1">Activities</span><span style="font-weight: 800">6,500</span></div>
+      <div style="display: flex; align-items: center; gap: 8px"><span style="width: 10px; height: 10px; border-radius: 3px; background: #FFFFFF"></span><span style="flex: 1">Transport</span><span style="font-weight: 800">3,500</span></div>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; justify-content: space-between; align-items: baseline">
+      <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 19px; font-weight: 800; letter-spacing: -0.02em">Settle up</h2>
+      <span style="font-size: 13px; font-weight: 800; color: #0E5A3E">You're owed ₹6,150</span>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 20px; padding: 6px 14px; display: flex; flex-direction: column">
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 60px">
+        <span style="width: 38px; height: 38px; border-radius: 50%; background: #FFE27A; display: flex; align-items: center; justify-content: center; font-weight: 800">A</span>
+        <div style="flex: 1"><div style="font-weight: 800; font-size: 15px">Ananya owes you</div><div style="font-size: 12px; color: #5B6070; font-weight: 600">Ha Long cruise deposit</div></div>
+        <span style="font-weight: 800">₹3,400</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 60px; border-top: 1px solid #ECE6D8">
+        <span style="width: 38px; height: 38px; border-radius: 50%; background: #D3E4C5; display: flex; align-items: center; justify-content: center; font-weight: 800">R</span>
+        <div style="flex: 1"><div style="font-weight: 800; font-size: 15px">Rohan owes you</div><div style="font-size: 12px; color: #5B6070; font-weight: 600">Dinner + Grab rides</div></div>
+        <span style="font-weight: 800">₹2,750</span>
+      </div>
+    </div>
+    <button style="height: 48px; border-radius: 16px; border: 0; background: #2D3E8C; color: #FFFFFF; font: 800 14px 'Manrope', sans-serif">Send UPI reminders</button>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 10px">
+    <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 19px; font-weight: 800; letter-spacing: -0.02em">Latest</h2>
+    <div style="display: flex; align-items: center; gap: 12px; background: #FFFFFF; border-radius: 18px; padding: 12px 14px">
+      <span style="width: 38px; height: 38px; border-radius: 12px; background: {{accent}}; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#14161B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11h16a8 8 0 0 1-16 0zM8 4v3M12 3v4M16 4v3"></path></svg></span>
+      <div style="flex: 1"><div style="font-weight: 800; font-size: 14px">Bún chả lunch</div><div style="font-size: 12px; color: #5B6070; font-weight: 600">Paid by you · split 4 ways · ₫540,000</div></div>
+      <span style="font-weight: 800; font-size: 14px">₹1,820</span>
+    </div>
+  </div>
+
+  <a href="AddExpense.dc.html" aria-label="Add expense" style="position: absolute; right: 20px; bottom: 28px; width: 60px; height: 60px; border-radius: 20px; background: {{accent}}; color: #14161B; box-shadow: 0 10px 24px rgba(20,22,27,0.22); display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#E5482F","options":["#E5482F","#FFE27A","#F0A898","#D3E4C5"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#E5482F' };
+  }
+}
+</script>
+</body>
+</html>

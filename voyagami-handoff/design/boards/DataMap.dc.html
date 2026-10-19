@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Voyagami — Data source map</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>
+body{margin:0;background:#F4F0E6}
+</style>
+</helmet>
+<div style="background: #F4F0E6; color: #14161B; font-family: 'Manrope', system-ui, sans-serif; font-size: 14px; line-height: 1.45; padding: 56px 20px 72px 20px">
+<div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px">
+  <header style="display: flex; flex-direction: column; gap: 10px">
+    <div style="font-size: 12px; font-weight: 800; letter-spacing: 0.1em; color: #5B6070">EVERY NUMBER ON EVERY SCREEN</div>
+    <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: clamp(34px, 5vw, 52px); font-weight: 800; letter-spacing: -0.04em; line-height: 1">Data source map</h1>
+    <p style="margin: 0; max-width: 760px; font-size: 16px; color: #3B3F4A">For each thing the app shows: who provides it, how it gets in, and what the screen does when it's missing. Screen codes match the canvas (01–06 core, O onboarding, D data, C crew).</p>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap">
+      <span style="height: 30px; border-radius: 99px; background: #FFE9DF; border: 2px solid #FFB89E; padding: 0 12px; display: flex; align-items: center; font-size: 12px; font-weight: 800; box-sizing: border-box">You</span>
+      <span style="height: 30px; border-radius: 99px; background: #E4E8F7; border: 2px solid #B7C0E8; padding: 0 12px; display: flex; align-items: center; font-size: 12px; font-weight: 800; box-sizing: border-box">App / partner</span>
+      <span style="height: 30px; border-radius: 99px; background: #D3E4C5; border: 2px solid #A9C99A; padding: 0 12px; display: flex; align-items: center; font-size: 12px; font-weight: 800; box-sizing: border-box">Worked out by the app</span>
+    </div>
+  </header>
+
+  <div style="overflow-x: auto; background: #FFFFFF; border-radius: 20px">
+    <table style="width: 100%; min-width: 900px; border-collapse: collapse">
+      <thead><tr style="text-align: left; font-size: 12px; letter-spacing: 0.06em; color: #5B6070"><th style="padding: 14px 16px">WHAT YOU SEE</th><th style="padding: 14px 8px">ON</th><th style="padding: 14px 8px">PROVIDED BY</th><th style="padding: 14px 8px">HOW IT GETS IN</th><th style="padding: 14px 16px">IF MISSING</th></tr></thead>
+      <tbody>
+        <tr style="background: #FBF8F1"><td colspan="5" style="padding: 10px 16px; font-weight: 800; font-size: 12px; letter-spacing: 0.08em">YOU &amp; THE TRIP</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Name, phone</b></td><td style="padding: 12px 8px">O2</td><td style="padding: 12px 8px"><span style="background: #FFE9DF; padding: 3px 8px; border-radius: 99px; font-weight: 700">You</span></td><td style="padding: 12px 8px">Phone code, Google or Apple sign-in</td><td style="padding: 12px 16px">Required to save trips</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Home city, currency</b></td><td style="padding: 12px 8px">O3</td><td style="padding: 12px 8px"><span style="background: #E4E8F7; padding: 3px 8px; border-radius: 99px; font-weight: 700">Your phone</span></td><td style="padding: 12px 8px">Phone region, confirmed with one tap</td><td style="padding: 12px 16px">Pick from a list</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Travel style</b></td><td style="padding: 12px 8px">O3</td><td style="padding: 12px 8px"><span style="background: #FFE9DF; padding: 3px 8px; border-radius: 99px; font-weight: 700">You</span></td><td style="padding: 12px 8px">Chips: interests, pace, spend</td><td style="padding: 12px 16px">Learned later from what you save</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Destination, dates</b></td><td style="padding: 12px 8px">D1</td><td style="padding: 12px 8px"><span style="background: #FFE9DF; padding: 3px 8px; border-radius: 99px; font-weight: 700">You</span></td><td style="padding: 12px 8px">Search + calendar, or "flexible: 9 days in Nov"</td><td style="padding: 12px 16px">Saved as a draft trip</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Domestic / international</b></td><td style="padding: 12px 8px">D1, 02</td><td style="padding: 12px 8px"><span style="background: #D3E4C5; padding: 3px 8px; border-radius: 99px; font-weight: 700">Worked out</span></td><td style="padding: 12px 8px">Destination country vs home country</td><td style="padding: 12px 16px">—</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Countdown, "4 of 9 days planned"</b></td><td style="padding: 12px 8px">01</td><td style="padding: 12px 8px"><span style="background: #D3E4C5; padding: 3px 8px; border-radius: 99px; font-weight: 700">Worked out</span></td><td style="padding: 12px 8px">Today vs start date; days with at least one stop</td><td style="padding: 12px 16px">—</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Crew &amp; roles</b></td><td style="padding: 12px 8px">D2, C1</td><td style="padding: 12px 8px"><span style="background: #FFE9DF; padding: 3px 8px; border-radius: 99px; font-weight: 700">You</span></td><td style="padding: 12px 8px">Invite link, WhatsApp, contacts, QR</td><td style="padding: 12px 16px">Solo trip, fully works</td></tr>
+
+        <tr style="background: #FBF8F1"><td colspan="5" style="padding: 10px 16px; font-weight: 800; font-size: 12px; letter-spacing: 0.08em">BOOKINGS &amp; PLANS</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Flights, stays, trains</b></td><td style="padding: 12px 8px">02, D3, D4</td><td style="padding: 12px 8px"><span style="background: #FFE9DF; padding: 3px 8px; border-radius: 99px; font-weight: 700">You</span></td><td style="padding: 12px 8px">Inbox sync, forward, upload PDF/screenshot, or type</td><td style="padding: 12px 16px">Empty card with "+ Add booking"</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Flight delays, terminal</b></td><td style="padding: 12px 8px">02, C5</td><td style="padding: 12px 8px"><span style="background: #E4E8F7; padding: 3px 8px; border-radius: 99px; font-weight: 700">Partner</span></td><td style="padding: 12px 8px">Flight status feed, by flight number</td><td style="padding: 12px 16px">Hidden, booking still shows</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Places: hours, pin, photo</b></td><td style="padding: 12px 8px">D5, C3</td><td style="padding: 12px 8px"><span style="background: #E4E8F7; padding: 3px 8px; border-radius: 99px; font-weight: 700">Partner</span></td><td style="padding: 12px 8px">Places data once you search, paste a link or accept a suggestion</td><td style="padding: 12px 16px">Drop your own pin and name</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Travel time, "save 18 min"</b></td><td style="padding: 12px 8px">03</td><td style="padding: 12px 8px"><span style="background: #E4E8F7; padding: 3px 8px; border-radius: 99px; font-weight: 700">Partner</span></td><td style="padding: 12px 8px">Directions service, per day, re-run when stops change</td><td style="padding: 12px 16px">Straight-line estimate, marked "approx."</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Weather</b></td><td style="padding: 12px 8px">03, 05, C5</td><td style="padding: 12px 8px"><span style="background: #E4E8F7; padding: 3px 8px; border-radius: 99px; font-weight: 700">Partner</span></td><td style="padding: 12px 8px">Forecast within ~10 days; month averages before that</td><td style="padding: 12px 16px">Chip hidden</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Visa, forex, SIM to-dos</b></td><td style="padding: 12px 8px">02, C4</td><td style="padding: 12px 8px"><span style="background: #D3E4C5; padding: 3px 8px; border-radius: 99px; font-weight: 700">Worked out</span></td><td style="padding: 12px 8px">Rules by destination; you assign and tick</td><td style="padding: 12px 16px">Domestic trips skip them</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Ask Voyagami drafts</b></td><td style="padding: 12px 8px">D6</td><td style="padding: 12px 8px"><span style="background: #E4E8F7; padding: 3px 8px; border-radius: 99px; font-weight: 700">App (AI)</span></td><td style="padding: 12px 8px">Your prompt + saved places + crew notes → draft</td><td style="padding: 12px 16px">Never applied without a tap</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Weekend escapes</b></td><td style="padding: 12px 8px">06</td><td style="padding: 12px 8px"><span style="background: #E4E8F7; padding: 3px 8px; border-radius: 99px; font-weight: 700">App</span></td><td style="padding: 12px 8px">Curated list near your home city, ranked by your style</td><td style="padding: 12px 16px">Popular picks</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Picks: sights, food, events</b></td><td style="padding: 12px 8px">R1, R2, R4</td><td style="padding: 12px 8px"><span style="background: #E4E8F7; padding: 3px 8px; border-radius: 99px; font-weight: 700">Partner</span></td><td style="padding: 12px 8px">Open place data + Wikivoyage, Google Places details, holiday calendars, crew saves; ranked for this trip</td><td style="padding: 12px 16px">Fewer picks, and the screen says why</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Stay prices, tours</b></td><td style="padding: 12px 8px">R3, R1</td><td style="padding: 12px 8px"><span style="background: #E4E8F7; padding: 3px 8px; border-radius: 99px; font-weight: 700">Partner</span></td><td style="padding: 12px 8px">Agoda, Booking.com, Klook, GetYourGuide partner feeds; booking hands off to them</td><td style="padding: 12px 16px">Card hidden</td></tr>
+
+        <tr style="background: #FBF8F1"><td colspan="5" style="padding: 10px 16px; font-weight: 800; font-size: 12px; letter-spacing: 0.08em">MONEY</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Expenses</b></td><td style="padding: 12px 8px">04, D7</td><td style="padding: 12px 8px"><span style="background: #FFE9DF; padding: 3px 8px; border-radius: 99px; font-weight: 700">You</span></td><td style="padding: 12px 8px">Typed, receipt scan, or from imported bookings</td><td style="padding: 12px 16px">—</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Exchange rate</b></td><td style="padding: 12px 8px">04, D7</td><td style="padding: 12px 8px"><span style="background: #E4E8F7; padding: 3px 8px; border-radius: 99px; font-weight: 700">Partner</span></td><td style="padding: 12px 8px">Daily rate feed, saved with each expense (local currency → the trip's currency)</td><td style="padding: 12px 16px">Last saved rate, marked</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Group budget</b></td><td style="padding: 12px 8px">D2b, 04</td><td style="padding: 12px 8px"><span style="background: #FFE9DF; padding: 3px 8px; border-radius: 99px; font-weight: 700">You</span></td><td style="padding: 12px 8px">Optional last step of a new trip, per person or whole group</td><td style="padding: 12px 16px">Shows spend only, no bar</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Who owes whom</b></td><td style="padding: 12px 8px">04</td><td style="padding: 12px 8px"><span style="background: #D3E4C5; padding: 3px 8px; border-radius: 99px; font-weight: 700">Worked out</span></td><td style="padding: 12px 8px">From expenses + split rules, fewest payments</td><td style="padding: 12px 16px">—</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Settle-up links</b></td><td style="padding: 12px 8px">04</td><td style="padding: 12px 8px"><span style="background: #FFE9DF; padding: 3px 8px; border-radius: 99px; font-weight: 700">You</span></td><td style="padding: 12px 8px">Each person adds a payment handle once (UPI, Venmo, PayPal…); the app opens one both people use, amount filled in</td><td style="padding: 12px 16px">Copy the amount instead</td></tr>
+
+        <tr style="background: #FBF8F1"><td colspan="5" style="padding: 10px 16px; font-weight: 800; font-size: 12px; letter-spacing: 0.08em">MEMORIES &amp; CREW</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Journal photos</b></td><td style="padding: 12px 8px">05</td><td style="padding: 12px 8px"><span style="background: #E4E8F7; padding: 3px 8px; border-radius: 99px; font-weight: 700">Your phone</span></td><td style="padding: 12px 8px">Matched on the phone by date + location; you pick</td><td style="padding: 12px 16px">Pick by hand</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Entry, mood</b></td><td style="padding: 12px 8px">05</td><td style="padding: 12px 8px"><span style="background: #FFE9DF; padding: 3px 8px; border-radius: 99px; font-weight: 700">You</span></td><td style="padding: 12px 8px">Typing, voice note (transcribed), one-tap mood</td><td style="padding: 12px 16px">Day keeps only stops + photos</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Passport stamps</b></td><td style="padding: 12px 8px">01, O5</td><td style="padding: 12px 8px"><span style="background: #D3E4C5; padding: 3px 8px; border-radius: 99px; font-weight: 700">Worked out</span></td><td style="padding: 12px 8px">Made when a trip ends; past trips can be added from the inbox</td><td style="padding: 12px 16px">Empty dashed stamps</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Votes, notes, to-dos</b></td><td style="padding: 12px 8px">C1–C4</td><td style="padding: 12px 8px"><span style="background: #FFE9DF; padding: 3px 8px; border-radius: 99px; font-weight: 700">Crew</span></td><td style="padding: 12px 8px">Typed or tapped; synced to everyone live</td><td style="padding: 12px 16px">—</td></tr>
+        <tr style="border-top: 1px solid #ECE6D8"><td style="padding: 12px 16px"><b>Crew on the map</b></td><td style="padding: 12px 8px">C5</td><td style="padding: 12px 8px"><span style="background: #FFE9DF; padding: 3px 8px; border-radius: 99px; font-weight: 700">Each person</span></td><td style="padding: 12px 8px">Opt-in location sharing, timed, this trip only</td><td style="padding: 12px 16px">Person not shown</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2094}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

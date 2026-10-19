@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Voyagami — Crew hub</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>
+:where(a,button){position:relative}:where(a,button)::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
+body{margin:0}
+a{color:#2D3E8C}a:hover{color:#1F2C6B}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F4F0E6; color: #14161B; font-family: 'Manrope', system-ui, sans-serif; position: relative; overflow: hidden; display: flex; flex-direction: column">
+  <div style="flex: 1; display: flex; flex-direction: column; gap: 16px; padding: 56px 20px 0 20px">
+    <div>
+      <div style="font-size: 13px; font-weight: 700; color: #5B6070">Hanoi &amp; Ha Long Bay</div>
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 34px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.05">Crew</h1>
+    </div>
+
+    <div style="display: flex; gap: 14px">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: 700"><span style="position: relative; width: 52px; height: 52px; border-radius: 50%; background: {{accent}}; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px">M</span>You</div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: 700"><span style="position: relative; width: 52px; height: 52px; border-radius: 50%; background: #FFE27A; box-shadow: 0 0 0 3px #F4F0E6, 0 0 0 5px #2F6B3A; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px">A</span>Ananya</div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: 700"><span style="width: 52px; height: 52px; border-radius: 50%; background: #D3E4C5; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px">R</span>Rohan</div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; color: #5B6070"><span style="width: 52px; height: 52px; border-radius: 50%; border: 2px dashed #B9B2A2; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px">S</span>Pending</div>
+      <a href="InviteCrew.dc.html" aria-label="Invite someone" style="width: 52px; height: 52px; border-radius: 50%; background: #FFFFFF; color: #14161B; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></a>
+    </div>
+    <div style="font-size: 13px; font-weight: 700; color: #0E5A3E; display: flex; align-items: center; gap: 8px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #2F6B3A"></span>Ananya is editing Day 4 right now</div>
+
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+      <a href="Poll.dc.html" style="background: #2D3E8C; color: #FFFFFF; border-radius: 18px; padding: 12px; text-decoration: none; display: flex; flex-direction: column; gap: 2px; min-height: 84px; box-sizing: border-box; justify-content: space-between"><span style="font-size: 12px; font-weight: 800">Votes</span><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 800">1 open</span></a>
+      <a href="Tasks.dc.html" style="background: #FFE27A; color: #14161B; border-radius: 18px; padding: 12px; text-decoration: none; display: flex; flex-direction: column; gap: 2px; min-height: 84px; box-sizing: border-box; justify-content: space-between"><span style="font-size: 12px; font-weight: 800">To-dos</span><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 800">3 left</span></a>
+      <a href="LiveTrip.dc.html" style="background: #FFFFFF; color: #14161B; border-radius: 18px; padding: 12px; text-decoration: none; display: flex; flex-direction: column; gap: 2px; min-height: 84px; box-sizing: border-box; justify-content: space-between"><span style="font-size: 12px; font-weight: 800">Live mode</span><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 800">From 19 Nov</span></a>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: baseline"><h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 19px; font-weight: 800">What changed</h2><button style="height: 32px; border: 0; background: transparent; font: 800 13px 'Manrope', sans-serif; color: #2D3E8C">Mute trip</button></div>
+    <div style="background: #FFFFFF; border-radius: 20px; padding: 4px 14px; display: flex; flex-direction: column">
+      <a href="Comments.dc.html" style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; text-decoration: none; color: #14161B">
+        <span style="width: 32px; height: 32px; border-radius: 50%; background: #D3E4C5; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px">R</span>
+        <span style="flex: 1; font-size: 14px; line-height: 1.4"><b>Rohan</b> commented on <b>Temple of Literature</b>: "9:30 works, I'll carry scarves" <span style="display: block; font-size: 12px; color: #5B6070; font-weight: 600">12 min ago</span></span>
+      </a>
+      <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-top: 1px solid #ECE6D8">
+        <span style="width: 32px; height: 32px; border-radius: 50%; background: #FFE27A; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px">A</span>
+        <span style="flex: 1; font-size: 14px; line-height: 1.4"><b>Ananya</b> moved <b>Ha Long cruise</b> to Day 3 <button style="height: 28px; border: 0; background: transparent; padding: 0; font: 800 12px 'Manrope', sans-serif; color: #2D3E8C">Undo</button><span style="display: block; font-size: 12px; color: #5B6070; font-weight: 600">1 hr ago</span></span>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-top: 1px solid #ECE6D8">
+        <span style="width: 32px; height: 32px; border-radius: 50%; background: #E4E8F7; flex-shrink: 0; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#14161B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"></path></svg></span>
+        <span style="flex: 1; font-size: 14px; line-height: 1.4"><b>Voyagami</b> filed a flight from Mihir's Gmail <span style="display: block; font-size: 12px; color: #5B6070; font-weight: 600">Yesterday</span></span>
+      </div>
+    </div>
+  </div>
+
+  <nav style="margin: 12px 16px 24px 16px; height: 68px; border-radius: 24px; background: #14161B; display: flex; align-items: center; justify-content: space-around">
+    <a href="Main.dc.html" aria-label="Trips" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; color: #C4C8D2"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg></a>
+    <a href="Explore.dc.html" aria-label="Explore" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; color: #C4C8D2"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M15.5 8.5l-2 5-5 2 2-5z"></path></svg></a>
+    <a href="Journal.dc.html" aria-label="Journal" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; color: #C4C8D2"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"></path><path d="M5 17a3 3 0 0 1 3-3h11"></path></svg></a>
+    <a href="GroupHub.dc.html" aria-label="Crew activity" style="width: 48px; height: 48px; border-radius: 16px; background: #FFFFFF; color: #14161B; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"></circle><path d="M2 21v-1a6 6 0 0 1 12 0v1M16 4a4 4 0 0 1 0 8M22 21v-1a6 6 0 0 0-3-5"></path></svg></a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#E5482F","options":["#E5482F","#FFE27A","#F0A898","#D3E4C5"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#E5482F' };
+  }
+}
+</script>
+</body>
+</html>
