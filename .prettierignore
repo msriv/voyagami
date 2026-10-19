@@ -1,0 +1,11 @@
+# Read-only reference material
+design/
+CLAUDE.md
+
+pnpm-lock.yaml
+node_modules/
+dist/
+build/
+coverage/
+.expo/
+packages/api-client/src/generated/
