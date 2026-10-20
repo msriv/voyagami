@@ -17,3 +17,11 @@ output "image_prefix" {
 output "api_runtime_service_account" {
   value = module.api_runtime.email
 }
+
+output "media_bucket" {
+  value = module.media_bucket.name
+}
+
+output "pubsub_topics" {
+  value = module.topics.topic_ids
+}

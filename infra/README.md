@@ -21,6 +21,10 @@ modules/project-apis/  enables Google APIs
 modules/github-wif/    workload identity pool + CI service account for GitHub Actions
 modules/artifact-registry/  Docker image repository
 modules/service-account/    service account with a minimal role list
+modules/firestore/         Firestore database (location cannot change later)
+modules/pubsub-topics/     Pub/Sub topics
+modules/storage-bucket/    private bucket with CORS for signed URLs
+modules/secrets/           empty Secret Manager secrets (values added by hand)
 modules/cloud-run/     Cloud Run service (scale to zero, image owned by deploys)
 scripts/               one-time bootstrap helpers
 ```
