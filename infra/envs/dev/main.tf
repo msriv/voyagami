@@ -90,3 +90,80 @@ resource "google_service_account_iam_member" "ci_act_as_runtime" {
   role               = "roles/iam.serviceAccountUser"
   member             = "serviceAccount:${module.github_wif.ci_service_account_email}"
 }
+
+module "firestore" {
+  source      = "../../modules/firestore"
+  project_id  = var.project_id
+  location_id = var.region
+
+  depends_on = [module.apis]
+}
+
+module "topics" {
+  source     = "../../modules/pubsub-topics"
+  project_id = var.project_id
+  topics     = ["notifications", "recap", "place-ingest"]
+
+  depends_on = [module.apis]
+}
+
+module "media_bucket" {
+  source     = "../../modules/storage-bucket"
+  project_id = var.project_id
+  name       = "${var.project_id}-media"
+  location   = var.region
+
+  # Dev only: lets a throwaway dev project be torn down cleanly.
+  force_destroy = true
+
+  depends_on = [module.apis]
+}
+
+module "secrets" {
+  source     = "../../modules/secrets"
+  project_id = var.project_id
+
+  # Empty containers. Add the value with:
+  #   printf '%s' "$KEY" | gcloud secrets versions add google-maps-server-key --data-file=-
+  secret_ids = ["google-maps-server-key"]
+
+  depends_on = [module.apis]
+}
+
+# What the API runtime account may touch. Least privilege, resource by resource.
+resource "google_project_iam_member" "api_firestore" {
+  project = var.project_id
+  role    = "roles/datastore.user"
+  member  = "serviceAccount:${module.api_runtime.email}"
+}
+
+resource "google_pubsub_topic_iam_member" "api_publish" {
+  for_each = module.topics.topic_ids
+
+  project = var.project_id
+  topic   = each.value
+  role    = "roles/pubsub.publisher"
+  member  = "serviceAccount:${module.api_runtime.email}"
+}
+
+resource "google_storage_bucket_iam_member" "api_media" {
+  bucket = module.media_bucket.name
+  role   = "roles/storage.objectUser"
+  member = "serviceAccount:${module.api_runtime.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "api_secrets" {
+  for_each = module.secrets.secret_ids
+
+  project   = var.project_id
+  secret_id = each.value
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${module.api_runtime.email}"
+}
+
+# Signed upload and download URLs are signed with the runtime account's own key.
+resource "google_service_account_iam_member" "api_sign_urls" {
+  service_account_id = module.api_runtime.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:${module.api_runtime.email}"
+}
