@@ -2,7 +2,18 @@
 
 Terraform, one root per environment under `envs/`. Only `dev` exists in the D phases (VOY-8). Reusable pieces live in `modules/`.
 
-Projects: `voyagami-dev-512208` (the display name is voyagami-dev) holds dev now (staging joins it in P1). `voyagami-prod` is separate and not created yet.
+## Projects
+
+Two Google Cloud projects (decided 2026-10-20):
+
+| Project               | Holds                                                                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `voyagami-dev-512208` | dev now; staging is added here in P1 (VOY-81) as its own Cloud Run service, named Firestore database and service accounts, with a `staging` name prefix |
+| `voyagami-prod`       | production only, created in P1 (VOY-81)                                                                                                                 |
+
+Prod has its own project because Firebase Auth users, push (FCM), IAM, quotas and budgets are all per project. There is no `voyagami-staging` project. The dev project's display name is `voyagami-dev`; its ID is the one above.
+
+## Layout
 
 ```
 envs/dev/              root for the dev project (remote state in gs://voyagami-dev-512208-tfstate)
