@@ -6,7 +6,7 @@
 API_DIR := services/api
 HAS_API := $(wildcard $(API_DIR)/go.mod)
 
-.PHONY: setup dev lint test typecheck format api-client
+.PHONY: setup dev lint test typecheck format api-client deploy-dev
 
 setup: ## Install toolchain dependencies
 	corepack enable
@@ -47,3 +47,6 @@ ifneq ($(HAS_API),)
 	cd $(API_DIR) && go generate ./...
 endif
 	@echo "make api-client: the TypeScript client arrives with VOY-16."
+
+deploy-dev: ## Build the API image and deploy it to the dev Cloud Run service (needs docker and gcloud)
+	infra/scripts/deploy-api-dev.sh

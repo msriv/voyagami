@@ -52,7 +52,11 @@ Store them as GitHub repository variables `GCP_WORKLOAD_IDENTITY_PROVIDER` and `
 
 ## Applying later changes
 
-Run `terraform plan` then `terraform apply` in `infra/envs/dev` from Cloud Shell, as for the first apply. The first Cloud Run service starts on Google's placeholder image; deploying the API (VOY-94) replaces the image and Terraform ignores that change.
+Run `terraform plan` then `terraform apply` in `infra/envs/dev` from Cloud Shell, as for the first apply. The first Cloud Run service starts on Google's placeholder image; deploying the API replaces the image and Terraform ignores that change.
+
+## Deploying the API (dev)
+
+`make deploy-dev` builds `services/api/Dockerfile` for linux/amd64, pushes it to Artifact Registry (`voyagami`) tagged with the git commit, rolls `voyagami-api` to it and checks `/healthz`. It needs `docker` and a signed-in `gcloud` (`gcloud auth login`, project `voyagami-dev-512208`). The same script runs from GitHub: Actions, "Deploy API (dev)", Run workflow, on `main` only. It signs in through workload identity, so no key is stored.
 
 ## Rules
 

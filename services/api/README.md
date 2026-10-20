@@ -36,6 +36,10 @@ All optional. Bad values stop the process at startup with every problem listed.
 | `SHUTDOWN_TIMEOUT` | `10s`   | Time allowed for in-flight requests on SIGTERM |
 | `REQUEST_TIMEOUT`  | `30s`   | Maximum time for one request                   |
 
+## Container and deploy
+
+`Dockerfile` builds a static binary into a distroless, non-root image that listens on `PORT` (Cloud Run sets it). `make deploy-dev` ships it to the dev Cloud Run service; see `infra/README.md`. CI builds the image on every API change but does not push it.
+
 ## Auth, errors and request IDs
 
 Every route needs `Authorization: Bearer <token>` unless the spec marks it `security: []` (a test keeps `publicRoutes` in `internal/server/auth.go` in step with the spec). The token is checked by an `auth.Verifier`; until sign-in exists `main` uses `auth.RejectAll`, so protected routes answer 401. Tests use a fake verifier.
