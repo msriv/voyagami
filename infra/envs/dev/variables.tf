@@ -1,7 +1,7 @@
 variable "project_id" {
   description = "GCP project ID for dev."
   type        = string
-  default     = "voyagami-dev"
+  default     = "voyagami-dev-512208"
 }
 
 variable "region" {
@@ -16,5 +16,5 @@ variable "github_repository" {
 
 variable "state_bucket" {
   type    = string
-  default = "voyagami-dev-tfstate"
+  default = "voyagami-dev-512208-tfstate"
 }

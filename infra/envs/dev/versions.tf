@@ -10,7 +10,7 @@ terraform {
 
   # Bucket is created once by infra/scripts/bootstrap-state.sh.
   backend "gcs" {
-    bucket = "voyagami-dev-tfstate"
+    bucket = "voyagami-dev-512208-tfstate"
     prefix = "dev"
   }
 }

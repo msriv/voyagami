@@ -3,7 +3,7 @@
 # Usage: infra/scripts/bootstrap-state.sh [project-id] [location]
 set -euo pipefail
 
-PROJECT_ID="${1:-voyagami-dev}"
+PROJECT_ID="${1:-voyagami-dev-512208}"
 LOCATION="${2:-asia-south1}"
 BUCKET="${PROJECT_ID}-tfstate"
 
