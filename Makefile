@@ -42,5 +42,8 @@ ifneq ($(HAS_API),)
 	cd $(API_DIR) && gofmt -w .
 endif
 
-api-client: ## Generate the typed API client from OpenAPI (VOY-16)
-	@echo "make api-client: no OpenAPI spec yet. VOY-92 adds the spec and VOY-16 the generator."
+api-client: ## Generate code from api/openapi.yaml (Go server now; TypeScript client is VOY-16)
+ifneq ($(HAS_API),)
+	cd $(API_DIR) && go generate ./...
+endif
+	@echo "make api-client: the TypeScript client arrives with VOY-16."

@@ -63,3 +63,23 @@ func TestRequestLogHasNoQueryString(t *testing.T) {
 		t.Errorf("log line leaked the query string: %s", buf.String())
 	}
 }
+
+func TestMeIsUnauthenticatedUntilAuthExists(t *testing.T) {
+	h := NewHandler(slog.New(slog.DiscardHandler))
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/v1/me", nil))
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("status = %d, want 401", rec.Code)
+	}
+	var got struct {
+		Code    string `json:"code"`
+		Message string `json:"message"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+		t.Fatalf("body is not JSON: %v", err)
+	}
+	if got.Code != "unauthenticated" || got.Message == "" {
+		t.Errorf("error body = %+v, want code unauthenticated and a message", got)
+	}
+}

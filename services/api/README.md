@@ -4,10 +4,17 @@ The Go API that runs on Cloud Run. Standard library only for now.
 
 ```
 cmd/api/              main: config, logger, server, graceful shutdown
+internal/api/         server interface generated from api/openapi.yaml (do not edit)
 internal/config/      environment settings and validation
 internal/logging/     JSON logs in the Cloud Logging shape
 internal/server/      router and request logging
 ```
+
+## The API contract
+
+`api/openapi.yaml` (OpenAPI 3.1, at the repo root) is the source of truth. The routes, request and response types in `internal/api/api.gen.go` are generated from it. After changing the spec, run `make api-client` and commit the result. CI fails if the generated code is out of date. Handlers live in `internal/server` and implement the generated `StrictServerInterface`.
+
+The generator is pinned as a Go tool in `go.mod` (`go tool oapi-codegen`), so nothing is installed globally. Go 1.25 is required because that generator version needs it.
 
 ## Run it
 
