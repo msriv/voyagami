@@ -1,0 +1,18 @@
+{
+  "name": "@voyagami/rules-tests",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Firestore security rules and index tests. They need the Firestore emulator, so they run through `make test` or `pnpm run test:emulator` under `firebase emulators:exec`.",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test:emulator": "vitest run"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^6.0.0",
+    "@types/node": "^22.19.0",
+    "firebase": "^13.0.0",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.5"
+  }
+}

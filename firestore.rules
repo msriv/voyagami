@@ -1,0 +1,16 @@
+rules_version = '2';
+
+// Deny by default (VOY-97). In the D phases every read and write goes through
+// the Go API, which uses the Admin SDK and is not affected by these rules.
+//
+// Collections open to the app one at a time, each with its own rule and a test
+// in packages/rules-tests, when the ticket that needs direct access lands
+// (live co-editing, local-first sync). Access is then decided from
+// trips/{tripId}/members/{uid}, as described in docs/data-model.md.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

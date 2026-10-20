@@ -61,7 +61,7 @@ For now it starts the API on port 8080 (`curl localhost:8080/health`). The app (
 
 ### Firebase emulators
 
-`pnpm run emulators` starts the Auth, Firestore and Pub/Sub emulators and the emulator UI at http://localhost:4000. It uses the offline project ID `demo-voyagami`, so it needs no Google login or account. The first run downloads the emulator files and needs Java 21 or newer (`java -version`). Ports are in `firebase.json`. Firestore rules arrive with VOY-97; until then the emulator allows all reads and writes.
+`pnpm run emulators` starts the Auth, Firestore and Pub/Sub emulators and the emulator UI at http://localhost:4000. It uses the offline project ID `demo-voyagami`, so it needs no Google login or account. The first run downloads the emulator files and needs Java 21 or newer (`java -version`). Ports are in `firebase.json`. The emulator loads `firestore.rules`, which deny all direct client access (VOY-97), and `firestore.indexes.json`.
 
 Never commit secrets. Local settings go in `.env` files, which git ignores; commit an `.env.example` with placeholder values instead.
 
@@ -105,7 +105,7 @@ GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs on 
 | Go API                          | `services/api/`, `.golangci.yml`            | gofmt, `go vet`, golangci-lint, `go test` on the Firestore emulator |
 | Firestore rules on the emulator | `firebase.json`, `firestore.rules`, the API | Rules tests against the Firestore emulator                          |
 
-The Go and rules jobs skip themselves until `services/api/go.mod` (VOY-91) and the Firestore rules (VOY-97) exist. Dependencies are cached, and each job should finish in under 5 minutes.
+Dependencies are cached, and each job should finish in under 5 minutes.
 
 ### Required status checks
 

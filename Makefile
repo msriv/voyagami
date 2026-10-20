@@ -30,12 +30,12 @@ ifneq ($(HAS_API),)
 	cd $(API_DIR) && golangci-lint run --config ../../.golangci.yml ./...
 endif
 
-test: ## Run all tests (starts the Firestore emulator for the API when Java is installed)
+test: ## Run all tests (starts the Firestore emulator for the API and rules tests when Java is installed)
 	pnpm run test
 ifneq ($(HAS_API),)
 	@if command -v java >/dev/null 2>&1; then \
 		pnpm exec firebase emulators:exec --only firestore --project demo-voyagami \
-			"cd $(API_DIR) && REQUIRE_EMULATOR=1 go test ./..."; \
+			"(cd $(API_DIR) && REQUIRE_EMULATOR=1 go test ./...) && pnpm --filter @voyagami/rules-tests run test:emulator"; \
 	else \
 		echo "make test: Java not found, so the Firestore emulator tests are skipped. Install Java 21 to run them."; \
 		cd $(API_DIR) && go test ./...; \
