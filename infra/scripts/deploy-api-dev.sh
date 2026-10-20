@@ -28,14 +28,14 @@ gcloud run deploy "$SERVICE" \
   --image "$image" --quiet
 
 url="$(gcloud run services describe "$SERVICE" --project "$PROJECT_ID" --region "$REGION" --format 'value(status.url)')"
-echo "Checking ${url}/healthz"
+echo "Checking ${url}/health"
 for attempt in 1 2 3 4 5 6; do
-  if curl -fsS --max-time 10 "${url}/healthz"; then
+  if curl -fsS --max-time 10 "${url}/health"; then
     echo
     echo "Deployed ${tag} to ${url}"
     exit 0
   fi
   sleep 5
 done
-echo "healthz did not return 200 after deploy" >&2
+echo "health check did not return 200 after deploy" >&2
 exit 1
