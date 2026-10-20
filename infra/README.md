@@ -19,6 +19,9 @@ Prod has its own project because Firebase Auth users, push (FCM), IAM, quotas an
 envs/dev/              root for the dev project (remote state in gs://voyagami-dev-512208-tfstate)
 modules/project-apis/  enables Google APIs
 modules/github-wif/    workload identity pool + CI service account for GitHub Actions
+modules/artifact-registry/  Docker image repository
+modules/service-account/    service account with a minimal role list
+modules/cloud-run/     Cloud Run service (scale to zero, image owned by deploys)
 scripts/               one-time bootstrap helpers
 ```
 
@@ -42,6 +45,10 @@ terraform apply
 - `ci_service_account_email`
 
 Store them as GitHub repository variables `GCP_WORKLOAD_IDENTITY_PROVIDER` and `GCP_CI_SERVICE_ACCOUNT` (Settings, Secrets and variables, Actions, Variables). They are not sensitive.
+
+## Applying later changes
+
+Run `terraform plan` then `terraform apply` in `infra/envs/dev` from Cloud Shell, as for the first apply. The first Cloud Run service starts on Google's placeholder image; deploying the API (VOY-94) replaces the image and Terraform ignores that change.
 
 ## Rules
 
