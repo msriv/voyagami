@@ -111,4 +111,4 @@ The Go and rules jobs skip themselves until `services/api/go.mod` (VOY-91) and t
 
 Set one required check in the GitHub branch protection rule for `main`: **CI**. It is the final job in the workflow, runs every time, and fails if any job it depends on failed or was cancelled, so skipped (path-filtered) jobs never leave the check pending.
 
-Deploys, EAS builds and security scanning are not part of this workflow; they arrive in P1.
+Continuous delivery, EAS builds and security scanning are not part of this workflow; they arrive in P1. The API is deployed to dev by hand with `make deploy-dev` or the "Deploy API (dev)" workflow.
