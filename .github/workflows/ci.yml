@@ -117,10 +117,24 @@ jobs:
         run: |
           go generate ./...
           git diff --exit-code -- . || (echo "Generated code is out of date. Run 'make api-client' and commit the result." && exit 1)
-      - name: Go tests
+      - uses: pnpm/action-setup@v4
         if: steps.mod.outputs.present == 'true'
-        working-directory: services/api
-        run: go test ./...
+      - uses: actions/setup-node@v4
+        if: steps.mod.outputs.present == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        if: steps.mod.outputs.present == 'true'
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install dependencies
+        if: steps.mod.outputs.present == 'true'
+        run: pnpm install --frozen-lockfile
+      - name: Go tests (with the Firestore emulator)
+        if: steps.mod.outputs.present == 'true'
+        run: pnpm exec firebase emulators:exec --only firestore --project demo-voyagami "cd services/api && REQUIRE_EMULATOR=1 go test ./..."
       - name: Container image builds
         if: steps.mod.outputs.present == 'true'
         run: docker build services/api

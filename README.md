@@ -99,11 +99,11 @@ docs/            engineering docs
 
 GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs on every pull request and on pushes to `main`. Path filters decide which parts run:
 
-| Job                             | Runs when these change                      | What it checks                             |
-| ------------------------------- | ------------------------------------------- | ------------------------------------------ |
-| Mobile and shared packages      | `apps/`, `packages/`, JS config, docs       | Prettier, ESLint, typecheck, unit tests    |
-| Go API                          | `services/api/`, `.golangci.yml`            | gofmt, `go vet`, golangci-lint, `go test`  |
-| Firestore rules on the emulator | `firebase.json`, `firestore.rules`, the API | Rules tests against the Firestore emulator |
+| Job                             | Runs when these change                      | What it checks                                                      |
+| ------------------------------- | ------------------------------------------- | ------------------------------------------------------------------- |
+| Mobile and shared packages      | `apps/`, `packages/`, JS config, docs       | Prettier, ESLint, typecheck, unit tests                             |
+| Go API                          | `services/api/`, `.golangci.yml`            | gofmt, `go vet`, golangci-lint, `go test` on the Firestore emulator |
+| Firestore rules on the emulator | `firebase.json`, `firestore.rules`, the API | Rules tests against the Firestore emulator                          |
 
 The Go and rules jobs skip themselves until `services/api/go.mod` (VOY-91) and the Firestore rules (VOY-97) exist. Dependencies are cached, and each job should finish in under 5 minutes.
 

@@ -1,6 +1,6 @@
 # services/api
 
-The Go API that runs on Cloud Run. Standard library only for now.
+The Go API that runs on Cloud Run.
 
 ```
 cmd/api/              main: config, logger, server, graceful shutdown
@@ -9,6 +9,9 @@ internal/config/      environment settings and validation
 internal/logging/     JSON logs in the Cloud Logging shape
 internal/auth/        Verifier interface and Identity (the real verifier comes with sign-in)
 internal/server/      router, auth, request IDs, error shape, panic recovery
+internal/model/       plain types and validation for stored data (see docs/data-model.md)
+internal/repo/        storage interfaces the rest of the API depends on
+internal/repo/firestorerepo/  Firestore implementation of those interfaces
 ```
 
 ## The API contract
@@ -39,6 +42,12 @@ All optional. Bad values stop the process at startup with every problem listed.
 ## Container and deploy
 
 `Dockerfile` builds a static binary into a distroless, non-root image that listens on `PORT` (Cloud Run sets it). `make deploy-dev` ships it to the dev Cloud Run service; see `infra/README.md`. CI builds the image on every API change but does not push it.
+
+## Data access
+
+Code outside `internal/repo/firestorerepo` uses the `repo.Users` and `repo.Trips` interfaces and the types in `internal/model`, never the Firestore client, so the planned Cloud SQL move only replaces one package. Missing and duplicate documents come back as `repo.ErrNotFound` and `repo.ErrAlreadyExists`, rule breaks (such as removing a trip's owner) as `repo.ErrForbidden`, and bad input as `*model.ValidationError`. Membership changes keep the trip's `memberUids` list in step inside one transaction. Checks here are about shape only (a currency code has 3 capital letters); whether it is a real ISO 4217 code is the locale module's job (VOY-58).
+
+The repository tests run against the Firestore emulator. `make test` starts it for you (needs Java 21; the first run downloads the emulator). Plain `go test ./...` skips those tests unless `FIRESTORE_EMULATOR_HOST` is set, and fails instead of skipping when `REQUIRE_EMULATOR=1`, which CI sets. Each test makes its own IDs, so tests never need a clean database.
 
 ## Auth, errors and request IDs
 
