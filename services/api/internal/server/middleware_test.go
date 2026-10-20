@@ -105,8 +105,8 @@ func TestMeAuth(t *testing.T) {
 	}
 }
 
-func TestHealthzNeedsNoToken(t *testing.T) {
-	rec := do(NewHandler(quiet(), auth.RejectAll{}), http.MethodGet, "/healthz", nil)
+func TestHealthNeedsNoToken(t *testing.T) {
+	rec := do(NewHandler(quiet(), auth.RejectAll{}), http.MethodGet, "/health", nil)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d, want 200", rec.Code)
 	}
@@ -116,7 +116,7 @@ func TestRequestID(t *testing.T) {
 	h := NewHandler(quiet(), auth.RejectAll{})
 
 	t.Run("generated when absent", func(t *testing.T) {
-		rec := do(h, http.MethodGet, "/healthz", nil)
+		rec := do(h, http.MethodGet, "/health", nil)
 		if got := rec.Header().Get(requestIDHeader); len(got) != 32 {
 			t.Errorf("generated id = %q, want 32 hex chars", got)
 		}
@@ -133,7 +133,7 @@ func TestRequestID(t *testing.T) {
 	})
 	t.Run("replaced when unsafe", func(t *testing.T) {
 		for _, bad := range []string{"has space", "new\nline", strings.Repeat("a", 65), "semi;colon"} {
-			rec := do(h, http.MethodGet, "/healthz", map[string]string{requestIDHeader: bad})
+			rec := do(h, http.MethodGet, "/health", map[string]string{requestIDHeader: bad})
 			if got := rec.Header().Get(requestIDHeader); got == bad || len(got) != 32 {
 				t.Errorf("unsafe id %q was kept as %q", bad, got)
 			}
@@ -144,7 +144,7 @@ func TestRequestID(t *testing.T) {
 func TestRequestLogCarriesRequestID(t *testing.T) {
 	var buf bytes.Buffer
 	h := NewHandler(slog.New(slog.NewJSONHandler(&buf, nil)), auth.RejectAll{})
-	do(h, http.MethodGet, "/healthz", map[string]string{requestIDHeader: "req-1"})
+	do(h, http.MethodGet, "/health", map[string]string{requestIDHeader: "req-1"})
 
 	var got map[string]any
 	if err := json.Unmarshal(buf.Bytes(), &got); err != nil {
@@ -163,7 +163,7 @@ func TestRouterErrorsUseErrorShape(t *testing.T) {
 		wantCode       string
 	}{
 		{http.MethodGet, "/nope", 404, codeNotFound},
-		{http.MethodPost, "/healthz", 405, codeMethodNotAllowed},
+		{http.MethodPost, "/health", 405, codeMethodNotAllowed},
 	}
 	for _, tt := range tests {
 		rec := do(h, tt.method, tt.target, nil)
@@ -174,7 +174,7 @@ func TestRouterErrorsUseErrorShape(t *testing.T) {
 			t.Errorf("%s %s code = %q, want %q", tt.method, tt.target, got, tt.wantCode)
 		}
 	}
-	if rec := do(h, http.MethodPost, "/healthz", nil); rec.Header().Get("Allow") == "" {
+	if rec := do(h, http.MethodPost, "/health", nil); rec.Header().Get("Allow") == "" {
 		t.Error("405 lost its Allow header")
 	}
 }

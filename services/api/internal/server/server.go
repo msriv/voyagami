@@ -39,9 +39,9 @@ func NewHandler(logger *slog.Logger, verifier auth.Verifier) http.Handler {
 // handlers implements the generated api.StrictServerInterface.
 type handlers struct{}
 
-// GetHealthz reports that the process is up. It checks no dependencies.
-func (handlers) GetHealthz(context.Context, api.GetHealthzRequestObject) (api.GetHealthzResponseObject, error) {
-	return api.GetHealthz200JSONResponse{Status: "ok"}, nil
+// GetHealth reports that the process is up. It checks no dependencies.
+func (handlers) GetHealth(context.Context, api.GetHealthRequestObject) (api.GetHealthResponseObject, error) {
+	return api.GetHealth200JSONResponse{Status: "ok"}, nil
 }
 
 // GetMe returns the person the auth middleware identified.

@@ -24,7 +24,7 @@ The generator is pinned as a Go tool in `go.mod` (`go tool oapi-codegen`), so no
 
 ```sh
 make dev            # from the repo root; listens on :8080
-curl localhost:8080/healthz
+curl localhost:8080/health
 ```
 
 ## Settings

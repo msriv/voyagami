@@ -52,3 +52,12 @@ func TestEverySpecOperationIsRouted(t *testing.T) {
 		}
 	}
 }
+
+// Cloud Run's front end answers /healthz itself (an HTML 404), so the request
+// never reaches the container. Keep the health check off that path.
+func TestSpecAvoidsPathsCloudRunReserves(t *testing.T) {
+	doc := loadSpec(t)
+	if doc.Paths.Find("/healthz") != nil {
+		t.Error("the spec defines /healthz, which Cloud Run reserves; use /health")
+	}
+}

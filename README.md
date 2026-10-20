@@ -57,7 +57,7 @@ Both must pass before you open a PR.
 make dev
 ```
 
-For now it starts the API on port 8080 (`curl localhost:8080/healthz`). The app (VOY-98) will add the Expo dev server. The dev setup never needs real accounts: sign-in uses a stub SMS provider whose code is always `123456`.
+For now it starts the API on port 8080 (`curl localhost:8080/health`). The app (VOY-98) will add the Expo dev server. The dev setup never needs real accounts: sign-in uses a stub SMS provider whose code is always `123456`.
 
 ### Firebase emulators
 
