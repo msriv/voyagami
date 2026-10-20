@@ -59,6 +59,10 @@ make dev
 
 This is a placeholder until the API (VOY-91) and the app (VOY-98) exist. When they do, it starts the API against the dev emulators and the Expo dev server. The dev setup never needs real accounts: sign-in uses a stub SMS provider whose code is always `123456`.
 
+### Firebase emulators
+
+`pnpm run emulators` starts the Auth, Firestore and Pub/Sub emulators and the emulator UI at http://localhost:4000. It uses the offline project ID `demo-voyagami`, so it needs no Google login or account. The first run downloads the emulator files and needs Java 21 or newer (`java -version`). Ports are in `firebase.json`. Firestore rules arrive with VOY-97; until then the emulator allows all reads and writes.
+
 Never commit secrets. Local settings go in `.env` files, which git ignores; commit an `.env.example` with placeholder values instead.
 
 ## Commands
