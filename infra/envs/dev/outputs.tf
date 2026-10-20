@@ -5,3 +5,15 @@ output "workload_identity_provider" {
 output "ci_service_account_email" {
   value = module.github_wif.ci_service_account_email
 }
+
+output "api_url" {
+  value = module.api.url
+}
+
+output "image_prefix" {
+  value = module.artifact_registry.image_prefix
+}
+
+output "api_runtime_service_account" {
+  value = module.api_runtime.email
+}
