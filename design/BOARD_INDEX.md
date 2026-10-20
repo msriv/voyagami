@@ -9,7 +9,7 @@ Sample data (Bengaluru persona, ₹, UPI, Hanoi trip) is illustrative only.
 ## Brand and navigation
 | File | What it is | Tickets |
 |---|---|---|
-| Brand | Brand sheet: colours, type, motifs | VOY-11, VOY-12 |
+| Brand | Brand sheet: colours, type, motifs, logo (seal + wordmark, app icon) | VOY-11, VOY-12 |
 | Main | Home | VOY-11, VOY-22 |
 | HomeMulti, HomeDark | Home with several trips; dark variant | VOY-22, VOY-11 |
 | Explore | Explore tab | VOY-45 |
