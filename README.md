@@ -89,3 +89,21 @@ docs/            engineering docs
 - Name the branch after the ticket, using the branch name Linear suggests (the "Copy git branch name" action), for example `voy-87`. Add a short slug if you like: `voy-87-docs-skeleton`. The `VOY-123` key in the branch name or PR title links the PR to the ticket.
 - Title the PR `VOY-123: <ticket title>`. The [PR template](.github/pull_request_template.md) asks for a short "How I tested this" and screenshots for any UI change.
 - A human reviews, merges and closes the ticket.
+
+## Continuous integration
+
+GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs on every pull request and on pushes to `main`. Path filters decide which parts run:
+
+| Job                             | Runs when these change                      | What it checks                             |
+| ------------------------------- | ------------------------------------------- | ------------------------------------------ |
+| Mobile and shared packages      | `apps/`, `packages/`, JS config, docs       | Prettier, ESLint, typecheck, unit tests    |
+| Go API                          | `services/api/`, `.golangci.yml`            | gofmt, `go vet`, golangci-lint, `go test`  |
+| Firestore rules on the emulator | `firebase.json`, `firestore.rules`, the API | Rules tests against the Firestore emulator |
+
+The Go and rules jobs skip themselves until `services/api/go.mod` (VOY-91) and the Firestore rules (VOY-97) exist. Dependencies are cached, and each job should finish in under 5 minutes.
+
+### Required status checks
+
+Set one required check in the GitHub branch protection rule for `main`: **CI**. It is the final job in the workflow, runs every time, and fails if any job it depends on failed or was cancelled, so skipped (path-filtered) jobs never leave the check pending.
+
+Deploys, EAS builds and security scanning are not part of this workflow; they arrive in P1.
