@@ -7,7 +7,8 @@ cmd/api/              main: config, logger, server, graceful shutdown
 internal/api/         server interface generated from api/openapi.yaml (do not edit)
 internal/config/      environment settings and validation
 internal/logging/     JSON logs in the Cloud Logging shape
-internal/server/      router and request logging
+internal/auth/        Verifier interface and Identity (the real verifier comes with sign-in)
+internal/server/      router, auth, request IDs, error shape, panic recovery
 ```
 
 ## The API contract
@@ -35,8 +36,14 @@ All optional. Bad values stop the process at startup with every problem listed.
 | `SHUTDOWN_TIMEOUT` | `10s`   | Time allowed for in-flight requests on SIGTERM |
 | `REQUEST_TIMEOUT`  | `30s`   | Maximum time for one request                   |
 
+## Auth, errors and request IDs
+
+Every route needs `Authorization: Bearer <token>` unless the spec marks it `security: []` (a test keeps `publicRoutes` in `internal/server/auth.go` in step with the spec). The token is checked by an `auth.Verifier`; until sign-in exists `main` uses `auth.RejectAll`, so protected routes answer 401. Tests use a fake verifier.
+
+All errors use the `Error` schema (`code`, `message`, `requestId`), including router 404 and 405 and recovered panics (500). Every response carries `X-Request-Id`; a safe caller-supplied value is reused. Logs carry the request ID, never the token.
+
 ## Logging rule
 
-Logs carry no personal data: no phone numbers, exact locations or free text. The request log records method, path (without the query string), status and duration only. Never log request or response bodies.
+Logs carry no personal data: no phone numbers, exact locations or free text. The request log records method, path (without the query string), status, duration and request ID only. Never log request or response bodies.
 
 Lint config is `.golangci.yml` at the repo root. `make lint test` runs golangci-lint and `go test` here.

@@ -8,6 +8,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/msriv/voyagami/services/api/internal/auth"
 )
 
 func TestHealthz(t *testing.T) {
@@ -25,7 +27,7 @@ func TestHealthz(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := NewHandler(slog.New(slog.DiscardHandler))
+			h := NewHandler(slog.New(slog.DiscardHandler), auth.RejectAll{})
 			rec := httptest.NewRecorder()
 			h.ServeHTTP(rec, httptest.NewRequest(tt.method, tt.target, nil))
 
@@ -46,7 +48,7 @@ func TestHealthz(t *testing.T) {
 
 func TestRequestLogHasNoQueryString(t *testing.T) {
 	var buf bytes.Buffer
-	h := NewHandler(slog.New(slog.NewJSONHandler(&buf, nil)))
+	h := NewHandler(slog.New(slog.NewJSONHandler(&buf, nil)), auth.RejectAll{})
 	h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/healthz?phone=%2B911234567890", nil))
 
 	var got map[string]any
@@ -61,25 +63,5 @@ func TestRequestLogHasNoQueryString(t *testing.T) {
 	}
 	if strings.Contains(buf.String(), "911234567890") {
 		t.Errorf("log line leaked the query string: %s", buf.String())
-	}
-}
-
-func TestMeIsUnauthenticatedUntilAuthExists(t *testing.T) {
-	h := NewHandler(slog.New(slog.DiscardHandler))
-	rec := httptest.NewRecorder()
-	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/v1/me", nil))
-
-	if rec.Code != http.StatusUnauthorized {
-		t.Fatalf("status = %d, want 401", rec.Code)
-	}
-	var got struct {
-		Code    string `json:"code"`
-		Message string `json:"message"`
-	}
-	if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
-		t.Fatalf("body is not JSON: %v", err)
-	}
-	if got.Code != "unauthenticated" || got.Message == "" {
-		t.Errorf("error body = %+v, want code unauthenticated and a message", got)
 	}
 }

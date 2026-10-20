@@ -9,6 +9,7 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 
+	"github.com/msriv/voyagami/services/api/internal/auth"
 	"github.com/msriv/voyagami/services/api/internal/server"
 )
 
@@ -37,7 +38,7 @@ func TestSpecIsValidOpenAPI31(t *testing.T) {
 // answers 404 or 405 means the spec and the server have drifted apart.
 func TestEverySpecOperationIsRouted(t *testing.T) {
 	doc := loadSpec(t)
-	h := server.NewHandler(nilLogger())
+	h := server.NewHandler(nilLogger(), auth.RejectAll{})
 
 	for path, item := range doc.Paths.Map() {
 		for method := range item.Operations() {
