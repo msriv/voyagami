@@ -47,3 +47,7 @@ GoogleService-Info.plist
 .vscode/*
 !.vscode/extensions.json
 *.swp
+
+# Firebase emulators
+*-debug.log
+.firebase/
