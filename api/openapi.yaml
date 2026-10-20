@@ -79,14 +79,21 @@ components:
           description: Name the person chose, if any.
     Error:
       type: object
+      description: |
+        The one error shape every non-2xx response uses. Codes: `bad_request`,
+        `unauthenticated`, `not_found`, `method_not_allowed`, `internal`,
+        `unavailable`, `timeout`.
       required: [code, message]
       properties:
         code:
           type: string
-          description: Stable machine-readable error code.
+          description: Stable machine-readable error code. The app switches on this.
         message:
           type: string
-          description: Plain-English explanation for logs and developers.
+          description: Plain-English explanation for logs and developers. Not shown to people.
+        requestId:
+          type: string
+          description: Same value as the `X-Request-Id` response header. Quote it in bug reports. Callers may send their own `X-Request-Id` (1 to 64 characters from letters, digits, `-`, `_`, `.`); otherwise the server makes one.
         fieldErrors:
           type: array
           items:

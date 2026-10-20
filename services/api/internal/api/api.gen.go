@@ -13,14 +13,19 @@ import (
 	"net/http"
 )
 
-// Error defines model for Error.
+// Error The one error shape every non-2xx response uses. Codes: `bad_request`,
+// `unauthenticated`, `not_found`, `method_not_allowed`, `internal`,
+// `unavailable`, `timeout`.
 type Error struct {
-	// Code Stable machine-readable error code.
+	// Code Stable machine-readable error code. The app switches on this.
 	Code        string        `json:"code"`
 	FieldErrors *[]FieldError `json:"fieldErrors,omitempty"`
 
-	// Message Plain-English explanation for logs and developers.
+	// Message Plain-English explanation for logs and developers. Not shown to people.
 	Message string `json:"message"`
+
+	// RequestId Same value as the `X-Request-Id` response header. Quote it in bug reports. Callers may send their own `X-Request-Id` (1 to 64 characters from letters, digits, `-`, `_`, `.`); otherwise the server makes one.
+	RequestId *string `json:"requestId,omitempty"`
 }
 
 // FieldError defines model for FieldError.
@@ -44,7 +49,9 @@ type Me struct {
 	Id string `json:"id"`
 }
 
-// Unauthorized defines model for Unauthorized.
+// Unauthorized The one error shape every non-2xx response uses. Codes: `bad_request`,
+// `unauthenticated`, `not_found`, `method_not_allowed`, `internal`,
+// `unavailable`, `timeout`.
 type Unauthorized = Error
 
 // ServerInterface represents all server handlers.

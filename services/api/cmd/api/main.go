@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/msriv/voyagami/services/api/internal/auth"
 	"github.com/msriv/voyagami/services/api/internal/config"
 	"github.com/msriv/voyagami/services/api/internal/logging"
 	"github.com/msriv/voyagami/services/api/internal/server"
@@ -33,7 +34,7 @@ func run() error {
 
 	srv := &http.Server{
 		Addr:              ":" + strconv.Itoa(cfg.Port),
-		Handler:           http.TimeoutHandler(server.NewHandler(logger), cfg.RequestTimeout, `{"error":"request timed out"}`),
+		Handler:           http.TimeoutHandler(server.NewHandler(logger, auth.RejectAll{}), cfg.RequestTimeout, `{"code":"timeout","message":"The request took too long."}`),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       cfg.RequestTimeout,
 		WriteTimeout:      cfg.RequestTimeout + 5*time.Second,
