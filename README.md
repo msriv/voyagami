@@ -18,7 +18,7 @@ These steps assume macOS or Linux. On Windows, use WSL 2 for everything except t
 | [Git](https://git-scm.com/)                                                                 | any recent                             | source control                                         |
 | [Node.js](https://nodejs.org/) via [nvm](https://github.com/nvm-sh/nvm) or similar          | 22 (see [`.nvmrc`](.nvmrc))            | app, shared packages, lint                             |
 | pnpm, via [Corepack](https://nodejs.org/api/corepack.html)                                  | pinned in `package.json`               | package manager; `make setup` enables Corepack for you |
-| [Go](https://go.dev/dl/)                                                                    | 1.24 or newer                          | the API in `services/api`                              |
+| [Go](https://go.dev/dl/)                                                                    | 1.25 or newer                          | the API in `services/api`                              |
 | [golangci-lint](https://golangci-lint.run/welcome/install/)                                 | v2                                     | Go lint (config in `.golangci.yml`)                    |
 | [Xcode](https://developer.apple.com/xcode/) (macOS only)                                    | latest stable, with an iOS simulator   | iOS builds and the simulator                           |
 | [Android Studio](https://developer.android.com/studio)                                      | latest stable, with one emulator image | Android builds and the emulator                        |
@@ -80,6 +80,7 @@ Never commit secrets. Local settings go in `.env` files, which git ignores; comm
 
 ```
 apps/mobile      Expo (React Native) app
+api/              OpenAPI 3.1 spec, the source of truth for the API
 services/api     Go API on Cloud Run
 packages/        shared types, generated api-client
 infra/           Terraform (one root per environment)

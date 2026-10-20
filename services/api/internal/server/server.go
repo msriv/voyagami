@@ -2,28 +2,37 @@
 package server
 
 import (
-	"encoding/json"
+	"context"
 	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/msriv/voyagami/services/api/internal/api"
 )
 
-// NewHandler returns the API's router. Routes use Go's method-aware patterns.
+// NewHandler returns the API's router. Routes and request types come from the
+// generated code in internal/api; this file only supplies the behaviour.
 func NewHandler(logger *slog.Logger) http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /healthz", healthz)
+	api.HandlerFromMux(api.NewStrictHandler(handlers{}, nil), mux)
 	return logRequests(logger, mux)
 }
 
-// healthz reports that the process is up. It checks no dependencies.
-func healthz(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+// handlers implements the generated api.StrictServerInterface.
+type handlers struct{}
+
+// GetHealthz reports that the process is up. It checks no dependencies.
+func (handlers) GetHealthz(context.Context, api.GetHealthzRequestObject) (api.GetHealthzResponseObject, error) {
+	return api.GetHealthz200JSONResponse{Status: "ok"}, nil
 }
 
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
+// GetMe is a placeholder until bearer-token auth exists (VOY-93). With no
+// verifier, nobody can be signed in yet.
+func (handlers) GetMe(context.Context, api.GetMeRequestObject) (api.GetMeResponseObject, error) {
+	return api.GetMe401JSONResponse{UnauthorizedJSONResponse: api.UnauthorizedJSONResponse{
+		Code:    "unauthenticated",
+		Message: "Sign-in is not available yet.",
+	}}, nil
 }
 
 type statusRecorder struct {

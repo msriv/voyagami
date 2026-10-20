@@ -46,6 +46,7 @@ jobs:
               - '.github/workflows/ci.yml'
             api:
               - 'services/api/**'
+              - 'api/**'
               - '.golangci.yml'
               - '.github/workflows/ci.yml'
             rules:
@@ -106,9 +107,15 @@ jobs:
       - uses: golangci/golangci-lint-action@v8
         if: steps.mod.outputs.present == 'true'
         with:
-          version: v2.1
+          version: v2.5
           working-directory: services/api
           args: --config ../../.golangci.yml
+      - name: Generated code matches api/openapi.yaml
+        if: steps.mod.outputs.present == 'true'
+        working-directory: services/api
+        run: |
+          go generate ./...
+          git diff --exit-code -- . || (echo "Generated code is out of date. Run 'make api-client' and commit the result." && exit 1)
       - name: Go tests
         if: steps.mod.outputs.present == 'true'
         working-directory: services/api

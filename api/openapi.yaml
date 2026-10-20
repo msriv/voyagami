@@ -1,0 +1,103 @@
+openapi: 3.1.0
+info:
+  title: Voyagami API
+  version: 0.1.0
+  description: |
+    The contract between the Voyagami app and the Go API. This file is the
+    source of truth: the Go server interface and the app's typed client are
+    generated from it. Run `make api-client` after changing it.
+
+    Money is always an integer in minor units plus an ISO 4217 currency code,
+    never a float. No endpoint carries or logs personal data it does not need.
+servers:
+  - url: /
+tags:
+  - name: system
+    description: Process health.
+  - name: account
+    description: The signed-in person.
+paths:
+  /healthz:
+    get:
+      operationId: getHealthz
+      tags: [system]
+      summary: Report that the process is up
+      description: Checks no dependencies. Used by Cloud Run and uptime checks.
+      security: []
+      responses:
+        "200":
+          description: The process is running.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+  /v1/me:
+    get:
+      operationId: getMe
+      tags: [account]
+      summary: Get the signed-in person
+      description: A sample authenticated endpoint. Needs a bearer token.
+      responses:
+        "200":
+          description: The signed-in person.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Token issued after phone sign-in.
+  responses:
+    Unauthorized:
+      description: Missing, invalid or expired token.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          examples: [ok]
+    Me:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+          description: Stable account ID. Not the phone number.
+        displayName:
+          type: string
+          description: Name the person chose, if any.
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: Stable machine-readable error code.
+        message:
+          type: string
+          description: Plain-English explanation for logs and developers.
+        fieldErrors:
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldError"
+    FieldError:
+      type: object
+      required: [field, message]
+      properties:
+        field:
+          type: string
+        message:
+          type: string
+security:
+  - bearerAuth: []
