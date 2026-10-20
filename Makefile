@@ -15,8 +15,12 @@ ifneq ($(HAS_API),)
 	cd $(API_DIR) && go mod download
 endif
 
-dev: ## Run the API and app against dev (filled in by VOY-91 and VOY-98)
+dev: ## Run the API (the app, VOY-98, adds itself here)
+ifneq ($(HAS_API),)
+	cd $(API_DIR) && go run ./cmd/api
+else
 	@echo "make dev: nothing to run yet. The API (VOY-91) and app (VOY-98) add themselves here."
+endif
 
 lint: ## Format check, ESLint, typecheck and Go lint
 	pnpm run lint
