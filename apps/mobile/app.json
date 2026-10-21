@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "name": "Voyagami",
+    "slug": "voyagami",
+    "scheme": "voyagami",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": { "supportsTablet": false, "bundleIdentifier": "app.voyagami.dev" },
+    "android": { "package": "app.voyagami.dev" },
+    "plugins": ["expo-router"],
+    "experiments": { "typedRoutes": true }
+  }
+}
