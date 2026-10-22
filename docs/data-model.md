@@ -17,7 +17,7 @@ Firestore at launch, in the `voyagami-dev` project during the D phases. A later 
 ## Conventions
 
 - **Trip membership drives all access.** Everything a trip owns lives under `trips/{tripId}/…` and carries `tripId`. Access is decided from the member document at `trips/{tripId}/members/{uid}`, never from a field on the trip.
-- **Two writers.** Content that must work offline and merge freely (stops, notes, comments, votes, tasks, expenses, journal) is written by the app straight to Firestore, within the rules. Anything that is gated by a plan limit, needs one consistent answer, or touches permissions or money settlement is written only by the Go API (`server` in the access tables). Rules deny client writes to server-owned collections and fields. Limits are always checked on the server (CLAUDE.md), so every create that a limit can stop goes through the API.
+- **Two writers.** Content that must work offline and merge freely (stops, notes, comments, votes, tasks, expenses, journal) is written by the app straight to Firestore, within the rules. Anything that is gated by a plan limit, needs one consistent answer, or touches permissions or money settlement is written only by the Go API (`server` in the access tables). Rules deny client writes to server-owned collections and fields. **Today the rules deny all direct client access** (VOY-97) and the API does every read and write; collections are opened to the app one at a time by the tickets that need them (D2 co-editing, D3 local-first sync), each with its own rule and tests. See [security.md](security.md). Limits are always checked on the server (CLAUDE.md), so every create that a limit can stop goes through the API.
 - **IDs** are strings. The app makes the ID for content it creates (UUID v7), so a retried write cannot create a duplicate. The server makes IDs for server-owned documents. User IDs are our own stable account ID, not the phone number.
 - **Every document** has `createdAt`, `updatedAt` (UTC instants, set by the server clock), `createdBy` and `updatedBy` (user IDs). They are left out of the tables below.
 - **Instants** (booking times, `createdAt`) are UTC. **Calendar dates** the person thinks of as "21 Nov" are `YYYY-MM-DD` strings, and **local clock times** are `HH:mm` strings, each paired with an IANA time zone (`Asia/Ho_Chi_Minh`). Display follows the trip's time zone, then the viewer's formats.
@@ -442,21 +442,17 @@ Write: members append rows where `actorUid` is their own ID; nothing is updated 
 
 ## Indexes
 
-Defined in code in `firestore.indexes.json` (VOY-97). Single-field indexes are automatic. Needed composites:
+Defined in code in `firestore.indexes.json` (VOY-97). Firestore builds single-field indexes by itself, so only queries that combine fields need an entry here.
 
-| Collection                 | Fields                                                 | Used for                              |
-| -------------------------- | ------------------------------------------------------ | ------------------------------------- |
-| `trips`                    | `memberUids` (array-contains), `status`, `dates.start` | Home and Trips list, upcoming vs past |
-| `trips/{tripId}/stops`     | `date`, `order`                                        | Day view in order                     |
-| `trips/{tripId}/bookings`  | `startsAt`                                             | Timeline and countdown                |
-| `trips/{tripId}/expenses`  | `date`, `createdAt`                                    | Expense list                          |
-| `trips/{tripId}/comments`  | `target.id`, `createdAt`                               | Comments on one place                 |
-| `trips/{tripId}/journal`   | `date`, `authorUid`                                    | A day's entries                       |
-| `trips/{tripId}/media`     | `takenAt`                                              | Photo matching by date                |
-| `trips/{tripId}/activity`  | `createdAt` (desc)                                     | Activity feed                         |
-| collection group `members` | `uid`, `status`                                        | Admin and deletion jobs               |
+| Collection                | Fields                                                 | Used for                                                                                                                             |
+| ------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `trips`                   | `memberUids` (array-contains), `status`, `dates.start` | Trips list split into upcoming and past. Trips with flexible dates have no `dates.start` and do not appear in a query ordered by it. |
+| `trips/{tripId}/stops`    | `date`, `order`                                        | Day view in order                                                                                                                    |
+| `trips/{tripId}/expenses` | `date` (desc), `createdAt` (desc)                      | Expense list, newest first                                                                                                           |
+| `trips/{tripId}/comments` | `target.id`, `createdAt`                               | Comments on one place                                                                                                                |
+| `trips/{tripId}/journal`  | `date`, `authorUid`                                    | A day's entries                                                                                                                      |
 
-TTL policy on `trips/{tripId}/presence` field `endsAt`.
+Also in the file: collection-group indexes on `members.uid` and `members.status` (admin and deletion jobs look people up across trips), and a TTL policy on `trips/{tripId}/presence` field `endsAt`. Bookings (`startsAt`), media (`takenAt`) and the activity feed (`createdAt`) are ordered by one field, so they need nothing extra.
 
 ## Offline sync
 
