@@ -6,6 +6,12 @@ import Explore from "../app/(tabs)/explore";
 import Home from "../app/(tabs)/index";
 import Profile from "../app/(tabs)/profile";
 
+jest.mock("expo-font", () => ({ useFonts: () => [true, null] }));
+jest.mock("expo-splash-screen", () => ({
+  preventAutoHideAsync: jest.fn(() => Promise.resolve()),
+  hideAsync: jest.fn(() => Promise.resolve()),
+}));
+
 describe("tab shell", () => {
   it("shows Home, Explore and Profile tabs", async () => {
     await renderRouter({

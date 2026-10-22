@@ -2,6 +2,7 @@
 // (for example React Native rules in apps/mobile).
 import js from "@eslint/js";
 import prettier from "eslint-config-prettier";
+import react from "eslint-plugin-react";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
@@ -19,6 +20,17 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.strict,
   prettier,
+  {
+    // User-facing text must come from i18n (CLAUDE.md), so no literal strings in JSX.
+    files: ["apps/mobile/**/*.tsx"],
+    plugins: { react },
+    rules: { "react/jsx-no-literals": "error" },
+  },
+  {
+    // Tests may render literal text.
+    files: ["**/__tests__/**"],
+    rules: { "react/jsx-no-literals": "off" },
+  },
   {
     // Metro, Babel and Jest read these as CommonJS.
     files: ["**/*.config.js"],

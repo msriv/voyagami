@@ -1,5 +1,8 @@
 import { View } from "react-native";
 
+import { useTranslation } from "@/i18n";
+
 export default function ExploreScreen() {
-  return <View style={{ flex: 1 }} accessibilityLabel="Explore" />;
+  const { t } = useTranslation();
+  return <View style={{ flex: 1 }} accessibilityLabel={t("tabs.explore")} />;
 }

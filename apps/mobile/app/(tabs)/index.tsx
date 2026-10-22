@@ -1,5 +1,8 @@
 import { View } from "react-native";
 
+import { useTranslation } from "@/i18n";
+
 export default function HomeScreen() {
-  return <View style={{ flex: 1 }} accessibilityLabel="Home" />;
+  const { t } = useTranslation();
+  return <View style={{ flex: 1 }} accessibilityLabel={t("tabs.home")} />;
 }
