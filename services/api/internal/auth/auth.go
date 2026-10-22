@@ -18,6 +18,9 @@ type Identity struct {
 	UserID string
 	// DisplayName is the name the person chose, if any.
 	DisplayName string
+	// SessionID is the sign-in session the token belongs to, if the verifier
+	// knows it. Sign-out ends this session.
+	SessionID string
 }
 
 // Verifier turns a bearer token into an Identity. Any error other than

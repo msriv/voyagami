@@ -58,6 +58,8 @@ A custom place is a pin the person dropped. A catalog place is a document in `pl
 users/{uid}
   devices/{deviceId}
   stamps/{stampId}
+phoneIndex/{phoneHash}
+sessions/{sessionId}
 entitlements/{uid}
 invites/{inviteId}
 places/{placeId}
@@ -130,6 +132,14 @@ The person. Read and written by that person only (plus the server). Other people
 The phone number is not stored in Firestore. It lives only with the sign-in provider (see [Decisions to confirm](#decisions-to-confirm)). `homeRegion`, `homeCurrency` and `units` are the user-held half of the four locale sources; the trip holds settlement currency and time zone, the destination holds local currency and language, and the app store holds prices.
 
 Subcollections: `devices/{deviceId}` holds `{ platform, pushToken, lastSeenAt }`, owner-only. `stamps/{stampId}` holds `{ tripId, destinationCode, kind, earnedAt }`, written by the server when a trip ends.
+
+### `phoneIndex/{phoneHash}` and `sessions/{sessionId}`
+
+Server-only, written by phone sign-in (VOY-105). No client can read or write them.
+
+`phoneIndex/{phoneHash}` is `{ uid }`. The ID is a keyed HMAC-SHA256 of the E.164 number, so the number itself is never stored and the hash cannot be reversed by trying every number without the server secret. It exists so a returning person finds their account.
+
+`sessions/{sessionId}` is `{ userId, refreshHash, expiresAt, revokedAt? }`, one per signed-in device. `refreshHash` is the SHA-256 of the refresh secret; the secret is never stored. A refresh token is `{sessionId}.{secret}`. Each refresh swaps the hash. Presenting a token whose hash is no longer current revokes the session. Sessions last 60 days from the last refresh.
 
 ### `entitlements/{uid}`
 
@@ -491,7 +501,7 @@ Chosen so the P3 move is a mapping, not a redesign:
 
 These were not stated in the tickets or boards. The doc takes the first option; change it before VOY-96 and VOY-97 build on it.
 
-1. **Phone number not stored in Firestore.** The Tech Stack board lists phone on `users`. Keeping it only with the sign-in provider avoids storing a number that crew could be exposed to and matches the privacy rule. The cost is that invites match by link or contact, not by number.
+1. **Phone number not stored in Firestore.** The Tech Stack board lists phone on `users`. The number is not on the user document, where crew could see it. VOY-105 stores only a keyed hash in the server-only `phoneIndex`, so a returning person finds their account. Invites still match by link or contact, not by number.
 2. **Viewer can vote, comment, react, tick their own tasks and write their own journal.** The Plans Spec does not define viewer rights beyond "viewer".
 3. **Members can write AP content directly to Firestore** (stops, notes, comments, tasks, expenses on a single currency), while limit-gated creates go through the API. The alternative is to route every write through the API, which is simpler to secure but breaks offline writes.
 4. **Trip `memberUids` mirror** for the "my trips" query, kept by the API in the same transaction as the member change. The alternative is a collection-group query on `members`, which costs an extra read per trip.

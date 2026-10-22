@@ -204,3 +204,15 @@ type Member struct {
 	InvitedVia     string // invite ID, if any
 	JoinedAt       time.Time
 }
+
+// Session is one signed-in device. The refresh token itself is never stored,
+// only its hash.
+type Session struct {
+	ID          string
+	UserID      string
+	RefreshHash string // hex SHA-256 of the refresh secret
+	ExpiresAt   time.Time
+	RevokedAt   *time.Time
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}

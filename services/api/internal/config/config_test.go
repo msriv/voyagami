@@ -24,8 +24,18 @@ func TestLoad(t *testing.T) {
 		},
 		{
 			name: "all set",
-			env:  map[string]string{"APP_ENV": "staging", "PORT": "9000", "LOG_LEVEL": "debug", "SHUTDOWN_TIMEOUT": "5s", "REQUEST_TIMEOUT": "1m"},
-			want: Config{Env: "staging", Port: 9000, LogLevel: slog.LevelDebug, ShutdownTimeout: 5 * time.Second, RequestTimeout: time.Minute},
+			env:  map[string]string{"APP_ENV": "staging", "PORT": "9000", "LOG_LEVEL": "debug", "SHUTDOWN_TIMEOUT": "5s", "REQUEST_TIMEOUT": "1m", "AUTH_SECRET": strings.Repeat("s", 32), "GCP_PROJECT": "p"},
+			want: Config{Env: "staging", Port: 9000, LogLevel: slog.LevelDebug, ShutdownTimeout: 5 * time.Second, RequestTimeout: time.Minute, AuthSecret: strings.Repeat("s", 32), GCPProject: "p"},
+		},
+		{
+			name:    "secret required outside dev",
+			env:     map[string]string{"APP_ENV": "prod"},
+			wantErr: []string{"AUTH_SECRET"},
+		},
+		{
+			name:    "secret too short",
+			env:     map[string]string{"AUTH_SECRET": "short"},
+			wantErr: []string{"AUTH_SECRET"},
 		},
 		{
 			name:    "bad env",
