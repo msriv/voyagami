@@ -9,11 +9,15 @@
     "android": "expo start --android",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "jest"
+    "test": "jest",
+    "build:dev:android": "eas build --profile development --platform android",
+    "build:dev:ios": "eas build --profile development --platform ios",
+    "build:dev:ios-simulator": "eas build --profile development-simulator --platform ios"
   },
   "dependencies": {
     "expo": "^58.0.16",
     "expo-constants": "^58.0.12",
+    "expo-dev-client": "^58.0.14",
     "expo-linking": "^58.0.13",
     "expo-router": "^58.0.24",
     "expo-status-bar": "^58.0.3",
