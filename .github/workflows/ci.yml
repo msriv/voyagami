@@ -168,7 +168,7 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Run rules tests
         if: steps.rules.outputs.present == 'true'
-        run: pnpm exec firebase emulators:exec --only firestore "pnpm --filter @voyagami/rules-tests run test"
+        run: pnpm exec firebase emulators:exec --only firestore --project demo-voyagami "pnpm --filter @voyagami/rules-tests run test:emulator"
 
   # The single required status check. It always runs, so path filters never
   # leave a required check pending, and it fails if any needed job failed.
