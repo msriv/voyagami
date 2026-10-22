@@ -11,7 +11,7 @@
 
 ## Auth
 
-- Phone OTP behind a provider interface (MSG91 for India, another provider elsewhere; a stub in dev).
+- Phone OTP behind a provider interface (MSG91 for India, another provider elsewhere; a stub in dev). See `services/api/internal/otp`: `SMSProvider`, the dev `Stub` (only when `APP_ENV=dev`) and the per-number `Limited` wrapper.
 - The server decides every limit through the entitlements service. The app only reflects the answer.
 - AI calls (Gemini on Vertex) go only through the backend.
 
