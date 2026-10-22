@@ -16,6 +16,9 @@ const (
 	usersCollection   = "users"
 	tripsCollection   = "trips"
 	membersCollection = "members"
+	// phoneIndexCollection maps a keyed phone hash to a user ID. It is server-only.
+	phoneIndexCollection = "phoneIndex"
+	sessionsCollection   = "sessions"
 )
 
 // mapErr turns Firestore errors into the repo's sentinel errors. Errors that

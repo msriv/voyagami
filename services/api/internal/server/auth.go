@@ -14,7 +14,10 @@ import (
 // in Request.Pattern. A test checks this list against `security: []` in
 // api/openapi.yaml, so the spec stays the source of truth.
 var publicRoutes = map[string]bool{
-	"GET /health": true,
+	"GET /health":               true,
+	"POST /v1/auth/otp/request": true,
+	"POST /v1/auth/otp/verify":  true,
+	"POST /v1/auth/refresh":     true,
 }
 
 // requireAuth checks the bearer token on every route not listed in

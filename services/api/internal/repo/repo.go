@@ -6,6 +6,7 @@ package repo
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/msriv/voyagami/services/api/internal/model"
 )
@@ -17,6 +18,9 @@ var (
 	ErrAlreadyExists = errors.New("already exists")
 	// ErrForbidden means the change breaks a trip rule, such as removing the owner.
 	ErrForbidden = errors.New("not allowed")
+	// ErrTokenReuse means a refresh token that was already replaced was
+	// presented again. The session is revoked.
+	ErrTokenReuse = errors.New("refresh token reused")
 )
 
 // Invalid input is reported as a *model.ValidationError.
@@ -58,4 +62,27 @@ type Trips interface {
 	// EndMembership marks a member left or removed. The owner cannot be
 	// removed (ErrForbidden).
 	EndMembership(ctx context.Context, tripID, uid string, status model.MemberStatus) error
+}
+
+// Accounts links a phone number to a user without storing the number. The
+// caller passes a keyed hash of the number, never the number itself.
+type Accounts interface {
+	// FindOrCreate returns the user linked to phoneHash. If there is none it
+	// stores newUser and the link in one step and reports created.
+	FindOrCreate(ctx context.Context, phoneHash string, newUser model.User) (u model.User, created bool, err error)
+}
+
+// Sessions stores sign-in sessions, one per device.
+type Sessions interface {
+	// Create stores a new session. It returns ErrAlreadyExists if the ID is taken.
+	Create(ctx context.Context, s model.Session) error
+	// Get returns the session, or ErrNotFound.
+	Get(ctx context.Context, id string) (model.Session, error)
+	// Rotate swaps the refresh hash and expiry if oldHash is the current hash.
+	// It returns ErrNotFound for a missing, revoked or expired session. If
+	// oldHash is not the current hash it revokes the session and returns
+	// ErrTokenReuse.
+	Rotate(ctx context.Context, id, oldHash, newHash string, expiresAt time.Time) error
+	// Revoke ends the session. Revoking a missing or ended session is not an error.
+	Revoke(ctx context.Context, id string) error
 }

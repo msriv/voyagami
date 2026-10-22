@@ -28,6 +28,8 @@ const documentPaths = [
   "users/u1",
   "users/u1/devices/d1",
   "users/u1/stamps/s1",
+  "phoneIndex/h1",
+  "sessions/s1",
   "entitlements/u1",
   "invites/i1",
   "places/p1",

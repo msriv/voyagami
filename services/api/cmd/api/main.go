@@ -12,7 +12,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/msriv/voyagami/services/api/internal/auth"
 	"github.com/msriv/voyagami/services/api/internal/config"
 	"github.com/msriv/voyagami/services/api/internal/logging"
 	"github.com/msriv/voyagami/services/api/internal/server"
@@ -32,9 +31,15 @@ func run() error {
 	}
 	logger := logging.New(os.Stdout, cfg.LogLevel, cfg.Env)
 
+	deps, err := buildSignIn(context.Background(), cfg, logger)
+	if err != nil {
+		return fmt.Errorf("sign-in: %w", err)
+	}
+	defer deps.close()
+
 	srv := &http.Server{
 		Addr:              ":" + strconv.Itoa(cfg.Port),
-		Handler:           http.TimeoutHandler(server.NewHandler(logger, auth.RejectAll{}), cfg.RequestTimeout, `{"code":"timeout","message":"The request took too long."}`),
+		Handler:           http.TimeoutHandler(server.NewHandler(logger, deps.verifier, deps.options...), cfg.RequestTimeout, `{"code":"timeout","message":"The request took too long."}`),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       cfg.RequestTimeout,
 		WriteTimeout:      cfg.RequestTimeout + 5*time.Second,
