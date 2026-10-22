@@ -15,7 +15,7 @@ ifneq ($(HAS_API),)
 	cd $(API_DIR) && go mod download
 endif
 
-dev: ## Run the API (the app, VOY-98, adds itself here)
+dev: ## Run the API (start the app with: pnpm --filter @voyagami/mobile start)
 ifneq ($(HAS_API),)
 	cd $(API_DIR) && go run ./cmd/api
 else

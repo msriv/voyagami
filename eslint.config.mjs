@@ -19,4 +19,10 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.strict,
   prettier,
+  {
+    // Metro, Babel and Jest read these as CommonJS.
+    files: ["**/*.config.js"],
+    languageOptions: { globals: { module: "writable" } },
+    rules: { "@typescript-eslint/no-require-imports": "off" },
+  },
 );
