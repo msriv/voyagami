@@ -6,6 +6,7 @@
 
 - Never commit secrets. `.env` files, keys, service-account JSON and Firebase config files are git-ignored; commit an `.env.example` with placeholders instead.
 - CI and Terraform reach Google Cloud through workload identity federation. No long-lived cloud keys.
+- Claude's PRs are opened by the `voyagami-bot` GitHub App. Its private key is only a GitHub Actions secret, never in a Claude environment. See [github-bot.md](github-bot.md).
 - D phases use only the `voyagami-dev` project, emulators and stubs (SMS code `123456`). No staging, prod or paid third-party accounts until P1.
 - From P1 there are two projects: `voyagami-dev` (dev and staging) and `voyagami-prod` (production only). See `infra/README.md`.
 

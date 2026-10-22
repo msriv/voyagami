@@ -1,0 +1,76 @@
+name: Open PR
+
+# Opens or updates a pull request as the voyagami-bot GitHub App (VOY-212),
+# so Claude's PRs have an author other than Mihir and Mihir can approve them.
+# Claude starts this with workflow_dispatch after pushing a branch.
+# Setup: docs/github-bot.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Head branch, already pushed (e.g. voy-212)
+        required: true
+      title:
+        description: "PR title, e.g. VOY-212 then the ticket title"
+        required: true
+      body:
+        description: PR body in Markdown
+        required: true
+      draft:
+        description: Open as a draft
+        type: boolean
+        default: false
+
+concurrency:
+  group: open-pr-${{ inputs.branch }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  open:
+    name: Open or update PR as bot
+    # Only Mihir's account (which Claude's sessions act as) may start this.
+    if: github.actor == 'msriv' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Mint a short-lived app token
+        id: app
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+
+      - name: Open or update the PR
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+          BRANCH: ${{ inputs.branch }}
+          TITLE: ${{ inputs.title }}
+          BODY: ${{ inputs.body }}
+          DRAFT: ${{ inputs.draft }}
+          REVIEWER: msriv
+        run: |
+          set -euo pipefail
+          case "$BRANCH" in
+            main|*[!A-Za-z0-9._/-]*) echo "::error::Bad branch name: $BRANCH"; exit 1 ;;
+          esac
+          printf '%s' "$BODY" > "$RUNNER_TEMP/body.md"
+
+          number=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            gh pr edit "$number" --title "$TITLE" --body-file "$RUNNER_TEMP/body.md"
+          else
+            args=(--base main --head "$BRANCH" --title "$TITLE" --body-file "$RUNNER_TEMP/body.md")
+            [ "$DRAFT" = "true" ] && args+=(--draft)
+            url=$(gh pr create "${args[@]}")
+            number=${url##*/}
+          fi
+          gh pr edit "$number" --add-assignee "$REVIEWER" --add-reviewer "$REVIEWER"
+
+          url="https://github.com/$GH_REPO/pull/$number"
+          echo "PR: $url"
+          echo "### PR [#$number]($url)" >> "$GITHUB_STEP_SUMMARY"
