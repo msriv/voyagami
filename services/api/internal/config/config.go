@@ -17,7 +17,16 @@ type Config struct {
 	LogLevel        slog.Level
 	ShutdownTimeout time.Duration
 	RequestTimeout  time.Duration
+	// AuthSecret signs sign-in tokens and keys the phone hash. Required
+	// outside dev; in dev an empty value means a random per-process secret.
+	AuthSecret string
+	// GCPProject is the Firestore project. Empty means detect it from the
+	// environment (Cloud Run) or use the emulator's project.
+	GCPProject string
 }
+
+// minAuthSecret is the shortest AUTH_SECRET accepted.
+const minAuthSecret = 32
 
 const (
 	defaultPort            = 8080
@@ -61,6 +70,15 @@ func Load(getenv func(string) string) (Config, error) {
 		if err := cfg.LogLevel.UnmarshalText([]byte(strings.ToUpper(v))); err != nil {
 			errs = append(errs, fmt.Errorf("LOG_LEVEL %q must be debug, info, warn or error", v))
 		}
+	}
+
+	cfg.GCPProject = getenv("GCP_PROJECT")
+	cfg.AuthSecret = getenv("AUTH_SECRET")
+	switch {
+	case cfg.AuthSecret == "" && cfg.Env != "dev":
+		errs = append(errs, errors.New("AUTH_SECRET is required outside dev"))
+	case cfg.AuthSecret != "" && len(cfg.AuthSecret) < minAuthSecret:
+		errs = append(errs, fmt.Errorf("AUTH_SECRET must be at least %d characters", minAuthSecret))
 	}
 
 	errs = appendDuration(errs, getenv, "SHUTDOWN_TIMEOUT", &cfg.ShutdownTimeout)

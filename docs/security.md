@@ -27,7 +27,15 @@
 
 When a later ticket needs direct client access (live co-editing in D2, local-first sync in D3), it opens one collection at a time: a rule decided from `trips/{tripId}/members/{uid}`, plus tests for each role and for a removed member, and an update to the table in the data model.
 
+## Sign-in tokens
+
+- Phone sign-in is `POST /v1/auth/otp/request`, `POST /v1/auth/otp/verify`, `POST /v1/auth/refresh` and `POST /v1/auth/sign-out`. Only the first three are public.
+- **Access token:** signed with HMAC-SHA256, valid 15 minutes, checked without a database read. A signed-out device's access token still works until it expires (at most 15 minutes).
+- **Refresh token:** random secret, valid 60 days, works once. Only its SHA-256 is stored. Reusing an old one ends the session.
+- **Secrets:** `AUTH_SECRET` (32 characters or more) is the one master secret. The token key and the phone-hash key are derived from it, so they never share a key. It is required outside dev. In dev a random secret is made at start-up, which means tokens stop working on restart and are not shared between Cloud Run instances.
+- **Phone numbers:** never stored or logged. The account index holds a keyed HMAC of the number (see [data-model.md](data-model.md)).
+- **Rate limits:** 5 code requests and 10 code checks per number per 15 minutes, held in memory per instance for now.
+
 ## To document here
 
-- Token lifetimes, refresh and sign-out.
 - Data export and account deletion.

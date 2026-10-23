@@ -14,6 +14,8 @@ servers:
 tags:
   - name: system
     description: Process health.
+  - name: auth
+    description: Phone sign-in, token refresh and sign-out.
   - name: account
     description: The signed-in person.
 paths:
@@ -49,6 +51,99 @@ paths:
                 $ref: "#/components/schemas/Me"
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /v1/auth/otp/request:
+    post:
+      operationId: requestOtp
+      tags: [auth]
+      summary: Send a one-time code to a phone
+      description: |
+        Sends a six-digit code by SMS. The answer is the same whether or not
+        the number already has an account. In dev the code is always `123456`
+        and nothing is sent.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpRequest"
+      responses:
+        "204":
+          description: A code was sent.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/auth/otp/verify:
+    post:
+      operationId: verifyOtp
+      tags: [auth]
+      summary: Check a one-time code and sign in
+      description: |
+        Creates the account the first time a number is verified. Returns a
+        short-lived access token and a refresh token. A wrong code answers 400
+        with code `invalid_code`.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpVerifyRequest"
+      responses:
+        "200":
+          description: Signed in.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionTokens"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/auth/refresh:
+    post:
+      operationId: refreshSession
+      tags: [auth]
+      summary: Swap a refresh token for a new token pair
+      description: |
+        Each refresh token works once. Sending one that was already used ends
+        the session, so a stolen token cannot be used quietly.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "200":
+          description: A new token pair.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionTokens"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/auth/sign-out:
+    post:
+      operationId: signOut
+      tags: [auth]
+      summary: End this device's session
+      description: |
+        Revokes the refresh token for the session. The access token keeps
+        working until it expires, at most 15 minutes.
+      responses:
+        "204":
+          description: Signed out.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 components:
   securitySchemes:
     bearerAuth:
@@ -62,6 +157,24 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/Error"
+    BadRequest:
+      description: The request could not be read or a field is not valid.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    TooManyRequests:
+      description: Too many attempts for this phone number. Try again later.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unavailable:
+      description: The service cannot do this right now.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
   schemas:
     Health:
       type: object
@@ -70,6 +183,56 @@ components:
         status:
           type: string
           examples: [ok]
+    OtpRequest:
+      type: object
+      required: [phone]
+      properties:
+        phone:
+          type: string
+          description: Phone number in E.164 form, for example `+14155550123`.
+          examples: ["+14155550123"]
+    OtpVerifyRequest:
+      type: object
+      required: [phone, code]
+      properties:
+        phone:
+          type: string
+          description: Phone number in E.164 form.
+        code:
+          type: string
+          description: The one-time code.
+        region:
+          type: string
+          description: Device region (ISO 3166-1 alpha-2). Only used when the account is created, until onboarding confirms it.
+          pattern: "^[A-Za-z]{2}$"
+        language:
+          type: string
+          description: Device language (BCP 47). Only used when the account is created.
+          maxLength: 35
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+    SessionTokens:
+      type: object
+      required: [accessToken, refreshToken, expiresIn, userId, isNewUser]
+      properties:
+        accessToken:
+          type: string
+          description: "Send as `Authorization: Bearer <token>`."
+        refreshToken:
+          type: string
+          description: Keep in secure storage. Works once.
+        expiresIn:
+          type: integer
+          description: Seconds until the access token expires.
+        userId:
+          type: string
+        isNewUser:
+          type: boolean
+          description: True when this sign-in created the account. Always false on refresh.
     Me:
       type: object
       required: [id]
@@ -84,8 +247,8 @@ components:
       type: object
       description: |
         The one error shape every non-2xx response uses. Codes: `bad_request`,
-        `unauthenticated`, `not_found`, `method_not_allowed`, `internal`,
-        `unavailable`, `timeout`.
+        `unauthenticated`, `invalid_code`, `rate_limited`, `not_found`,
+        `method_not_allowed`, `internal`, `unavailable`, `timeout`.
       required: [code, message]
       properties:
         code:

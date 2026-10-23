@@ -7,7 +7,9 @@ cmd/api/              main: config, logger, server, graceful shutdown
 internal/api/         server interface generated from api/openapi.yaml (do not edit)
 internal/config/      environment settings and validation
 internal/logging/     JSON logs in the Cloud Logging shape
-internal/auth/        Verifier interface and Identity (the real verifier comes with sign-in)
+internal/auth/        Verifier interface and Identity
+internal/otp/         SMSProvider interface, dev stub (code 123456) and per-number rate limits
+internal/signin/      phone sign-in: access tokens, refresh rotation, account creation
 internal/server/      router, auth, request IDs, error shape, panic recovery
 internal/model/       plain types and validation for stored data (see docs/data-model.md)
 internal/repo/        storage interfaces the rest of the API depends on
@@ -27,17 +29,27 @@ make dev            # from the repo root; listens on :8080
 curl localhost:8080/health
 ```
 
+Sign-in needs Firestore. Locally, start the emulator (`pnpm emulators`, port 8080), then run the API on another port:
+
+```sh
+FIRESTORE_EMULATOR_HOST=localhost:8080 GCP_PROJECT=demo-voyagami PORT=8081 make dev
+curl -X POST localhost:8081/v1/auth/otp/request -H 'Content-Type: application/json' -d '{"phone":"+14155550123"}'
+curl -X POST localhost:8081/v1/auth/otp/verify  -H 'Content-Type: application/json' -d '{"phone":"+14155550123","code":"123456"}'
+```
+
 ## Settings
 
 All optional. Bad values stop the process at startup with every problem listed.
 
-| Variable           | Default | Meaning                                        |
-| ------------------ | ------- | ---------------------------------------------- |
-| `APP_ENV`          | `dev`   | `dev`, `staging` or `prod`                     |
-| `PORT`             | `8080`  | Listen port (Cloud Run sets this)              |
-| `LOG_LEVEL`        | `info`  | `debug`, `info`, `warn` or `error`             |
-| `SHUTDOWN_TIMEOUT` | `10s`   | Time allowed for in-flight requests on SIGTERM |
-| `REQUEST_TIMEOUT`  | `30s`   | Maximum time for one request                   |
+| Variable           | Default | Meaning                                                                       |
+| ------------------ | ------- | ----------------------------------------------------------------------------- |
+| `APP_ENV`          | `dev`   | `dev`, `staging` or `prod`                                                    |
+| `PORT`             | `8080`  | Listen port (Cloud Run sets this)                                             |
+| `LOG_LEVEL`        | `info`  | `debug`, `info`, `warn` or `error`                                            |
+| `SHUTDOWN_TIMEOUT` | `10s`   | Time allowed for in-flight requests on SIGTERM                                |
+| `REQUEST_TIMEOUT`  | `30s`   | Maximum time for one request                                                  |
+| `AUTH_SECRET`      | none    | 32+ characters. Required outside dev; in dev a random one is made at start-up |
+| `GCP_PROJECT`      | detect  | Firestore project. Locally use `demo-voyagami` with `FIRESTORE_EMULATOR_HOST` |
 
 ## Container and deploy
 
@@ -51,7 +63,7 @@ The repository tests run against the Firestore emulator. `make test` starts it f
 
 ## Auth, errors and request IDs
 
-Every route needs `Authorization: Bearer <token>` unless the spec marks it `security: []` (a test keeps `publicRoutes` in `internal/server/auth.go` in step with the spec). The token is checked by an `auth.Verifier`; until sign-in exists `main` uses `auth.RejectAll`, so protected routes answer 401. Tests use a fake verifier.
+Every route needs `Authorization: Bearer <token>` unless the spec marks it `security: []` (a test keeps `publicRoutes` in `internal/server/auth.go` in step with the spec). The token is checked by an `auth.Verifier`; `main` uses the verifier from `internal/signin`. Tests use a fake verifier.
 
 All errors use the `Error` schema (`code`, `message`, `requestId`), including router 404 and 405 and recovered panics (500). Every response carries `X-Request-Id`; a safe caller-supplied value is reused. Logs carry the request ID, never the token.
 

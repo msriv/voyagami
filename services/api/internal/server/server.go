@@ -15,8 +15,12 @@ import (
 // NewHandler returns the API's router. Routes and request types come from the
 // generated code in internal/api; this file only supplies the behaviour. The
 // verifier decides who counts as signed in.
-func NewHandler(logger *slog.Logger, verifier auth.Verifier) http.Handler {
-	strict := api.NewStrictHandlerWithOptions(handlers{}, nil, api.StrictHTTPServerOptions{
+func NewHandler(logger *slog.Logger, verifier auth.Verifier, opts ...Option) http.Handler {
+	h := &handlers{}
+	for _, o := range opts {
+		o(h)
+	}
+	strict := api.NewStrictHandlerWithOptions(h, nil, api.StrictHTTPServerOptions{
 		RequestErrorHandlerFunc: func(w http.ResponseWriter, r *http.Request, _ error) {
 			writeError(w, r, http.StatusBadRequest, codeBadRequest, "The request could not be read.")
 		},
@@ -37,15 +41,17 @@ func NewHandler(logger *slog.Logger, verifier auth.Verifier) http.Handler {
 }
 
 // handlers implements the generated api.StrictServerInterface.
-type handlers struct{}
+type handlers struct {
+	signIn SignIn
+}
 
 // GetHealth reports that the process is up. It checks no dependencies.
-func (handlers) GetHealth(context.Context, api.GetHealthRequestObject) (api.GetHealthResponseObject, error) {
+func (*handlers) GetHealth(context.Context, api.GetHealthRequestObject) (api.GetHealthResponseObject, error) {
 	return api.GetHealth200JSONResponse{Status: "ok"}, nil
 }
 
 // GetMe returns the person the auth middleware identified.
-func (handlers) GetMe(ctx context.Context, _ api.GetMeRequestObject) (api.GetMeResponseObject, error) {
+func (*handlers) GetMe(ctx context.Context, _ api.GetMeRequestObject) (api.GetMeResponseObject, error) {
 	id, ok := auth.FromContext(ctx)
 	if !ok {
 		// requireAuth guards this route, so this means the wiring is broken.
