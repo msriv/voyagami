@@ -8,6 +8,11 @@
 - `Button` and `IconButton` always set role `button`, a label and state (`disabled`, `busy`). They are at least 44x44 with `hitSlop` around that. `IconButton` requires `accessibilityLabel`.
 - Pressed feedback is dimming plus a small scale; the scale is dropped when reduce motion is on (`useReducedMotion`).
 - Accent (vermilion) buttons use ink text, never white, so contrast passes.
+- `Chip` is a button with `selected` and `disabled` state; selection is also shown by fill and weight, not colour alone.
+- `Input` shows its label above the field (not as a placeholder), sets it as the accessible label, and shows errors in a polite live region with a vermilion border plus text.
+- `Sheet` is a modal with a heading, a close button and a tappable backdrop, both labelled; content scrolls so it stays reachable at 200% text. It has no slide animation when reduce motion is on.
+- `Toast` is announced as an alert, lasts 5 seconds by default and always has a labelled dismiss button.
+- Labels for close and dismiss are props, so the caller passes them through i18n.
 - Tests for these props live in `apps/mobile/src/ui/__tests__`. They cannot show 200% text or screen reader order; check those on a device.
 
 ## Rules
