@@ -1,9 +1,10 @@
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
+import { AuthProvider, useAuth } from "@/auth";
 import "@/i18n";
 import { fontAssets, ThemeProvider } from "@/theme";
 
@@ -21,8 +22,41 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false }} />
+      <AuthProvider>
+        <StatusBar style="dark" />
+        <Screens />
+      </AuthProvider>
     </ThemeProvider>
+  );
+}
+
+// Signed-in people only reach the tabs; everyone else only reaches sign-in. Nothing shows
+// until the saved session has been read, so a returning person never sees sign-in flash by.
+function Screens() {
+  const { status } = useAuth();
+  const router = useRouter();
+  const previous = useRef(status);
+
+  // When the session changes after launch, the screen we were on is now guarded off, so go to the
+  // new start screen. The first read after launch is skipped so deep links keep working.
+  useEffect(() => {
+    if (previous.current !== "loading" && previous.current !== status) {
+      router.replace(status === "signedIn" ? "/" : "/sign-in");
+    }
+    previous.current = status;
+  }, [status, router]);
+
+  if (status === "loading") return null;
+  const signedIn = status === "signedIn";
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Protected guard={signedIn}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="gallery" />
+      </Stack.Protected>
+      <Stack.Protected guard={!signedIn}>
+        <Stack.Screen name="(auth)" />
+      </Stack.Protected>
+    </Stack>
   );
 }
