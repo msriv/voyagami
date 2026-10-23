@@ -34,8 +34,9 @@ Rules:
 4. Read the ticket fully, then open the board(s) it names in `design/boards/`. See `design/BOARD_INDEX.md` for which file is which.
 5. Build it. Meet every acceptance criterion. If something is ambiguous, check the matching spec board (Plans Spec, Recs Spec, Locale Spec, Tech Stack, Data Map) before asking.
 6. Open a PR titled `VOY-123: <ticket title>`, linking the ticket. Put a short "How I tested this" and screenshots for any UI change. Move the ticket to **In Review**.
-7. Do not mark a ticket Done. A human merges and closes.
-8. If you find work that is not covered by a ticket, create a new one (label it, link it to the project) rather than quietly widening the PR.
+7. Merge only after Mihir says so. Claude's GitHub access acts as Mihir, so GitHub's Approve button is not available on Claude's PRs. Instead, Mihir comments "LGTM" on the PR (or says so in the project thread). Once he has, every review thread is resolved and CI is green on the latest commit, merge with a merge commit. A push after his LGTM needs a fresh LGTM.
+8. After merging, check the ticket moved to Done (the Linear integration does this from `Closes VOY-123`); if not, move it yourself.
+9. If you find work that is not covered by a ticket, create a new one (label it, link it to the project) rather than quietly widening the PR.
 
 One ticket per PR. Keep PRs small. Never commit secrets.
 
