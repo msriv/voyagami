@@ -32,6 +32,7 @@ jobs:
           filters: |
             js:
               - 'apps/**'
+              - 'api/**'
               - 'packages/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
@@ -72,6 +73,10 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Generated API client matches api/openapi.yaml
+        run: |
+          pnpm --filter @voyagami/api-client run generate
+          git diff --exit-code -- packages/api-client || (echo "Generated API client is out of date. Run 'make api-client' and commit the result." && exit 1)
       - name: Format and lint
         run: pnpm run lint
       - name: Typecheck

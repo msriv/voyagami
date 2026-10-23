@@ -1,0 +1,23 @@
+{
+  "name": "@voyagami/api-client",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Typed client for the Voyagami API. Types are generated from api/openapi.yaml; run `make api-client` after changing the spec.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "generate": "openapi-typescript ../../api/openapi.yaml -o src/generated/schema.d.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.17.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "openapi-typescript": "^7.13.0",
+    "vitest": "^5.0.5"
+  }
+}

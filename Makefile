@@ -48,11 +48,11 @@ ifneq ($(HAS_API),)
 	cd $(API_DIR) && gofmt -w .
 endif
 
-api-client: ## Generate code from api/openapi.yaml (Go server now; TypeScript client is VOY-16)
+api-client: ## Generate the Go server and the TypeScript client from api/openapi.yaml
 ifneq ($(HAS_API),)
 	cd $(API_DIR) && go generate ./...
 endif
-	@echo "make api-client: the TypeScript client arrives with VOY-16."
+	pnpm --filter @voyagami/api-client run generate
 
 deploy-dev: ## Build the API image and deploy it to the dev Cloud Run service (needs docker and gcloud)
 	infra/scripts/deploy-api-dev.sh
