@@ -1,10 +1,11 @@
+import { callingCodeFor, toE164 } from "@voyagami/locale";
 import { getLocales } from "expo-localization";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { callingCodeFor, signInErrorKey, toE164, useAuth } from "@/auth";
+import { signInErrorKey, useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { Button, Input, Text } from "@/ui";
