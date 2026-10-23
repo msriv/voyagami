@@ -92,10 +92,6 @@ One ticket per PR. Keep PRs small. Never commit secrets.
 
 **Sponsored cards.** At most one per list, labelled "Sponsored", hideable for 30 days, shown on **all** plans including Plus.
 
-## Ponytail
-
-The ponytail plugin is enabled for this repo (`.claude/settings.json`). Prefer the smallest working change and reuse what exists. Use `/ponytail-review` on a diff when useful. The locked stack and the rules in this file win over any ponytail suggestion.
-
 ## Design system
 
 Tokens are in `design/tokens.json`. Short version:
