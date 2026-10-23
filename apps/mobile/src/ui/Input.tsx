@@ -16,8 +16,8 @@ export interface InputProps extends Omit<
   /** Always visible above the field; also the screen reader label. */
   label: string;
   /** Shown below the field in place of the hint. Marks the field invalid. */
-  error?: string;
-  hint?: string;
+  error?: string | undefined;
+  hint?: string | undefined;
 }
 
 /** A text input with a visible label and an error line. Text scales; the box grows with it. */

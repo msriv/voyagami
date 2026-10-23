@@ -7,9 +7,16 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "ios": { "supportsTablet": false, "bundleIdentifier": "app.voyagami.dev" },
-    "android": { "package": "app.voyagami.dev" },
-    "plugins": ["expo-router"],
-    "experiments": { "typedRoutes": true }
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "app.voyagami.dev"
+    },
+    "android": {
+      "package": "app.voyagami.dev"
+    },
+    "plugins": ["expo-router", "expo-secure-store"],
+    "experiments": {
+      "typedRoutes": true
+    }
   }
 }

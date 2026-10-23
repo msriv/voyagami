@@ -5,6 +5,37 @@ export const en = {
     explore: "Explore",
     profile: "Profile",
   },
+  signIn: {
+    title: "Let's get you a passport.",
+    intro: "Your crew finds you by phone number, so invites land in the right place.",
+    phoneLabel: "Mobile number",
+    phoneHint: "Starts with +{{code}} unless you type the full number with a plus sign.",
+    phoneHintNoRegion: "Type the full number with a plus sign and country code.",
+    sendCode: "Send 6-digit code",
+    consent: "We never message your contacts without you tapping send.",
+    codeTitle: "Enter your code",
+    codeIntro: "We sent a 6-digit code to {{phone}}.",
+    codeLabel: "6-digit code",
+    verify: "Verify",
+    resend: "Resend code",
+    resendIn: "Resend code in {{seconds}}s",
+    changeNumber: "Use a different number",
+    errors: {
+      invalidNumber: "That doesn't look like a valid phone number.",
+      invalidCode: "That code isn't right. Check it and try again.",
+      tooMany: "Too many tries. Wait a few minutes and try again.",
+      offline: "You're offline. Connect and try again.",
+      generic: "Something went wrong. Try again.",
+    },
+  },
+  home: {
+    welcomeNamed: "Welcome, {{name}}",
+    welcome: "Welcome",
+    signedIn: "You're signed in.",
+  },
+  profile: {
+    signOut: "Sign out",
+  },
   // Dev-only component gallery (VOY-103). Not shown to people.
   gallery: {
     title: "Component gallery",

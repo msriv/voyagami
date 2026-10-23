@@ -51,4 +51,5 @@ The dev build only needs rebuilding when native dependencies or `app.json` chang
 
 - **"Unable to resolve module" after pulling:** run `make setup`, then restart Metro with `--clear`.
 - **Phone cannot reach Metro:** same Wi-Fi, no VPN, or use `--tunnel`.
-- **API calls from a phone:** `localhost` on the phone is the phone. Use your computer's LAN address or the dev Cloud Run URL once the app has an API client (VOY-16).
+- **API calls from a phone:** `localhost` on the phone is the phone. Set `EXPO_PUBLIC_API_URL` before `make dev` (for example `EXPO_PUBLIC_API_URL=http://192.168.1.20:8080`) to your computer's LAN address, or to the dev Cloud Run URL. An Android emulator reaches your computer at `http://10.0.2.2:8080`. The iOS simulator can use the default `http://localhost:8080`.
+- **Signing in against the local API:** run the API with `APP_ENV=dev` (code `123456`). Dev tokens stop working when the API restarts until `AUTH_SECRET` is set (VOY-211), so sign in again after a restart.

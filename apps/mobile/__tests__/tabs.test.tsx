@@ -1,11 +1,13 @@
 import { renderRouter, screen } from "expo-router/testing-library";
 
-import RootLayout from "../app/_layout";
-import TabsLayout from "../app/(tabs)/_layout";
-import Explore from "../app/(tabs)/explore";
-import Home from "../app/(tabs)/index";
-import Profile from "../app/(tabs)/profile";
+import { json, mockApi, routes } from "../test-utils/api";
 
+const mockStore = new Map<string, string>();
+jest.mock("expo-secure-store", () => ({
+  getItemAsync: jest.fn((k: string) => Promise.resolve(mockStore.get(k) ?? null)),
+  setItemAsync: jest.fn((k: string, v: string) => Promise.resolve(void mockStore.set(k, v))),
+  deleteItemAsync: jest.fn((k: string) => Promise.resolve(void mockStore.delete(k))),
+}));
 jest.mock("expo-font", () => ({ useFonts: () => [true, null] }));
 jest.mock("expo-splash-screen", () => ({
   preventAutoHideAsync: jest.fn(() => Promise.resolve()),
@@ -13,15 +15,12 @@ jest.mock("expo-splash-screen", () => ({
 }));
 
 describe("tab shell", () => {
-  it("shows Home, Explore and Profile tabs", async () => {
-    await renderRouter({
-      _layout: RootLayout,
-      "(tabs)/_layout": TabsLayout,
-      "(tabs)/index": Home,
-      "(tabs)/explore": Explore,
-      "(tabs)/profile": Profile,
-    });
-    expect(screen.getByRole("button", { name: "Home" })).toBeTruthy();
+  it("shows Home, Explore and Profile tabs when signed in", async () => {
+    mockStore.set("voyagami.accessToken", "a");
+    mockStore.set("voyagami.refreshToken", "r");
+    mockApi({ "GET /v1/me": () => json(200, { id: "u1" }) });
+    await renderRouter(routes);
+    expect(await screen.findByRole("button", { name: "Home" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Explore" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Profile" })).toBeTruthy();
   });

@@ -36,6 +36,13 @@ When a later ticket needs direct client access (live co-editing in D2, local-fir
 - **Phone numbers:** never stored or logged. The account index holds a keyed HMAC of the number (see [data-model.md](data-model.md)).
 - **Rate limits:** 5 code requests and 10 code checks per number per 15 minutes, held in memory per instance for now.
 
+## Sign-in on the device
+
+- Both tokens are kept in the Keychain (iOS) or Keystore (Android) through `expo-secure-store` (`apps/mobile/src/auth/tokenStore.ts`), never in plain storage or logs.
+- A saved session counts as signed in on launch, so the app opens offline. The API client refreshes an expired access token on the first request; if the refresh fails, the saved tokens are deleted and the person is sent to sign in.
+- The phone number being verified is held in memory only (not in a route, storage or log). It is shown on screen and sent to the API, nowhere else.
+- The app sends the device region and language when verifying, which the API uses only to set defaults on a new account.
+
 ## To document here
 
 - Data export and account deletion.
