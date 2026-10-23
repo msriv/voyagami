@@ -20,3 +20,7 @@ i18n come in VOY-99; the development build and device guide in VOY-100.
 ## UI kit
 
 `src/ui` holds the shared components (`Text`, `Button`, `IconButton`; more in VOY-102 and VOY-103). Use them instead of raw `Text` and `Pressable` so role, label, state and the 44 point hit area are never forgotten. See [docs/accessibility.md](../../docs/accessibility.md).
+
+## Component gallery
+
+In a dev build, open the `/gallery` route (for example `npx uri-scheme open "voyagami:///gallery" --ios`, or `router.push("/gallery")` from the dev menu) to see every UI kit component and state. In release builds the route redirects home. Use it for the 200% text, screen reader and reduce-motion checks in `docs/accessibility.md`.

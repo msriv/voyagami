@@ -8,3 +8,4 @@ export { Chip, type ChipProps } from "./Chip";
 export { Input, type InputProps } from "./Input";
 export { Sheet, type SheetProps } from "./Sheet";
 export { Toast, type ToastProps } from "./Toast";
+export * from "./motifs";

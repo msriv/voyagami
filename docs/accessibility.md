@@ -13,6 +13,7 @@
 - `Sheet` is a modal with a heading, a close button and a tappable backdrop, both labelled; content scrolls so it stays reachable at 200% text. It has no slide animation when reduce motion is on.
 - `Toast` is announced as an alert, lasts 5 seconds by default and always has a labelled dismiss button.
 - Labels for close and dismiss are props, so the caller passes them through i18n.
+- Motifs (`Seal`, `WavePattern`, `BrushCircle`, `WashiTape`, `Postmark`) are decoration: hidden from screen readers unless given a label. `Postmark` reads as one phrase, "city, date".
 - Tests for these props live in `apps/mobile/src/ui/__tests__`. They cannot show 200% text or screen reader order; check those on a device.
 
 ## Rules
