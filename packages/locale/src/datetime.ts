@@ -38,3 +38,27 @@ export function formatTime(
     ...(timeZone ? { timeZone } : null),
   }).format(date);
 }
+
+/** A month and year for a calendar heading, for example "November 2026". */
+export function formatMonth(date: Date | number, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(date);
+}
+
+/** First day of the week for a locale, 0 = Sunday to 6 = Saturday. Falls back to Monday when the platform cannot say. */
+export function firstWeekday(locale: string): number {
+  // Platforms expose this as a getter (V8) or a method (Safari, Hermes).
+  const l = new Intl.Locale(locale) as unknown as {
+    weekInfo?: { firstDay: number };
+    getWeekInfo?: () => { firstDay: number };
+  };
+  const info = l.getWeekInfo?.() ?? l.weekInfo;
+  return info ? info.firstDay % 7 : 1;
+}
+
+/** Short weekday names in calendar order for a locale, starting on its first weekday. */
+export function weekdayLabels(locale: string): string[] {
+  const first = firstWeekday(locale);
+  const fmt = new Intl.DateTimeFormat(locale, { weekday: "narrow", timeZone: "UTC" });
+  // 2023-01-01 was a Sunday.
+  return Array.from({ length: 7 }, (_, i) => fmt.format(Date.UTC(2023, 0, 1 + ((first + i) % 7))));
+}

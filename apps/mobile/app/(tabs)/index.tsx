@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
+import { useRouter } from "expo-router";
 import { View } from "react-native";
 
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
-import { Text } from "@/ui";
+import { Button, Text } from "@/ui";
 
 export default function HomeScreen() {
   const { t } = useTranslation();
   const { api } = useAuth();
+  const router = useRouter();
   const [name, setName] = useState<string | undefined>();
 
   useEffect(() => {
@@ -28,6 +30,7 @@ export default function HomeScreen() {
         {name ? t("home.welcomeNamed", { name }) : t("home.welcome")}
       </Text>
       <Text color="muted">{t("home.signedIn")}</Text>
+      <Button label={t("home.newTrip")} onPress={() => router.push("/trips/new")} />
     </View>
   );
 }
