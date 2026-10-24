@@ -8,6 +8,7 @@ import Style from "../app/onboarding/style";
 import SignIn from "../app/(auth)/sign-in";
 import TabsLayout from "../app/(tabs)/_layout";
 import Explore from "../app/(tabs)/explore";
+import NewTrip from "../app/trips/new";
 import Home from "../app/(tabs)/index";
 import Profile from "../app/(tabs)/profile";
 
@@ -18,6 +19,7 @@ export const routes: Record<string, ComponentType> = {
   "(auth)/sign-in": SignIn,
   "onboarding/style": Style,
   "(auth)/code": Code,
+  "trips/new": NewTrip,
   "(tabs)/_layout": TabsLayout,
   "(tabs)/index": Home,
   "(tabs)/explore": Explore,
