@@ -60,3 +60,12 @@ toE164("98450 12345", "IN"); // "+919845012345"
 - Symbols, grouping and unit names all come from `Intl`, so nothing in here (or in a screen) names a currency or a country.
 
 The Go side is `services/api/internal/locale` (`MinorDigits`, `FormatMoney`). Phone parsing by region stays in the app; the API only checks the E.164 shape (`otp.ValidPhone`).
+
+### Blocking hard-coded locale values
+
+`pnpm run lint` (and so `make lint` and CI) fails when app or package code, outside `packages/locale` and tests, has:
+
+- a currency symbol or a dollar amount in a string (`"₹999"`, `"$29.99"`), a distance unit (`"6 km"`), a calling code (`"+91 ..."`) or a date format (`"DD/MM/YYYY"`);
+- `toFixed`, `toLocaleString`, `toLocaleDateString`, `toLocaleTimeString`, or `Intl.NumberFormat` and `Intl.DateTimeFormat`.
+
+Use `formatMoney`, `formatDate`, `formatTime`, `formatDistance` or `toE164` from `@voyagami/locale`, or an i18n string. The rules live in `eslint.config.mjs` and are tested in `packages/locale/src/lintRule.test.ts`. The Go API is not covered yet; it formats nothing but money, through `internal/locale`.
