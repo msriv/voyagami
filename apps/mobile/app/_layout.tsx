@@ -53,6 +53,7 @@ function Screens() {
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="gallery" />
+        <Stack.Screen name="trips/new" options={{ presentation: "modal" }} />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="(auth)" />

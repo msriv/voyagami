@@ -3,6 +3,9 @@ import { describe, expect, it } from "vitest";
 import {
   callingCodeFor,
   defaultClock,
+  defaultCurrency,
+  formatMonth,
+  weekdayLabels,
   defaultUnits,
   formatDate,
   formatDistance,
@@ -114,5 +117,22 @@ describe("phone", () => {
     expect(callingCodeFor("GB")).toBe("44");
     expect(callingCodeFor(null)).toBeNull();
     expect(callingCodeFor("ZZ")).toBeNull();
+  });
+});
+
+describe("calendar helpers and default currency", () => {
+  it("guesses a currency from the region", () => {
+    expect(defaultCurrency("in")).toBe("INR");
+    expect(defaultCurrency("FR")).toBe("EUR");
+    expect(defaultCurrency("ZZ")).toBeNull();
+    expect(defaultCurrency(null)).toBeNull();
+  });
+  it("starts the week where the locale does, with seven labels", () => {
+    expect(weekdayLabels("en-US")).toHaveLength(7);
+    expect(weekdayLabels("en-US")[0]).toBe("S");
+    expect(weekdayLabels("en-GB")[0]).toBe("M");
+  });
+  it("names a month and year", () => {
+    expect(formatMonth(Date.UTC(2026, 10, 5), "en-US")).toBe("November 2026");
   });
 });
