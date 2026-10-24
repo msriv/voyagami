@@ -92,3 +92,24 @@ func TestNewIDIsUniqueAndTimeOrdered(t *testing.T) {
 		t.Errorf("id %q is not a UUID v7", a)
 	}
 }
+
+func TestUserPatchValidate(t *testing.T) {
+	name := func(s string) *string { return &s }
+	ok := UserPatch{DisplayName: name("Asha"), TravelStyle: &TravelStyle{Interests: []string{"beaches", "slowCafes"}, Pace: "slow", Spend: "comfort"}}
+	if err := ok.Validate(); err != nil {
+		t.Fatalf("good patch rejected: %v", err)
+	}
+	for label, p := range map[string]UserPatch{
+		"blank name":       {DisplayName: name("  ")},
+		"long name":        {DisplayName: name(strings.Repeat("a", 81))},
+		"unknown interest": {TravelStyle: &TravelStyle{Interests: []string{"skydiving"}}},
+		"duplicate":        {TravelStyle: &TravelStyle{Interests: []string{"beaches", "beaches"}}},
+		"too many":         {TravelStyle: &TravelStyle{Interests: []string{"mountains", "beaches", "foodTrails", "roadTrips", "cultureHistory", "nightlife", "wildlife", "slowCafes", "x"}}},
+		"bad pace":         {TravelStyle: &TravelStyle{Pace: "zoom"}},
+		"bad spend":        {TravelStyle: &TravelStyle{Spend: "lavish"}},
+	} {
+		if err := p.Validate(); !IsValidation(err) {
+			t.Errorf("%s: error = %v, want validation error", label, err)
+		}
+	}
+}

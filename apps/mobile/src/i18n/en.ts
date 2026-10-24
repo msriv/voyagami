@@ -62,6 +62,35 @@ export const en = {
       generic: "Something went wrong. Try again.",
     },
   },
+  onboarding: {
+    welcome: {
+      title: "Trips are better planned together.",
+      intro:
+        "Plan the route, split the costs and keep the memories, all in one place with your crew.",
+      start: "Get started",
+    },
+    style: {
+      title: "How do you like to travel?",
+      intro: "Pick what fits. We use it to suggest places. You can change it later.",
+      interests: "What do you enjoy?",
+      pace: "Pace",
+      spend: "Spending",
+      continue: "Continue",
+      skip: "Skip for now",
+      interest: {
+        mountains: "Mountains",
+        beaches: "Beaches",
+        foodTrails: "Food trails",
+        roadTrips: "Road trips",
+        cultureHistory: "Culture and history",
+        nightlife: "Nightlife",
+        wildlife: "Wildlife",
+        slowCafes: "Slow cafes",
+      },
+      paceOption: { slow: "Slow", balanced: "Balanced", packed: "Packed" },
+      spendOption: { shoestring: "Shoestring", comfort: "Comfort", splurge: "Splurge" },
+    },
+  },
   home: {
     welcomeNamed: "Welcome, {{name}}",
     welcome: "Welcome",
