@@ -18,6 +18,7 @@ beforeEach(() => {
   mockStore.clear();
   mockStore.set("voyagami.accessToken", "a");
   mockStore.set("voyagami.refreshToken", "r");
+  mockStore.set("voyagami.onboarded", "1");
 });
 
 const me = { "GET /v1/me": () => json(200, { id: "u1" }) };
