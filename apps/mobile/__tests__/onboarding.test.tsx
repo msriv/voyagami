@@ -1,3 +1,4 @@
+import * as Contacts from "expo-contacts";
 import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
 import { json, mockApi, routes } from "../test-utils/api";
@@ -39,7 +40,7 @@ describe("travel style", () => {
     return calls;
   }
 
-  it("saves picks, announces selection state and goes Home", async () => {
+  it("saves picks, announces selection state and moves on to the connect step", async () => {
     const calls = await signedInAtStyle();
     await fireEvent.press(screen.getByRole("button", { name: "Beaches" }));
     await fireEvent.press(screen.getByRole("button", { name: "Slow cafes" }));
@@ -49,7 +50,7 @@ describe("travel style", () => {
       true,
     );
     await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-    expect(await screen.findByText("Welcome, Asha")).toBeTruthy();
+    expect(await screen.findByText("Let Voyagami help.")).toBeTruthy();
     const patch = calls.find((c) => c.key === "PATCH /v1/me");
     expect(patch?.body).toEqual({
       travelStyle: { interests: ["beaches", "slowCafes"], pace: "slow", spend: "comfort" },
@@ -59,7 +60,33 @@ describe("travel style", () => {
   it("skips without calling the server", async () => {
     const calls = await signedInAtStyle();
     await fireEvent.press(screen.getByRole("button", { name: "Skip for now" }));
-    expect(await screen.findByText("Welcome, Asha")).toBeTruthy();
+    expect(await screen.findByText("Let Voyagami help.")).toBeTruthy();
     await waitFor(() => expect(calls.some((c) => c.key === "PATCH /v1/me")).toBe(false));
+  });
+});
+
+describe("first-run routing", () => {
+  it("sends a first launch through style and connect once, then straight to Home", async () => {
+    mockStore.set("voyagami.accessToken", "a");
+    mockStore.set("voyagami.refreshToken", "r");
+    mockApi({ "GET /v1/me": () => json(200, { id: "u1", displayName: "Asha" }) });
+    const first = await renderRouter(routes, { initialUrl: "/" });
+    await screen.findByText("How do you like to travel?");
+    await fireEvent.press(screen.getByRole("button", { name: "Skip for now" }));
+    await screen.findByText("Let Voyagami help.");
+    // Permissions are asked only when tapped, and an allowed one shows as such.
+    const contacts = Contacts as unknown as { requestPermissionsAsync: jest.Mock };
+    expect(contacts.requestPermissionsAsync).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole("button", { name: "Allow Contacts" }));
+    await waitFor(() => expect(contacts.requestPermissionsAsync).toHaveBeenCalledTimes(1));
+    expect(await screen.findByText("Allowed")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Allow Contacts" })).toBeDisabled();
+    await fireEvent.press(screen.getByRole("button", { name: "Finish setup" }));
+    expect(await screen.findByText("Welcome, Asha")).toBeTruthy();
+    expect(mockStore.get("voyagami.onboarded")).toBe("1");
+    first.unmount();
+
+    await renderRouter(routes, { initialUrl: "/" });
+    expect(await screen.findByText("Welcome, Asha")).toBeTruthy();
   });
 });

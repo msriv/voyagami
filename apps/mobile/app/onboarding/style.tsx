@@ -50,7 +50,7 @@ export default function StyleScreen() {
           },
         }),
       );
-      router.replace("/");
+      router.replace("/onboarding/connect");
     } catch (e) {
       setError(t(`signIn.errors.${signInErrorKey(e)}`));
     } finally {
@@ -106,7 +106,7 @@ export default function StyleScreen() {
         <Button
           label={t("onboarding.style.skip")}
           variant="ghost"
-          onPress={() => router.replace("/")}
+          onPress={() => router.replace("/onboarding/connect")}
           disabled={busy}
           fullWidth
         />
