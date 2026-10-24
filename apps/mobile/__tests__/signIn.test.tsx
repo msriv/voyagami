@@ -33,7 +33,8 @@ describe("sign in", () => {
     await fireEvent.changeText(await screen.findByLabelText("6-digit code"), "123456");
     await fireEvent.press(screen.getByRole("button", { name: "Verify" }));
 
-    expect(await screen.findByText("Welcome, Asha")).toBeTruthy();
+    // A first sign-in goes through onboarding before Home.
+    expect(await screen.findByText("How do you like to travel?")).toBeTruthy();
     expect(calls[0]).toEqual({ key: "POST /v1/auth/otp/request", body: { phone: "+14155550123" } });
     expect(calls[1]?.body).toMatchObject({ phone: "+14155550123", code: "123456" });
     expect(mockStore.get("voyagami.refreshToken")).toBe("refresh-1");
@@ -81,6 +82,7 @@ describe("sign in", () => {
   it("signs in again on relaunch from the saved session", async () => {
     mockStore.set("voyagami.accessToken", "a");
     mockStore.set("voyagami.refreshToken", "r");
+    mockStore.set("voyagami.onboarded", "1");
     mockApi({ "GET /v1/me": () => json(200, { id: "u1", displayName: "Asha" }) });
     await renderRouter(routes);
     expect(await screen.findByText("Welcome, Asha")).toBeTruthy();
@@ -89,18 +91,21 @@ describe("sign in", () => {
   it("returns to sign in when the saved session is dead", async () => {
     mockStore.set("voyagami.accessToken", "a");
     mockStore.set("voyagami.refreshToken", "r");
+    mockStore.set("voyagami.onboarded", "1");
     mockApi({
       "GET /v1/me": () => json(401, { code: "unauthenticated", message: "x" }),
       "POST /v1/auth/refresh": () => json(401, { code: "unauthenticated", message: "x" }),
     });
     await renderRouter(routes);
     expect(await screen.findByRole("button", { name: "Get started" })).toBeTruthy();
-    await waitFor(() => expect(mockStore.size).toBe(0));
+    // A dead session clears the tokens but keeps the onboarding flag for the same person.
+    await waitFor(() => expect([...mockStore.keys()]).toEqual(["voyagami.onboarded"]));
   });
 
   it("signs out from Profile and clears the saved session", async () => {
     mockStore.set("voyagami.accessToken", "a");
     mockStore.set("voyagami.refreshToken", "r");
+    mockStore.set("voyagami.onboarded", "1");
     mockApi({
       "GET /v1/me": () => json(200, { id: "u1" }),
       "POST /v1/auth/sign-out": () => json(204),

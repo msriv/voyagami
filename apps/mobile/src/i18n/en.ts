@@ -35,6 +35,17 @@ export const en = {
         "Plan the route, split the costs and keep the memories, all in one place with your crew.",
       start: "Get started",
     },
+    connect: {
+      title: "Let Voyagami help.",
+      intro: "Both are optional. You can change them later in your phone's settings.",
+      contacts: "Contacts",
+      contactsWhy: "Find friends to invite. We never message anyone unless you tap send.",
+      notifications: "Notifications",
+      notificationsWhy: "Trip changes, new votes and who owes what.",
+      allow: "Allow",
+      allowed: "Allowed",
+      finish: "Finish setup",
+    },
     style: {
       title: "How do you like to travel?",
       intro: "Pick what fits. We use it to suggest places. You can change it later.",

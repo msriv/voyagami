@@ -26,3 +26,15 @@ export async function saveTokens(tokens: StoredTokens | null): Promise<void> {
     SecureStore.setItemAsync(refreshKey, tokens.refreshToken),
   ]);
 }
+
+const onboardedKey = "voyagami.onboarded";
+
+/** Whether first-run onboarding was finished on this device. */
+export async function loadOnboarded(): Promise<boolean> {
+  return (await SecureStore.getItemAsync(onboardedKey)) === "1";
+}
+
+export async function saveOnboarded(done: boolean): Promise<void> {
+  if (done) await SecureStore.setItemAsync(onboardedKey, "1");
+  else await SecureStore.deleteItemAsync(onboardedKey);
+}

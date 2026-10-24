@@ -54,6 +54,7 @@ function Screens() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="gallery" />
         <Stack.Screen name="onboarding/style" />
+        <Stack.Screen name="onboarding/connect" />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="(auth)" />

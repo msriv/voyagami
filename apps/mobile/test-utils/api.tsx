@@ -4,6 +4,7 @@ import RootLayout from "../app/_layout";
 import AuthLayout from "../app/(auth)/_layout";
 import Code from "../app/(auth)/code";
 import Welcome from "../app/(auth)/index";
+import Connect from "../app/onboarding/connect";
 import Style from "../app/onboarding/style";
 import SignIn from "../app/(auth)/sign-in";
 import TabsLayout from "../app/(tabs)/_layout";
@@ -16,6 +17,7 @@ export const routes: Record<string, ComponentType> = {
   "(auth)/_layout": AuthLayout,
   "(auth)/index": Welcome,
   "(auth)/sign-in": SignIn,
+  "onboarding/connect": Connect,
   "onboarding/style": Style,
   "(auth)/code": Code,
   "(tabs)/_layout": TabsLayout,
