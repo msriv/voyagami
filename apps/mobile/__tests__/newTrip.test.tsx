@@ -52,7 +52,7 @@ describe("new trip", () => {
     await fireEvent.changeText(screen.getByLabelText("Settlement currency"), "inr");
     await fireEvent.press(screen.getByRole("button", { name: "Create trip" }));
 
-    expect(await screen.findByText("You're signed in.")).toBeTruthy();
+    expect(await screen.findByText("Where to next?")).toBeTruthy();
     const post = calls.find((c) => c.key === "POST /v1/trips");
     expect(post?.body).toMatchObject({
       title: "Hanoi trip",
@@ -72,7 +72,7 @@ describe("new trip", () => {
     for (const day of days) await fireEvent.press(day);
     await fireEvent.changeText(screen.getByLabelText("Settlement currency"), "JPY");
     await fireEvent.press(screen.getByRole("button", { name: "Create trip" }));
-    expect(await screen.findByText("You're signed in.")).toBeTruthy();
+    expect(await screen.findByText("Where to next?")).toBeTruthy();
     const body = calls.find((c) => c.key === "POST /v1/trips")?.body as {
       dates: { start: string; end: string };
     };

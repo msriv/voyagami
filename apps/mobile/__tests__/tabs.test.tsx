@@ -19,7 +19,10 @@ describe("tab shell", () => {
     mockStore.set("voyagami.accessToken", "a");
     mockStore.set("voyagami.refreshToken", "r");
     mockStore.set("voyagami.onboarded", "1");
-    mockApi({ "GET /v1/me": () => json(200, { id: "u1" }) });
+    mockApi({
+      "GET /v1/me": () => json(200, { id: "u1" }),
+      "GET /v1/trips": () => json(200, { trips: [] }),
+    });
     await renderRouter(routes);
     expect(await screen.findByRole("button", { name: "Home" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Explore" })).toBeTruthy();
