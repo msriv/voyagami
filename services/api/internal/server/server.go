@@ -44,6 +44,7 @@ func NewHandler(logger *slog.Logger, verifier auth.Verifier, opts ...Option) htt
 type handlers struct {
 	signIn  SignIn
 	profile Profile
+	trips   TripStore
 }
 
 // GetHealth reports that the process is up. It checks no dependencies.

@@ -11,6 +11,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/oapi-codegen/runtime"
 )
 
 // Defines values for TravelStyleInterests.
@@ -91,8 +93,66 @@ func (e TravelStyleSpend) Valid() bool {
 	}
 }
 
+// Defines values for TripRole.
+const (
+	Editor TripRole = "editor"
+	Owner  TripRole = "owner"
+	Viewer TripRole = "viewer"
+)
+
+// Valid indicates whether the value is a known member of the TripRole enum.
+func (e TripRole) Valid() bool {
+	switch e {
+	case Editor:
+		return true
+	case Owner:
+		return true
+	case Viewer:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TripStatus.
+const (
+	Active  TripStatus = "active"
+	Draft   TripStatus = "draft"
+	Past    TripStatus = "past"
+	Planned TripStatus = "planned"
+)
+
+// Valid indicates whether the value is a known member of the TripStatus enum.
+func (e TripStatus) Valid() bool {
+	switch e {
+	case Active:
+		return true
+	case Draft:
+		return true
+	case Past:
+		return true
+	case Planned:
+		return true
+	default:
+		return false
+	}
+}
+
+// Destination defines model for Destination.
+type Destination struct {
+	// CountryCode ISO 3166-1 alpha-2, upper case.
+	CountryCode string `json:"countryCode"`
+
+	// LocalCurrency ISO 4217, upper case. Optional.
+	LocalCurrency *string `json:"localCurrency,omitempty"`
+	Name          string  `json:"name"`
+
+	// TimeZone IANA zone, such as Asia/Tokyo.
+	TimeZone string `json:"timeZone"`
+}
+
 // Error The one error shape every non-2xx response uses. Codes: `bad_request`,
-// `unauthenticated`, `invalid_code`, `rate_limited`, `not_found`,
+// `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,
 // `method_not_allowed`, `internal`, `unavailable`, `timeout`.
 type Error struct {
 	// Code Stable machine-readable error code. The app switches on this.
@@ -198,23 +258,99 @@ type TravelStylePace string
 // TravelStyleSpend defines model for TravelStyle.Spend.
 type TravelStyleSpend string
 
+// Trip defines model for Trip.
+type Trip struct {
+	// Dates Either `start` and `end`, or `flexible`, never both.
+	Dates        TripDates     `json:"dates"`
+	Destinations []Destination `json:"destinations"`
+	Id           string        `json:"id"`
+	OwnerId      string        `json:"ownerId"`
+
+	// Role The caller's role on this trip.
+	Role TripRole `json:"role"`
+
+	// SettlementCurrency ISO 4217. One per trip. Fixed at creation.
+	SettlementCurrency string     `json:"settlementCurrency"`
+	Status             TripStatus `json:"status"`
+
+	// TimeZone IANA zone the trip's days are counted in.
+	TimeZone string `json:"timeZone"`
+	Title    string `json:"title"`
+}
+
+// TripRole The caller's role on this trip.
+type TripRole string
+
+// TripCreate defines model for TripCreate.
+type TripCreate struct {
+	// Dates Either `start` and `end`, or `flexible`, never both.
+	Dates              TripDates     `json:"dates"`
+	Destinations       []Destination `json:"destinations"`
+	SettlementCurrency string        `json:"settlementCurrency"`
+	TimeZone           string        `json:"timeZone"`
+	Title              string        `json:"title"`
+}
+
+// TripDates Either `start` and `end`, or `flexible`, never both.
+type TripDates struct {
+	// End YYYY-MM-DD
+	End      *string `json:"end,omitempty"`
+	Flexible *struct {
+		Days int `json:"days"`
+
+		// Month YYYY-MM, optional.
+		Month *string `json:"month,omitempty"`
+	} `json:"flexible,omitempty"`
+
+	// Start YYYY-MM-DD
+	Start *string `json:"start,omitempty"`
+}
+
+// TripList defines model for TripList.
+type TripList struct {
+	Trips []Trip `json:"trips"`
+}
+
+// TripStatus defines model for TripStatus.
+type TripStatus string
+
+// TripUpdate defines model for TripUpdate.
+type TripUpdate struct {
+	// Dates Either `start` and `end`, or `flexible`, never both.
+	Dates        *TripDates     `json:"dates,omitempty"`
+	Destinations *[]Destination `json:"destinations,omitempty"`
+	Status       *TripStatus    `json:"status,omitempty"`
+	TimeZone     *string        `json:"timeZone,omitempty"`
+	Title        *string        `json:"title,omitempty"`
+}
+
 // BadRequest The one error shape every non-2xx response uses. Codes: `bad_request`,
-// `unauthenticated`, `invalid_code`, `rate_limited`, `not_found`,
+// `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,
 // `method_not_allowed`, `internal`, `unavailable`, `timeout`.
 type BadRequest = Error
 
+// Forbidden The one error shape every non-2xx response uses. Codes: `bad_request`,
+// `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,
+// `method_not_allowed`, `internal`, `unavailable`, `timeout`.
+type Forbidden = Error
+
+// NotFound The one error shape every non-2xx response uses. Codes: `bad_request`,
+// `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,
+// `method_not_allowed`, `internal`, `unavailable`, `timeout`.
+type NotFound = Error
+
 // TooManyRequests The one error shape every non-2xx response uses. Codes: `bad_request`,
-// `unauthenticated`, `invalid_code`, `rate_limited`, `not_found`,
+// `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,
 // `method_not_allowed`, `internal`, `unavailable`, `timeout`.
 type TooManyRequests = Error
 
 // Unauthorized The one error shape every non-2xx response uses. Codes: `bad_request`,
-// `unauthenticated`, `invalid_code`, `rate_limited`, `not_found`,
+// `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,
 // `method_not_allowed`, `internal`, `unavailable`, `timeout`.
 type Unauthorized = Error
 
 // Unavailable The one error shape every non-2xx response uses. Codes: `bad_request`,
-// `unauthenticated`, `invalid_code`, `rate_limited`, `not_found`,
+// `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,
 // `method_not_allowed`, `internal`, `unavailable`, `timeout`.
 type Unavailable = Error
 
@@ -229,6 +365,12 @@ type RefreshSessionJSONRequestBody = RefreshRequest
 
 // UpdateMeJSONRequestBody defines body for UpdateMe for application/json ContentType.
 type UpdateMeJSONRequestBody = MeUpdate
+
+// CreateTripJSONRequestBody defines body for CreateTrip for application/json ContentType.
+type CreateTripJSONRequestBody = TripCreate
+
+// UpdateTripJSONRequestBody defines body for UpdateTrip for application/json ContentType.
+type UpdateTripJSONRequestBody = TripUpdate
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -253,6 +395,18 @@ type ServerInterface interface {
 	// UpdateMe Change the signed-in person's profile
 	// (PATCH /v1/me)
 	UpdateMe(w http.ResponseWriter, r *http.Request)
+	// ListTrips List my trips
+	// (GET /v1/trips)
+	ListTrips(w http.ResponseWriter, r *http.Request)
+	// CreateTrip Create a trip
+	// (POST /v1/trips)
+	CreateTrip(w http.ResponseWriter, r *http.Request)
+	// GetTrip Get a trip
+	// (GET /v1/trips/{tripId})
+	GetTrip(w http.ResponseWriter, r *http.Request, tripId string)
+	// UpdateTrip Change or archive a trip
+	// (PATCH /v1/trips/{tripId})
+	UpdateTrip(w http.ResponseWriter, r *http.Request, tripId string)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -353,6 +507,86 @@ func (siw *ServerInterfaceWrapper) UpdateMe(w http.ResponseWriter, r *http.Reque
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.UpdateMe(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListTrips operation middleware
+func (siw *ServerInterfaceWrapper) ListTrips(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListTrips(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateTrip operation middleware
+func (siw *ServerInterfaceWrapper) CreateTrip(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateTrip(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetTrip operation middleware
+func (siw *ServerInterfaceWrapper) GetTrip(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetTrip(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateTrip operation middleware
+func (siw *ServerInterfaceWrapper) UpdateTrip(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateTrip(w, r, tripId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -485,6 +719,10 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/health", wrapper.GetHealth)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/me", wrapper.GetMe)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/me", wrapper.UpdateMe)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips", wrapper.ListTrips)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips", wrapper.CreateTrip)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}", wrapper.GetTrip)
+	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/trips/{tripId}", wrapper.UpdateTrip)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/auth/otp/request", wrapper.RequestOtp)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/auth/otp/verify", wrapper.VerifyOtp)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/auth/refresh", wrapper.RefreshSession)
@@ -494,6 +732,10 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 }
 
 type BadRequestJSONResponse Error
+
+type ForbiddenJSONResponse Error
+
+type NotFoundJSONResponse Error
 
 type TooManyRequestsJSONResponse Error
 
@@ -822,6 +1064,276 @@ func (response UpdateMe503JSONResponse) VisitUpdateMeResponse(w http.ResponseWri
 	return err
 }
 
+type ListTripsRequestObject struct {
+}
+
+type ListTripsResponseObject interface {
+	VisitListTripsResponse(w http.ResponseWriter) error
+}
+
+type ListTrips200JSONResponse TripList
+
+func (response ListTrips200JSONResponse) VisitListTripsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListTrips401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ListTrips401JSONResponse) VisitListTripsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListTrips503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ListTrips503JSONResponse) VisitListTripsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateTripRequestObject struct {
+	Body *CreateTripJSONRequestBody
+}
+
+type CreateTripResponseObject interface {
+	VisitCreateTripResponse(w http.ResponseWriter) error
+}
+
+type CreateTrip201JSONResponse Trip
+
+func (response CreateTrip201JSONResponse) VisitCreateTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateTrip400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CreateTrip400JSONResponse) VisitCreateTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateTrip401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CreateTrip401JSONResponse) VisitCreateTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateTrip503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response CreateTrip503JSONResponse) VisitCreateTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetTripRequestObject struct {
+	TripId string `json:"tripId"`
+}
+
+type GetTripResponseObject interface {
+	VisitGetTripResponse(w http.ResponseWriter) error
+}
+
+type GetTrip200JSONResponse Trip
+
+func (response GetTrip200JSONResponse) VisitGetTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetTrip401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response GetTrip401JSONResponse) VisitGetTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetTrip404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response GetTrip404JSONResponse) VisitGetTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetTrip503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response GetTrip503JSONResponse) VisitGetTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateTripRequestObject struct {
+	TripId string `json:"tripId"`
+	Body   *UpdateTripJSONRequestBody
+}
+
+type UpdateTripResponseObject interface {
+	VisitUpdateTripResponse(w http.ResponseWriter) error
+}
+
+type UpdateTrip200JSONResponse Trip
+
+func (response UpdateTrip200JSONResponse) VisitUpdateTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateTrip400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response UpdateTrip400JSONResponse) VisitUpdateTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateTrip401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response UpdateTrip401JSONResponse) VisitUpdateTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateTrip403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response UpdateTrip403JSONResponse) VisitUpdateTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateTrip404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response UpdateTrip404JSONResponse) VisitUpdateTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateTrip503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response UpdateTrip503JSONResponse) VisitUpdateTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// GetHealth Report that the process is up
@@ -845,6 +1357,18 @@ type StrictServerInterface interface {
 	// UpdateMe Change the signed-in person's profile
 	// (PATCH /v1/me)
 	UpdateMe(ctx context.Context, request UpdateMeRequestObject) (UpdateMeResponseObject, error)
+	// ListTrips List my trips
+	// (GET /v1/trips)
+	ListTrips(ctx context.Context, request ListTripsRequestObject) (ListTripsResponseObject, error)
+	// CreateTrip Create a trip
+	// (POST /v1/trips)
+	CreateTrip(ctx context.Context, request CreateTripRequestObject) (CreateTripResponseObject, error)
+	// GetTrip Get a trip
+	// (GET /v1/trips/{tripId})
+	GetTrip(ctx context.Context, request GetTripRequestObject) (GetTripResponseObject, error)
+	// UpdateTrip Change or archive a trip
+	// (PATCH /v1/trips/{tripId})
+	UpdateTrip(ctx context.Context, request UpdateTripRequestObject) (UpdateTripResponseObject, error)
 }
 
 type StrictHandlerFunc func(ctx context.Context, w http.ResponseWriter, r *http.Request, request any) (any, error)
@@ -1075,6 +1599,120 @@ func (sh *strictHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(UpdateMeResponseObject); ok {
 		if err := validResponse.VisitUpdateMeResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListTrips operation middleware
+func (sh *strictHandler) ListTrips(w http.ResponseWriter, r *http.Request) {
+	var request ListTripsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListTrips(ctx, request.(ListTripsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListTrips")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListTripsResponseObject); ok {
+		if err := validResponse.VisitListTripsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateTrip operation middleware
+func (sh *strictHandler) CreateTrip(w http.ResponseWriter, r *http.Request) {
+	var request CreateTripRequestObject
+
+	var body CreateTripJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateTrip(ctx, request.(CreateTripRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateTrip")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateTripResponseObject); ok {
+		if err := validResponse.VisitCreateTripResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetTrip operation middleware
+func (sh *strictHandler) GetTrip(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request GetTripRequestObject
+
+	request.TripId = tripId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetTrip(ctx, request.(GetTripRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetTrip")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetTripResponseObject); ok {
+		if err := validResponse.VisitGetTripResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateTrip operation middleware
+func (sh *strictHandler) UpdateTrip(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request UpdateTripRequestObject
+
+	request.TripId = tripId
+
+	var body UpdateTripJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateTrip(ctx, request.(UpdateTripRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateTrip")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdateTripResponseObject); ok {
+		if err := validResponse.VisitUpdateTripResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
