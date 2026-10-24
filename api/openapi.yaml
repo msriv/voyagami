@@ -383,6 +383,20 @@ components:
           description: Name the person chose, if any.
         travelStyle:
           $ref: "#/components/schemas/TravelStyle"
+        homeRegion:
+          type: string
+          pattern: "^[A-Z]{2}$"
+          description: ISO 3166-1 alpha-2 code of the person's home country.
+        homeCurrency:
+          type: string
+          pattern: "^[A-Z]{3}$"
+          description: ISO 4217 code. Used for display and as a default for new trips.
+        units:
+          $ref: "#/components/schemas/Units"
+        regionSource:
+          type: string
+          enum: [device, confirmed]
+          description: "`device` when guessed from the phone, `confirmed` once the person chose."
     MeUpdate:
       type: object
       description: Fields to change. Leave a field out to keep it.
@@ -393,6 +407,39 @@ components:
           maxLength: 80
         travelStyle:
           $ref: "#/components/schemas/TravelStyle"
+        homeRegion:
+          type: string
+          pattern: "^[A-Z]{2}$"
+          description: ISO 3166-1 alpha-2 code of the person's home country.
+        homeCurrency:
+          type: string
+          pattern: "^[A-Z]{3}$"
+          description: ISO 4217 code. Used for display and as a default for new trips.
+        units:
+          $ref: "#/components/schemas/Units"
+        regionSource:
+          type: string
+          enum: [device, confirmed]
+          description: "`device` when guessed from the phone, `confirmed` once the person chose."
+    Units:
+      type: object
+      description: How the person likes distances, temperatures and times shown. Send all four fields.
+      required: [distance, temperature, clock, firstWeekday]
+      properties:
+        distance:
+          type: string
+          enum: [km, mi]
+        temperature:
+          type: string
+          enum: [c, f]
+        clock:
+          type: string
+          enum: [12h, 24h]
+        firstWeekday:
+          type: integer
+          minimum: 0
+          maximum: 6
+          description: 0 is Sunday.
     TravelStyle:
       type: object
       description: The chips picked in onboarding. Any part may be left empty.

@@ -10,7 +10,7 @@ export default function TabsLayout() {
   const { onboarded } = useAuth();
 
   // First launch goes through onboarding once; after that, straight to Home.
-  if (!onboarded) return <Redirect href="/onboarding/style" />;
+  if (!onboarded) return <Redirect href="/onboarding/region" />;
 
   return (
     <Tabs

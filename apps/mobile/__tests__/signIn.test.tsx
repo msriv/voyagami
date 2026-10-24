@@ -34,7 +34,7 @@ describe("sign in", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Verify" }));
 
     // A first sign-in goes through onboarding before Home.
-    expect(await screen.findByText("How do you like to travel?")).toBeTruthy();
+    expect(await screen.findByText("Where is home?")).toBeTruthy();
     expect(calls[0]).toEqual({ key: "POST /v1/auth/otp/request", body: { phone: "+14155550123" } });
     expect(calls[1]?.body).toMatchObject({ phone: "+14155550123", code: "123456" });
     expect(mockStore.get("voyagami.refreshToken")).toBe("refresh-1");

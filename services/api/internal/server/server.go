@@ -10,6 +10,7 @@ import (
 
 	"github.com/msriv/voyagami/services/api/internal/api"
 	"github.com/msriv/voyagami/services/api/internal/auth"
+	"github.com/msriv/voyagami/services/api/internal/repo"
 )
 
 // NewHandler returns the API's router. Routes and request types come from the
@@ -52,12 +53,22 @@ func (*handlers) GetHealth(context.Context, api.GetHealthRequestObject) (api.Get
 	return api.GetHealth200JSONResponse{Status: "ok"}, nil
 }
 
-// GetMe returns the person the auth middleware identified.
-func (*handlers) GetMe(ctx context.Context, _ api.GetMeRequestObject) (api.GetMeResponseObject, error) {
+// GetMe returns the signed-in person's profile, or just what the token says
+// when profiles are off or the profile is not there yet.
+func (h *handlers) GetMe(ctx context.Context, _ api.GetMeRequestObject) (api.GetMeResponseObject, error) {
 	id, ok := auth.FromContext(ctx)
 	if !ok {
 		// requireAuth guards this route, so this means the wiring is broken.
 		return nil, errors.New("GetMe reached without an identity")
+	}
+	if h.profile != nil {
+		user, err := h.profile.Get(ctx, id.UserID)
+		if err == nil {
+			return api.GetMe200JSONResponse(meFrom(user)), nil
+		}
+		if !errors.Is(err, repo.ErrNotFound) {
+			return nil, err
+		}
 	}
 	me := api.GetMe200JSONResponse{Id: id.UserID}
 	if id.DisplayName != "" {

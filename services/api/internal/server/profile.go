@@ -12,6 +12,7 @@ import (
 
 // Profile is the profile storage the routes need. repo.Users implements it.
 type Profile interface {
+	Get(ctx context.Context, id string) (model.User, error)
 	Update(ctx context.Context, id string, patch model.UserPatch) (model.User, error)
 }
 
@@ -42,6 +43,20 @@ func (h *handlers) UpdateMe(ctx context.Context, req api.UpdateMeRequestObject) 
 			if s.Spend != nil {
 				patch.TravelStyle.Spend = string(*s.Spend)
 			}
+		}
+		b := req.Body
+		patch.HomeRegion, patch.HomeCurrency = b.HomeRegion, b.HomeCurrency
+		if u := b.Units; u != nil {
+			patch.Units = &model.Units{
+				Distance:     string(u.Distance),
+				Temperature:  string(u.Temperature),
+				Clock:        string(u.Clock),
+				FirstWeekday: u.FirstWeekday,
+			}
+		}
+		if b.RegionSource != nil {
+			src := string(*b.RegionSource)
+			patch.RegionSource = &src
 		}
 	}
 	user, err := h.profile.Update(ctx, id.UserID, patch)
@@ -86,6 +101,24 @@ func meFrom(u model.User) api.Me {
 			style.Spend = &spend
 		}
 		me.TravelStyle = &style
+	}
+	if u.HomeRegion != "" {
+		me.HomeRegion = &u.HomeRegion
+	}
+	if u.HomeCurrency != "" {
+		me.HomeCurrency = &u.HomeCurrency
+	}
+	if u.Units.Distance != "" {
+		me.Units = &api.Units{
+			Distance:     api.UnitsDistance(u.Units.Distance),
+			Temperature:  api.UnitsTemperature(u.Units.Temperature),
+			Clock:        api.UnitsClock(u.Units.Clock),
+			FirstWeekday: u.Units.FirstWeekday,
+		}
+	}
+	if u.RegionSource != "" {
+		src := api.MeRegionSource(u.RegionSource)
+		me.RegionSource = &src
 	}
 	return me
 }

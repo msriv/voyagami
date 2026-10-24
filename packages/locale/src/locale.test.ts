@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   callingCodeFor,
+  regionName,
+  searchRegions,
   defaultClock,
   defaultCurrency,
   formatMonth,
@@ -134,5 +136,20 @@ describe("calendar helpers and default currency", () => {
   });
   it("names a month and year", () => {
     expect(formatMonth(Date.UTC(2026, 10, 5), "en-US")).toBe("November 2026");
+  });
+});
+
+describe("regions", () => {
+  it("names regions in the viewer's language and sorts by that name", () => {
+    expect(regionName("VN", "en-US")).toBe("Vietnam");
+    expect(regionName("VN", "fr-FR")).toBe("Viêt Nam");
+    const names = searchRegions("", "en-US").map((r) => r.name);
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, "en-US")));
+  });
+
+  it("finds by part of the name or by exact code, and returns nothing for nonsense", () => {
+    expect(searchRegions("viet", "en-US").map((r) => r.code)).toEqual(["VN"]);
+    expect(searchRegions("in", "en-US").map((r) => r.code)).toContain("IN");
+    expect(searchRegions("zzzzzz", "en-US")).toEqual([]);
   });
 });
