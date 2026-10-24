@@ -53,8 +53,11 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 
 	deps := signInDeps{
 		verifier: signin.NewVerifier(keys),
-		options:  []server.Option{server.WithProfile(firestorerepo.NewUsers(client))},
-		close:    func() { _ = client.Close() },
+		options: []server.Option{
+			server.WithProfile(firestorerepo.NewUsers(client)),
+			server.WithTrips(firestorerepo.NewTrips(client)),
+		},
+		close: func() { _ = client.Close() },
 	}
 	if cfg.Env != "dev" {
 		logger.Warn("no SMS provider for this environment yet, so phone sign-in is off")

@@ -77,6 +77,106 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/trips:
+    get:
+      operationId: listTrips
+      tags: [trips]
+      summary: List my trips
+      description: |
+        Trips the signed-in person is an active member of, soonest first. Trips
+        with no fixed dates come after the dated ones. Archived trips (status
+        `past`) are included; the app filters them.
+      responses:
+        "200":
+          description: The person's trips.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TripList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    post:
+      operationId: createTrip
+      tags: [trips]
+      summary: Create a trip
+      description: The caller becomes the owner. The trip starts as `planned`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TripCreate"
+      responses:
+        "201":
+          description: The new trip.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getTrip
+      tags: [trips]
+      summary: Get a trip
+      description: Only active members can read a trip. Everyone else gets 404, so trip IDs reveal nothing.
+      responses:
+        "200":
+          description: The trip.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    patch:
+      operationId: updateTrip
+      tags: [trips]
+      summary: Change or archive a trip
+      description: |
+        Changes only the fields that are sent. Owners and editors can change
+        details. Only the owner can change `status`; setting it to `past`
+        archives the trip, and setting it back unarchives it. Nothing is deleted.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TripUpdate"
+      responses:
+        "200":
+          description: The trip after the change.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/auth/otp/request:
     post:
       operationId: requestOtp
@@ -201,6 +301,18 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: The person is on the trip but their role does not allow this.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: No such trip, or the person is not a member of it.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
   schemas:
     Health:
       type: object
@@ -308,11 +420,117 @@ components:
         spend:
           type: string
           enum: [shoestring, comfort, splurge]
+    Destination:
+      type: object
+      required: [name, countryCode, timeZone]
+      properties:
+        name:
+          type: string
+        countryCode:
+          type: string
+          description: ISO 3166-1 alpha-2, upper case.
+        timeZone:
+          type: string
+          description: IANA zone, such as Asia/Tokyo.
+        localCurrency:
+          type: string
+          description: ISO 4217, upper case. Optional.
+    TripDates:
+      type: object
+      description: Either `start` and `end`, or `flexible`, never both.
+      properties:
+        start:
+          type: string
+          description: YYYY-MM-DD
+        end:
+          type: string
+          description: YYYY-MM-DD
+        flexible:
+          type: object
+          required: [days]
+          properties:
+            days:
+              type: integer
+              minimum: 1
+            month:
+              type: string
+              description: YYYY-MM, optional.
+    TripStatus:
+      type: string
+      enum: [draft, planned, active, past]
+    Trip:
+      type: object
+      required:
+        [id, title, ownerId, destinations, dates, timeZone, settlementCurrency, status, role]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        ownerId:
+          type: string
+        destinations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Destination"
+        dates:
+          $ref: "#/components/schemas/TripDates"
+        timeZone:
+          type: string
+          description: IANA zone the trip's days are counted in.
+        settlementCurrency:
+          type: string
+          description: ISO 4217. One per trip. Fixed at creation.
+        status:
+          $ref: "#/components/schemas/TripStatus"
+        role:
+          type: string
+          enum: [owner, editor, viewer]
+          description: The caller's role on this trip.
+    TripList:
+      type: object
+      required: [trips]
+      properties:
+        trips:
+          type: array
+          items:
+            $ref: "#/components/schemas/Trip"
+    TripCreate:
+      type: object
+      required: [title, destinations, dates, timeZone, settlementCurrency]
+      properties:
+        title:
+          type: string
+        destinations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Destination"
+        dates:
+          $ref: "#/components/schemas/TripDates"
+        timeZone:
+          type: string
+        settlementCurrency:
+          type: string
+    TripUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        destinations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Destination"
+        dates:
+          $ref: "#/components/schemas/TripDates"
+        timeZone:
+          type: string
+        status:
+          $ref: "#/components/schemas/TripStatus"
     Error:
       type: object
       description: |
         The one error shape every non-2xx response uses. Codes: `bad_request`,
-        `unauthenticated`, `invalid_code`, `rate_limited`, `not_found`,
+        `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,
         `method_not_allowed`, `internal`, `unavailable`, `timeout`.
       required: [code, message]
       properties:
