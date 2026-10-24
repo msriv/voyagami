@@ -291,7 +291,17 @@ components:
           uniqueItems: true
           items:
             type: string
-            enum: [mountains, beaches, foodTrails, roadTrips, cultureHistory, nightlife, wildlife, slowCafes]
+            enum:
+              [
+                mountains,
+                beaches,
+                foodTrails,
+                roadTrips,
+                cultureHistory,
+                nightlife,
+                wildlife,
+                slowCafes,
+              ]
         pace:
           type: string
           enum: [slow, balanced, packed]

@@ -31,7 +31,8 @@ export const en = {
   onboarding: {
     welcome: {
       title: "Trips are better planned together.",
-      intro: "Plan the route, split the costs and keep the memories, all in one place with your crew.",
+      intro:
+        "Plan the route, split the costs and keep the memories, all in one place with your crew.",
       start: "Get started",
     },
     style: {

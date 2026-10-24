@@ -45,7 +45,9 @@ describe("travel style", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Slow cafes" }));
     await fireEvent.press(screen.getByRole("button", { name: "Slow" }));
     await fireEvent.press(screen.getByRole("button", { name: "Comfort" }));
-    expect(screen.getByRole("button", { name: "Beaches" }).props.accessibilityState.selected).toBe(true);
+    expect(screen.getByRole("button", { name: "Beaches" }).props.accessibilityState.selected).toBe(
+      true,
+    );
     await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
     expect(await screen.findByText("Welcome, Asha")).toBeTruthy();
     const patch = calls.find((c) => c.key === "PATCH /v1/me");
