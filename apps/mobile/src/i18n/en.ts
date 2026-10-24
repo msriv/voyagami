@@ -156,6 +156,7 @@ export const en = {
     emptyPlanBody: "Weekend getaway or a big trip abroad",
   },
   profile: {
+    homeRegion: "Home country",
     signOut: "Sign out",
   },
   // Dev-only component gallery (VOY-103). Not shown to people.

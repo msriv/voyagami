@@ -1,4 +1,3 @@
-import { getLocales } from "expo-localization";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
@@ -7,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
+import { useProfile } from "@/profile";
 import { partitionTrips, todayIso, type Trip } from "@/trips/summary";
 import { TripCard } from "@/trips/TripCard";
 import { Button, Card, Seal, Text } from "@/ui";
@@ -16,8 +16,7 @@ export default function HomeScreen() {
   const { colors } = useTheme();
   const { api } = useAuth();
   const router = useRouter();
-  const locale = getLocales()[0]?.languageTag ?? "en";
-  const [name, setName] = useState<string | undefined>();
+  const { locale, displayName: name } = useProfile();
   const [trips, setTrips] = useState<Trip[] | undefined>();
   const [failed, setFailed] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -33,17 +32,8 @@ export default function HomeScreen() {
   }, [api]);
 
   useEffect(() => {
-    let alive = true;
-    api
-      .unwrap(api.GET("/v1/me"))
-      .then((me) => alive && setName(me.displayName))
-      // Home still works offline; the greeting just has no name.
-      .catch(() => undefined);
     void load();
-    return () => {
-      alive = false;
-    };
-  }, [api, load]);
+  }, [load]);
 
   const today = todayIso();
   const { upcoming, past } = partitionTrips(trips ?? [], today);
