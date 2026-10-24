@@ -1,4 +1,4 @@
-import { daysBetween, monthCells, pickDay } from "./dates";
+import { daysBetween, daysInRange, monthCells, pickDay } from "./dates";
 
 describe("trip dates", () => {
   it("counts days inclusive", () => {
@@ -18,5 +18,14 @@ describe("trip dates", () => {
     expect(monthCells(2026, 10, 0)[0]).toBe("2026-11-01");
     expect(monthCells(2026, 10, 1).slice(0, 6)).toEqual([null, null, null, null, null, null]);
     expect(monthCells(2026, 10, 1)).toHaveLength(6 + 30);
+  });
+  it("lists every day in a range and caps long ones", () => {
+    expect(daysInRange("2026-02-27", "2026-03-02")).toEqual([
+      "2026-02-27",
+      "2026-02-28",
+      "2026-03-01",
+      "2026-03-02",
+    ]);
+    expect(daysInRange("2026-01-01", "2026-12-31", 5)).toHaveLength(5);
   });
 });
