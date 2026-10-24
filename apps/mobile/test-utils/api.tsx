@@ -3,6 +3,8 @@ import type { ComponentType } from "react";
 import RootLayout from "../app/_layout";
 import AuthLayout from "../app/(auth)/_layout";
 import Code from "../app/(auth)/code";
+import Welcome from "../app/(auth)/index";
+import Style from "../app/onboarding/style";
 import SignIn from "../app/(auth)/sign-in";
 import TabsLayout from "../app/(tabs)/_layout";
 import Explore from "../app/(tabs)/explore";
@@ -12,7 +14,9 @@ import Profile from "../app/(tabs)/profile";
 export const routes: Record<string, ComponentType> = {
   _layout: RootLayout,
   "(auth)/_layout": AuthLayout,
+  "(auth)/index": Welcome,
   "(auth)/sign-in": SignIn,
+  "onboarding/style": Style,
   "(auth)/code": Code,
   "(tabs)/_layout": TabsLayout,
   "(tabs)/index": Home,
