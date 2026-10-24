@@ -13,6 +13,7 @@ const (
 	codeUnauthenticated  = "unauthenticated"
 	codeInvalidCode      = "invalid_code"
 	codeRateLimited      = "rate_limited"
+	codeForbidden        = "forbidden"
 	codeNotFound         = "not_found"
 	codeMethodNotAllowed = "method_not_allowed"
 	codeInternal         = "internal"

@@ -51,7 +51,11 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 		return signInDeps{}, fmt.Errorf("firestore (set GCP_PROJECT): %w", err)
 	}
 
-	deps := signInDeps{verifier: signin.NewVerifier(keys), close: func() { _ = client.Close() }}
+	deps := signInDeps{
+		verifier: signin.NewVerifier(keys),
+		options:  []server.Option{server.WithTrips(firestorerepo.NewTrips(client))},
+		close:    func() { _ = client.Close() },
+	}
 	if cfg.Env != "dev" {
 		logger.Warn("no SMS provider for this environment yet, so phone sign-in is off")
 		return deps, nil
@@ -63,6 +67,6 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 	}
 	sms := otp.NewLimited(stub, otp.DefaultLimits)
 	svc := signin.NewService(sms, firestorerepo.NewAccounts(client), firestorerepo.NewSessions(client), keys)
-	deps.options = []server.Option{server.WithSignIn(svc)}
+	deps.options = append(deps.options, server.WithSignIn(svc))
 	return deps, nil
 }

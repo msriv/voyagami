@@ -43,6 +43,7 @@ func NewHandler(logger *slog.Logger, verifier auth.Verifier, opts ...Option) htt
 // handlers implements the generated api.StrictServerInterface.
 type handlers struct {
 	signIn SignIn
+	trips  TripStore
 }
 
 // GetHealth reports that the process is up. It checks no dependencies.

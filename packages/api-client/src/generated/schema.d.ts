@@ -46,6 +46,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/trips": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my trips
+         * @description Trips the signed-in person is an active member of, soonest first. Trips
+         *     with no fixed dates come after the dated ones. Archived trips (status
+         *     `past`) are included; the app filters them.
+         */
+        get: operations["listTrips"];
+        put?: never;
+        /**
+         * Create a trip
+         * @description The caller becomes the owner. The trip starts as `planned`.
+         */
+        post: operations["createTrip"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{tripId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Get a trip
+         * @description Only active members can read a trip. Everyone else gets 404, so trip IDs reveal nothing.
+         */
+        get: operations["getTrip"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Change or archive a trip
+         * @description Changes only the fields that are sent. Owners and editors can change
+         *     details. Only the owner can change `status`; setting it to `past`
+         *     archives the trip, and setting it back unarchives it. Nothing is deleted.
+         */
+        patch: operations["updateTrip"];
+        trace?: never;
+    };
     "/v1/auth/otp/request": {
         parameters: {
             query?: never;
@@ -177,9 +231,66 @@ export interface components {
             /** @description Name the person chose, if any. */
             displayName?: string;
         };
+        Destination: {
+            name: string;
+            /** @description ISO 3166-1 alpha-2, upper case. */
+            countryCode: string;
+            /** @description IANA zone, such as Asia/Tokyo. */
+            timeZone: string;
+            /** @description ISO 4217, upper case. Optional. */
+            localCurrency?: string;
+        };
+        /** @description Either `start` and `end`, or `flexible`, never both. */
+        TripDates: {
+            /** @description YYYY-MM-DD */
+            start?: string;
+            /** @description YYYY-MM-DD */
+            end?: string;
+            flexible?: {
+                days: number;
+                /** @description YYYY-MM, optional. */
+                month?: string;
+            };
+        };
+        /** @enum {string} */
+        TripStatus: "draft" | "planned" | "active" | "past";
+        Trip: {
+            id: string;
+            title: string;
+            ownerId: string;
+            destinations: components["schemas"]["Destination"][];
+            dates: components["schemas"]["TripDates"];
+            /** @description IANA zone the trip's days are counted in. */
+            timeZone: string;
+            /** @description ISO 4217. One per trip. Fixed at creation. */
+            settlementCurrency: string;
+            status: components["schemas"]["TripStatus"];
+            /**
+             * @description The caller's role on this trip.
+             * @enum {string}
+             */
+            role: "owner" | "editor" | "viewer";
+        };
+        TripList: {
+            trips: components["schemas"]["Trip"][];
+        };
+        TripCreate: {
+            title: string;
+            destinations: components["schemas"]["Destination"][];
+            dates: components["schemas"]["TripDates"];
+            timeZone: string;
+            settlementCurrency: string;
+        };
+        TripUpdate: {
+            title?: string;
+            destinations?: components["schemas"]["Destination"][];
+            dates?: components["schemas"]["TripDates"];
+            timeZone?: string;
+            status?: components["schemas"]["TripStatus"];
+        };
         /**
          * @description The one error shape every non-2xx response uses. Codes: `bad_request`,
-         *     `unauthenticated`, `invalid_code`, `rate_limited`, `not_found`,
+         *     `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,
          *     `method_not_allowed`, `internal`, `unavailable`, `timeout`.
          */
         Error: {
@@ -226,6 +337,24 @@ export interface components {
         };
         /** @description The service cannot do this right now. */
         Unavailable: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description The person is on the trip but their role does not allow this. */
+        Forbidden: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description No such trip, or the person is not a member of it. */
+        NotFound: {
             headers: {
                 [name: string]: unknown;
             };
@@ -280,6 +409,111 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+        };
+    };
+    listTrips: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The person's trips. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    createTrip: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TripCreate"];
+            };
+        };
+        responses: {
+            /** @description The new trip. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Trip"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    getTrip: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The trip. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Trip"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    updateTrip: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TripUpdate"];
+            };
+        };
+        responses: {
+            /** @description The trip after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Trip"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
         };
     };
     requestOtp: {
