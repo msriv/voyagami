@@ -24,3 +24,7 @@ i18n come in VOY-99; the development build and device guide in VOY-100.
 ## Component gallery
 
 In a dev build, open the `/gallery` route (for example `npx uri-scheme open "voyagami:///gallery" --ios`, or `router.push("/gallery")` from the dev menu) to see every UI kit component and state. In release builds the route redirects home. Use it for the 200% text, screen reader and reduce-motion checks in `docs/accessibility.md`.
+
+## Web preview (dev only)
+
+`pnpm --filter @voyagami/mobile web` opens the app in a browser, or `npx expo export --platform web` builds static files into `dist/` (git-ignored). Voyagami is mobile only: this is for looking at screens and taking screenshots, not a product. Secure storage has no web backend, so a sign-in does not survive a reload there.
