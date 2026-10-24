@@ -15,6 +15,42 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+// Defines values for MeRegionSource.
+const (
+	MeRegionSourceConfirmed MeRegionSource = "confirmed"
+	MeRegionSourceDevice    MeRegionSource = "device"
+)
+
+// Valid indicates whether the value is a known member of the MeRegionSource enum.
+func (e MeRegionSource) Valid() bool {
+	switch e {
+	case MeRegionSourceConfirmed:
+		return true
+	case MeRegionSourceDevice:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MeUpdateRegionSource.
+const (
+	MeUpdateRegionSourceConfirmed MeUpdateRegionSource = "confirmed"
+	MeUpdateRegionSourceDevice    MeUpdateRegionSource = "device"
+)
+
+// Valid indicates whether the value is a known member of the MeUpdateRegionSource enum.
+func (e MeUpdateRegionSource) Valid() bool {
+	switch e {
+	case MeUpdateRegionSourceConfirmed:
+		return true
+	case MeUpdateRegionSourceDevice:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for TravelStyleInterests.
 const (
 	Beaches        TravelStyleInterests = "beaches"
@@ -138,6 +174,60 @@ func (e TripStatus) Valid() bool {
 	}
 }
 
+// Defines values for UnitsClock.
+const (
+	N12h UnitsClock = "12h"
+	N24h UnitsClock = "24h"
+)
+
+// Valid indicates whether the value is a known member of the UnitsClock enum.
+func (e UnitsClock) Valid() bool {
+	switch e {
+	case N12h:
+		return true
+	case N24h:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for UnitsDistance.
+const (
+	Km UnitsDistance = "km"
+	Mi UnitsDistance = "mi"
+)
+
+// Valid indicates whether the value is a known member of the UnitsDistance enum.
+func (e UnitsDistance) Valid() bool {
+	switch e {
+	case Km:
+		return true
+	case Mi:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for UnitsTemperature.
+const (
+	C UnitsTemperature = "c"
+	F UnitsTemperature = "f"
+)
+
+// Valid indicates whether the value is a known member of the UnitsTemperature enum.
+func (e UnitsTemperature) Valid() bool {
+	switch e {
+	case C:
+		return true
+	case F:
+		return true
+	default:
+		return false
+	}
+}
+
 // Destination defines model for Destination.
 type Destination struct {
 	// CountryCode ISO 3166-1 alpha-2, upper case.
@@ -183,20 +273,50 @@ type Me struct {
 	// DisplayName Name the person chose, if any.
 	DisplayName *string `json:"displayName,omitempty"`
 
+	// HomeCurrency ISO 4217 code. Used for display and as a default for new trips.
+	HomeCurrency *string `json:"homeCurrency,omitempty"`
+
+	// HomeRegion ISO 3166-1 alpha-2 code of the person's home country.
+	HomeRegion *string `json:"homeRegion,omitempty"`
+
 	// Id Stable account ID. Not the phone number.
 	Id string `json:"id"`
 
+	// RegionSource `device` when guessed from the phone, `confirmed` once the person chose.
+	RegionSource *MeRegionSource `json:"regionSource,omitempty"`
+
 	// TravelStyle The chips picked in onboarding. Any part may be left empty.
 	TravelStyle *TravelStyle `json:"travelStyle,omitempty"`
+
+	// Units How the person likes distances, temperatures and times shown. Send all four fields.
+	Units *Units `json:"units,omitempty"`
 }
+
+// MeRegionSource `device` when guessed from the phone, `confirmed` once the person chose.
+type MeRegionSource string
 
 // MeUpdate Fields to change. Leave a field out to keep it.
 type MeUpdate struct {
 	DisplayName *string `json:"displayName,omitempty"`
 
+	// HomeCurrency ISO 4217 code. Used for display and as a default for new trips.
+	HomeCurrency *string `json:"homeCurrency,omitempty"`
+
+	// HomeRegion ISO 3166-1 alpha-2 code of the person's home country.
+	HomeRegion *string `json:"homeRegion,omitempty"`
+
+	// RegionSource `device` when guessed from the phone, `confirmed` once the person chose.
+	RegionSource *MeUpdateRegionSource `json:"regionSource,omitempty"`
+
 	// TravelStyle The chips picked in onboarding. Any part may be left empty.
 	TravelStyle *TravelStyle `json:"travelStyle,omitempty"`
+
+	// Units How the person likes distances, temperatures and times shown. Send all four fields.
+	Units *Units `json:"units,omitempty"`
 }
+
+// MeUpdateRegionSource `device` when guessed from the phone, `confirmed` once the person chose.
+type MeUpdateRegionSource string
 
 // OtpRequest defines model for OtpRequest.
 type OtpRequest struct {
@@ -323,6 +443,25 @@ type TripUpdate struct {
 	TimeZone     *string        `json:"timeZone,omitempty"`
 	Title        *string        `json:"title,omitempty"`
 }
+
+// Units How the person likes distances, temperatures and times shown. Send all four fields.
+type Units struct {
+	Clock    UnitsClock    `json:"clock"`
+	Distance UnitsDistance `json:"distance"`
+
+	// FirstWeekday 0 is Sunday.
+	FirstWeekday int              `json:"firstWeekday"`
+	Temperature  UnitsTemperature `json:"temperature"`
+}
+
+// UnitsClock defines model for Units.Clock.
+type UnitsClock string
+
+// UnitsDistance defines model for Units.Distance.
+type UnitsDistance string
+
+// UnitsTemperature defines model for Units.Temperature.
+type UnitsTemperature string
 
 // BadRequest The one error shape every non-2xx response uses. Codes: `bad_request`,
 // `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,

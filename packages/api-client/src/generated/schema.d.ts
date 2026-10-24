@@ -236,11 +236,42 @@ export interface components {
             /** @description Name the person chose, if any. */
             displayName?: string;
             travelStyle?: components["schemas"]["TravelStyle"];
+            /** @description ISO 3166-1 alpha-2 code of the person's home country. */
+            homeRegion?: string;
+            /** @description ISO 4217 code. Used for display and as a default for new trips. */
+            homeCurrency?: string;
+            units?: components["schemas"]["Units"];
+            /**
+             * @description `device` when guessed from the phone, `confirmed` once the person chose.
+             * @enum {string}
+             */
+            regionSource?: "device" | "confirmed";
         };
         /** @description Fields to change. Leave a field out to keep it. */
         MeUpdate: {
             displayName?: string;
             travelStyle?: components["schemas"]["TravelStyle"];
+            /** @description ISO 3166-1 alpha-2 code of the person's home country. */
+            homeRegion?: string;
+            /** @description ISO 4217 code. Used for display and as a default for new trips. */
+            homeCurrency?: string;
+            units?: components["schemas"]["Units"];
+            /**
+             * @description `device` when guessed from the phone, `confirmed` once the person chose.
+             * @enum {string}
+             */
+            regionSource?: "device" | "confirmed";
+        };
+        /** @description How the person likes distances, temperatures and times shown. Send all four fields. */
+        Units: {
+            /** @enum {string} */
+            distance: "km" | "mi";
+            /** @enum {string} */
+            temperature: "c" | "f";
+            /** @enum {string} */
+            clock: "12h" | "24h";
+            /** @description 0 is Sunday. */
+            firstWeekday: number;
         };
         /** @description The chips picked in onboarding. Any part may be left empty. */
         TravelStyle: {

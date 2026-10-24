@@ -66,11 +66,16 @@ describe("travel style", () => {
 });
 
 describe("first-run routing", () => {
-  it("sends a first launch through style and connect once, then straight to Home", async () => {
+  it("sends a first launch through region, style and connect once, then straight to Home", async () => {
     mockStore.set("voyagami.accessToken", "a");
     mockStore.set("voyagami.refreshToken", "r");
-    mockApi({ "GET /v1/me": () => json(200, { id: "u1", displayName: "Asha" }) });
+    mockApi({
+      "GET /v1/me": () => json(200, { id: "u1", displayName: "Asha" }),
+      "PATCH /v1/me": () => json(200, { id: "u1" }),
+    });
     const first = await renderRouter(routes, { initialUrl: "/" });
+    await screen.findByText("Where is home?");
+    await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
     await screen.findByText("How do you like to travel?");
     await fireEvent.press(screen.getByRole("button", { name: "Skip for now" }));
     await screen.findByText("Let Voyagami help.");

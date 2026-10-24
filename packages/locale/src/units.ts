@@ -11,6 +11,13 @@ export interface Units {
   clock: Clock;
 }
 
+/** Every value a person can pick for each unit setting, for building pickers. */
+export const unitOptions = {
+  distance: ["km", "mi"],
+  temperature: ["c", "f"],
+  clock: ["12h", "24h"],
+} as const satisfies { [K in keyof Units]?: readonly Units[K][] };
+
 // Regions whose roads are signed in miles, and whose weather is given in Fahrenheit.
 const mileRegions = new Set(["US", "GB", "LR", "MM"]);
 const fahrenheitRegions = new Set(["US", "BS", "BZ", "KY", "LR", "PW"]);
