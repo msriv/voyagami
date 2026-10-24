@@ -1,5 +1,3 @@
-import { defaultCurrency } from "@voyagami/locale";
-import { getLocales } from "expo-localization";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
@@ -7,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { signInErrorKey, useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
+import { useProfile } from "@/profile";
 import { useTheme } from "@/theme";
 import { suggestedDestinations, type Destination } from "@/trips/destinations";
 import { DateRangePicker } from "@/trips/DateRangePicker";
@@ -20,15 +19,16 @@ export default function NewTripScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const { api } = useAuth();
-  const locale = getLocales()[0];
-  const tag = locale?.languageTag ?? "en";
+  const { locale: tag, currency: homeCurrency } = useProfile();
 
   const [stops, setStops] = useState<Destination[]>([]);
   const [mode, setMode] = useState<Mode>("dates");
   const [range, setRange] = useState<DateRange>({});
   const [days, setDays] = useState(7);
   const [name, setName] = useState("");
-  const [currency, setCurrency] = useState(defaultCurrency(locale?.regionCode ?? null) ?? "");
+  // Until the person types one, the trip's money follows their home currency.
+  const [typedCurrency, setCurrency] = useState<string | undefined>();
+  const currency = typedCurrency ?? homeCurrency;
   const [error, setError] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
 

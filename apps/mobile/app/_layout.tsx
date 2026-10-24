@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 
 import { AuthProvider, useAuth } from "@/auth";
 import "@/i18n";
+import { ProfileProvider } from "@/profile";
 import { fontAssets, ThemeProvider } from "@/theme";
 
 void SplashScreen.preventAutoHideAsync();
@@ -23,8 +24,10 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <StatusBar style="dark" />
-        <Screens />
+        <ProfileProvider>
+          <StatusBar style="dark" />
+          <Screens />
+        </ProfileProvider>
       </AuthProvider>
     </ThemeProvider>
   );

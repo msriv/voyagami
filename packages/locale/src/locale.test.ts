@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   callingCodeFor,
+  localeFor,
   regionName,
   searchRegions,
   defaultClock,
@@ -151,5 +152,18 @@ describe("regions", () => {
     expect(searchRegions("viet", "en-US").map((r) => r.code)).toEqual(["VN"]);
     expect(searchRegions("in", "en-US").map((r) => r.code)).toContain("IN");
     expect(searchRegions("zzzzzz", "en-US")).toEqual([]);
+  });
+});
+
+describe("localeFor", () => {
+  it("keeps the language and swaps in the home region", () => {
+    expect(localeFor("en-US", "IN")).toBe("en-IN");
+    expect(localeFor("fr", "CA")).toBe("fr-CA");
+    expect(localeFor("en", null)).toBe("en");
+  });
+
+  it("keeps the input when the tag or region is not valid", () => {
+    expect(localeFor("not a tag", "IN")).toBe("not a tag");
+    expect(localeFor("en", "xx-!")).toBe("en");
   });
 });

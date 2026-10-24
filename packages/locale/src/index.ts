@@ -20,3 +20,4 @@ export {
   type Units,
 } from "./units";
 export { regionCodes, regionName, searchRegions } from "./regions";
+export { localeFor } from "./localeFor";

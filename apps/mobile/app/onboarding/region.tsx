@@ -16,6 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { signInErrorKey, useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
+import { useProfile } from "@/profile";
 import { Button, Card, Chip, Input, Sheet, Text } from "@/ui";
 
 const maxShown = 40;
@@ -24,12 +25,13 @@ export default function RegionScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const router = useRouter();
-  const { api } = useAuth();
-  const device = getLocales()[0];
-  const tag = device?.languageTag ?? "en";
-  const [region, setRegion] = useState<string | null>(device?.regionCode ?? null);
-  const [currency, setCurrency] = useState(defaultCurrency(region) ?? "");
-  const [units, setUnits] = useState<Units>(defaultUnits(region, tag));
+  const { api, onboarded } = useAuth();
+  const profile = useProfile();
+  const tag = getLocales()[0]?.languageTag ?? "en";
+  // Starts from what is saved, or from the phone on first run.
+  const [region, setRegion] = useState<string | null>(profile.region);
+  const [currency, setCurrency] = useState(profile.currency);
+  const [units, setUnits] = useState<Units>(profile.units);
   const [picking, setPicking] = useState(false);
   const [query, setQuery] = useState("");
   const [error, setError] = useState<string | undefined>();
@@ -61,7 +63,10 @@ export default function RegionScreen() {
           },
         }),
       );
-      router.replace("/onboarding/style");
+      await profile.reload();
+      // Changing it later from Profile goes back; first run carries on to the next step.
+      if (onboarded) router.back();
+      else router.replace("/onboarding/style");
     } catch (e) {
       setError(t(`signIn.errors.${signInErrorKey(e)}`));
     } finally {
