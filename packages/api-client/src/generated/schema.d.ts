@@ -43,7 +43,12 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Change the signed-in person's profile
+         * @description Changes only the fields that are sent. Used by onboarding to save the
+         *     travel style. Needs a bearer token.
+         */
+        patch: operations["updateMe"];
         trace?: never;
     };
     "/v1/auth/otp/request": {
@@ -176,6 +181,20 @@ export interface components {
             id: string;
             /** @description Name the person chose, if any. */
             displayName?: string;
+            travelStyle?: components["schemas"]["TravelStyle"];
+        };
+        /** @description Fields to change. Leave a field out to keep it. */
+        MeUpdate: {
+            displayName?: string;
+            travelStyle?: components["schemas"]["TravelStyle"];
+        };
+        /** @description The chips picked in onboarding. Any part may be left empty. */
+        TravelStyle: {
+            interests?: ("mountains" | "beaches" | "foodTrails" | "roadTrips" | "cultureHistory" | "nightlife" | "wildlife" | "slowCafes")[];
+            /** @enum {string} */
+            pace?: "slow" | "balanced" | "packed";
+            /** @enum {string} */
+            spend?: "shoestring" | "comfort" | "splurge";
         };
         /**
          * @description The one error shape every non-2xx response uses. Codes: `bad_request`,
@@ -280,6 +299,33 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+        };
+    };
+    updateMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MeUpdate"];
+            };
+        };
+        responses: {
+            /** @description The profile after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            503: components["responses"]["Unavailable"];
         };
     };
     requestOtp: {

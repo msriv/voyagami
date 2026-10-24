@@ -13,6 +13,84 @@ import (
 	"net/http"
 )
 
+// Defines values for TravelStyleInterests.
+const (
+	Beaches        TravelStyleInterests = "beaches"
+	CultureHistory TravelStyleInterests = "cultureHistory"
+	FoodTrails     TravelStyleInterests = "foodTrails"
+	Mountains      TravelStyleInterests = "mountains"
+	Nightlife      TravelStyleInterests = "nightlife"
+	RoadTrips      TravelStyleInterests = "roadTrips"
+	SlowCafes      TravelStyleInterests = "slowCafes"
+	Wildlife       TravelStyleInterests = "wildlife"
+)
+
+// Valid indicates whether the value is a known member of the TravelStyleInterests enum.
+func (e TravelStyleInterests) Valid() bool {
+	switch e {
+	case Beaches:
+		return true
+	case CultureHistory:
+		return true
+	case FoodTrails:
+		return true
+	case Mountains:
+		return true
+	case Nightlife:
+		return true
+	case RoadTrips:
+		return true
+	case SlowCafes:
+		return true
+	case Wildlife:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TravelStylePace.
+const (
+	Balanced TravelStylePace = "balanced"
+	Packed   TravelStylePace = "packed"
+	Slow     TravelStylePace = "slow"
+)
+
+// Valid indicates whether the value is a known member of the TravelStylePace enum.
+func (e TravelStylePace) Valid() bool {
+	switch e {
+	case Balanced:
+		return true
+	case Packed:
+		return true
+	case Slow:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TravelStyleSpend.
+const (
+	Comfort    TravelStyleSpend = "comfort"
+	Shoestring TravelStyleSpend = "shoestring"
+	Splurge    TravelStyleSpend = "splurge"
+)
+
+// Valid indicates whether the value is a known member of the TravelStyleSpend enum.
+func (e TravelStyleSpend) Valid() bool {
+	switch e {
+	case Comfort:
+		return true
+	case Shoestring:
+		return true
+	case Splurge:
+		return true
+	default:
+		return false
+	}
+}
+
 // Error The one error shape every non-2xx response uses. Codes: `bad_request`,
 // `unauthenticated`, `invalid_code`, `rate_limited`, `not_found`,
 // `method_not_allowed`, `internal`, `unavailable`, `timeout`.
@@ -47,6 +125,17 @@ type Me struct {
 
 	// Id Stable account ID. Not the phone number.
 	Id string `json:"id"`
+
+	// TravelStyle The chips picked in onboarding. Any part may be left empty.
+	TravelStyle *TravelStyle `json:"travelStyle,omitempty"`
+}
+
+// MeUpdate Fields to change. Leave a field out to keep it.
+type MeUpdate struct {
+	DisplayName *string `json:"displayName,omitempty"`
+
+	// TravelStyle The chips picked in onboarding. Any part may be left empty.
+	TravelStyle *TravelStyle `json:"travelStyle,omitempty"`
 }
 
 // OtpRequest defines model for OtpRequest.
@@ -93,6 +182,22 @@ type SessionTokens struct {
 	UserId       string `json:"userId"`
 }
 
+// TravelStyle The chips picked in onboarding. Any part may be left empty.
+type TravelStyle struct {
+	Interests *[]TravelStyleInterests `json:"interests,omitempty"`
+	Pace      *TravelStylePace        `json:"pace,omitempty"`
+	Spend     *TravelStyleSpend       `json:"spend,omitempty"`
+}
+
+// TravelStyleInterests defines model for TravelStyle.Interests.
+type TravelStyleInterests string
+
+// TravelStylePace defines model for TravelStyle.Pace.
+type TravelStylePace string
+
+// TravelStyleSpend defines model for TravelStyle.Spend.
+type TravelStyleSpend string
+
 // BadRequest The one error shape every non-2xx response uses. Codes: `bad_request`,
 // `unauthenticated`, `invalid_code`, `rate_limited`, `not_found`,
 // `method_not_allowed`, `internal`, `unavailable`, `timeout`.
@@ -122,6 +227,9 @@ type VerifyOtpJSONRequestBody = OtpVerifyRequest
 // RefreshSessionJSONRequestBody defines body for RefreshSession for application/json ContentType.
 type RefreshSessionJSONRequestBody = RefreshRequest
 
+// UpdateMeJSONRequestBody defines body for UpdateMe for application/json ContentType.
+type UpdateMeJSONRequestBody = MeUpdate
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// GetHealth Report that the process is up
@@ -142,6 +250,9 @@ type ServerInterface interface {
 	// GetMe Get the signed-in person
 	// (GET /v1/me)
 	GetMe(w http.ResponseWriter, r *http.Request)
+	// UpdateMe Change the signed-in person's profile
+	// (PATCH /v1/me)
+	UpdateMe(w http.ResponseWriter, r *http.Request)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -228,6 +339,20 @@ func (siw *ServerInterfaceWrapper) GetMe(w http.ResponseWriter, r *http.Request)
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetMe(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateMe operation middleware
+func (siw *ServerInterfaceWrapper) UpdateMe(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateMe(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -359,6 +484,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/health", wrapper.GetHealth)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/me", wrapper.GetMe)
+	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/me", wrapper.UpdateMe)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/auth/otp/request", wrapper.RequestOtp)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/auth/otp/verify", wrapper.VerifyOtp)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/auth/refresh", wrapper.RefreshSession)
@@ -632,6 +758,70 @@ func (response GetMe401JSONResponse) VisitGetMeResponse(w http.ResponseWriter) e
 	return err
 }
 
+type UpdateMeRequestObject struct {
+	Body *UpdateMeJSONRequestBody
+}
+
+type UpdateMeResponseObject interface {
+	VisitUpdateMeResponse(w http.ResponseWriter) error
+}
+
+type UpdateMe200JSONResponse Me
+
+func (response UpdateMe200JSONResponse) VisitUpdateMeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateMe400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response UpdateMe400JSONResponse) VisitUpdateMeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateMe401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response UpdateMe401JSONResponse) VisitUpdateMeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateMe503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response UpdateMe503JSONResponse) VisitUpdateMeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// GetHealth Report that the process is up
@@ -652,6 +842,9 @@ type StrictServerInterface interface {
 	// GetMe Get the signed-in person
 	// (GET /v1/me)
 	GetMe(ctx context.Context, request GetMeRequestObject) (GetMeResponseObject, error)
+	// UpdateMe Change the signed-in person's profile
+	// (PATCH /v1/me)
+	UpdateMe(ctx context.Context, request UpdateMeRequestObject) (UpdateMeResponseObject, error)
 }
 
 type StrictHandlerFunc func(ctx context.Context, w http.ResponseWriter, r *http.Request, request any) (any, error)
@@ -851,6 +1044,37 @@ func (sh *strictHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetMeResponseObject); ok {
 		if err := validResponse.VisitGetMeResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateMe operation middleware
+func (sh *strictHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
+	var request UpdateMeRequestObject
+
+	var body UpdateMeJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateMe(ctx, request.(UpdateMeRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateMe")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdateMeResponseObject); ok {
+		if err := validResponse.VisitUpdateMeResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

@@ -94,7 +94,7 @@ describe("sign in", () => {
       "POST /v1/auth/refresh": () => json(401, { code: "unauthenticated", message: "x" }),
     });
     await renderRouter(routes);
-    expect(await screen.findByLabelText("Mobile number")).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Get started" })).toBeTruthy();
     await waitFor(() => expect(mockStore.size).toBe(0));
   });
 
@@ -107,7 +107,7 @@ describe("sign in", () => {
     });
     await renderRouter(routes, { initialUrl: "/profile" });
     await fireEvent.press(await screen.findByRole("button", { name: "Sign out" }));
-    expect(await screen.findByLabelText("Mobile number")).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Get started" })).toBeTruthy();
     expect(mockStore.size).toBe(0);
   });
 });
