@@ -31,3 +31,12 @@ export function monthCells(year: number, month: number, firstWeekday: number): (
     ...Array.from({ length: count }, (_, i) => toIso(year, month, i + 1)),
   ];
 }
+
+/** Every day from start to end inclusive, as ISO strings. Stops at `max` so a typo cannot build a huge list. */
+export function daysInRange(start: string, end: string, max = 60): string[] {
+  const n = Math.min(daysBetween(start, end), max);
+  const first = isoToDate(start).getTime();
+  return Array.from({ length: n }, (_, i) =>
+    new Date(first + i * 86_400_000).toISOString().slice(0, 10),
+  );
+}

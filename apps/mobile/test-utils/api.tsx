@@ -10,6 +10,7 @@ import Style from "../app/onboarding/style";
 import SignIn from "../app/(auth)/sign-in";
 import TabsLayout from "../app/(tabs)/_layout";
 import Explore from "../app/(tabs)/explore";
+import Trip from "../app/trips/[id]";
 import NewTrip from "../app/trips/new";
 import Home from "../app/(tabs)/index";
 import Profile from "../app/(tabs)/profile";
@@ -24,6 +25,7 @@ export const routes: Record<string, ComponentType> = {
   "onboarding/style": Style,
   "(auth)/code": Code,
   "trips/new": NewTrip,
+  "trips/[id]": Trip,
   "(tabs)/_layout": TabsLayout,
   "(tabs)/index": Home,
   "(tabs)/explore": Explore,

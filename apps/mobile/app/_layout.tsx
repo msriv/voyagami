@@ -57,6 +57,7 @@ function Screens() {
         <Stack.Screen name="onboarding/style" />
         <Stack.Screen name="onboarding/connect" />
         <Stack.Screen name="trips/new" options={{ presentation: "modal" }} />
+        <Stack.Screen name="trips/[id]" />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="(auth)" />
