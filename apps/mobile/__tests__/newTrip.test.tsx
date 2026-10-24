@@ -68,8 +68,7 @@ describe("new trip", () => {
     await fireEvent.press(await screen.findByRole("button", { name: "Tokyo" }));
     // The calendar opens on the current month; day buttons are labelled with their full date.
     const days = screen.getAllByRole("button", { name: /\b(1|2|3)\b.*\d{4}/ }).slice(0, 2);
-    await fireEvent.press(days[0]!);
-    await fireEvent.press(days[1]!);
+    for (const day of days) await fireEvent.press(day);
     await fireEvent.changeText(screen.getByLabelText("Settlement currency"), "JPY");
     await fireEvent.press(screen.getByRole("button", { name: "Create trip" }));
     expect(await screen.findByText("You're signed in.")).toBeTruthy();
