@@ -51,6 +51,32 @@ paths:
                 $ref: "#/components/schemas/Me"
         "401":
           $ref: "#/components/responses/Unauthorized"
+    patch:
+      operationId: updateMe
+      tags: [account]
+      summary: Change the signed-in person's profile
+      description: |
+        Changes only the fields that are sent. Used by onboarding to save the
+        travel style. Needs a bearer token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeUpdate"
+      responses:
+        "200":
+          description: The profile after the change.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/trips:
     get:
       operationId: listTrips
@@ -355,6 +381,45 @@ components:
         displayName:
           type: string
           description: Name the person chose, if any.
+        travelStyle:
+          $ref: "#/components/schemas/TravelStyle"
+    MeUpdate:
+      type: object
+      description: Fields to change. Leave a field out to keep it.
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 80
+        travelStyle:
+          $ref: "#/components/schemas/TravelStyle"
+    TravelStyle:
+      type: object
+      description: The chips picked in onboarding. Any part may be left empty.
+      properties:
+        interests:
+          type: array
+          maxItems: 8
+          uniqueItems: true
+          items:
+            type: string
+            enum:
+              [
+                mountains,
+                beaches,
+                foodTrails,
+                roadTrips,
+                cultureHistory,
+                nightlife,
+                wildlife,
+                slowCafes,
+              ]
+        pace:
+          type: string
+          enum: [slow, balanced, packed]
+        spend:
+          type: string
+          enum: [shoestring, comfort, splurge]
     Destination:
       type: object
       required: [name, countryCode, timeZone]

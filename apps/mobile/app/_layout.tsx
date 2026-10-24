@@ -41,7 +41,7 @@ function Screens() {
   // new start screen. The first read after launch is skipped so deep links keep working.
   useEffect(() => {
     if (previous.current !== "loading" && previous.current !== status) {
-      router.replace(status === "signedIn" ? "/" : "/sign-in");
+      router.replace("/");
     }
     previous.current = status;
   }, [status, router]);
@@ -53,6 +53,7 @@ function Screens() {
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="gallery" />
+        <Stack.Screen name="onboarding/style" />
         <Stack.Screen name="trips/new" options={{ presentation: "modal" }} />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>

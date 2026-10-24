@@ -3,6 +3,7 @@ package model
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 )
@@ -74,6 +75,34 @@ func (m Money) validate(p *problems, field string) {
 	}
 }
 
+// Choices the travel style screen offers. The API checks them so a bad client cannot store junk.
+var (
+	TravelInterests = []string{"mountains", "beaches", "foodTrails", "roadTrips", "cultureHistory", "nightlife", "wildlife", "slowCafes"}
+	TravelPaces     = []string{"slow", "balanced", "packed"}
+	TravelSpends    = []string{"shoestring", "comfort", "splurge"}
+)
+
+func (t TravelStyle) validate(p *problems) {
+	seen := map[string]bool{}
+	for _, i := range t.Interests {
+		if !slices.Contains(TravelInterests, i) {
+			p.addf("travelStyle.interests has an unknown choice")
+		} else if seen[i] {
+			p.addf("travelStyle.interests has a repeat")
+		}
+		seen[i] = true
+	}
+	if len(t.Interests) > len(TravelInterests) {
+		p.addf("travelStyle.interests has too many choices")
+	}
+	if t.Pace != "" && !slices.Contains(TravelPaces, t.Pace) {
+		p.addf("travelStyle.pace is not a known choice")
+	}
+	if t.Spend != "" && !slices.Contains(TravelSpends, t.Spend) {
+		p.addf("travelStyle.spend is not a known choice")
+	}
+}
+
 func (u Units) validate(p *problems) {
 	if u.Distance != "km" && u.Distance != "mi" {
 		p.addf("units.distance must be km or mi")
@@ -134,6 +163,12 @@ func (u UserPatch) Validate() error {
 	}
 	if u.Units != nil {
 		u.Units.validate(&p)
+	}
+	if u.TravelStyle != nil {
+		u.TravelStyle.validate(&p)
+	}
+	if u.DisplayName != nil && (strings.TrimSpace(*u.DisplayName) == "" || len([]rune(*u.DisplayName)) > 80) {
+		p.addf("displayName must be 1 to 80 characters")
 	}
 	return p.err()
 }
