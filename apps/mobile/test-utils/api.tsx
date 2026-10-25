@@ -14,6 +14,7 @@ import Trip from "../app/trips/[id]";
 import AddPlace from "../app/trips/[id]/add-place";
 import AddExpense from "../app/trips/[id]/add-expense";
 import AddBooking from "../app/trips/[id]/add-booking";
+import ImportBooking from "../app/trips/[id]/import-booking";
 import Bookings from "../app/trips/[id]/bookings";
 import Crew from "../app/trips/[id]/crew";
 import Comments from "../app/trips/[id]/comments";
@@ -55,6 +56,7 @@ export const routes: Record<string, ComponentType> = {
   "trips/[id]/recap-player": RecapPlayer,
   join: Join,
   "trips/[id]/add-booking": AddBooking,
+  "trips/[id]/import-booking": ImportBooking,
   "trips/[id]/add-expense": AddExpense,
   "(tabs)/_layout": TabsLayout,
   "(tabs)/index": Home,
