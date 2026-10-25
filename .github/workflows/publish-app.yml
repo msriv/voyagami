@@ -33,6 +33,10 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
       - run: pnpm install --frozen-lockfile
+      - name: Create channel
+        working-directory: apps/mobile
+        # The stable Expo Go link uses channel-name=main; this errors once it exists.
+        run: eas channel:create main --non-interactive || true
       - name: Publish
         working-directory: apps/mobile
         env:
