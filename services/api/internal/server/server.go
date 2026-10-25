@@ -56,6 +56,8 @@ type handlers struct {
 	journal     JournalStore
 	invites     repo.Invites
 	polls       repo.Polls
+	meetPoints  repo.MeetPoints
+	presence    repo.Presence
 	rates       rates.Provider
 
 	plans      *entitlements.Service

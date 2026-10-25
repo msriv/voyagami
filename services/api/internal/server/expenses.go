@@ -130,6 +130,12 @@ func uidsOf(ps []split.Part) []string {
 // multiCurrencyAllowed asks the entitlements service whether the trip may
 // use a second currency. Without the service it is allowed.
 func (h *handlers) multiCurrencyAllowed(ctx context.Context, uid, tripID string) (bool, error) {
+	return h.featureAllowed(ctx, uid, tripID, entitlements.MultiCurrency)
+}
+
+// featureAllowed asks the entitlements service about one feature for a person
+// on a trip. Without the service everything is allowed.
+func (h *handlers) featureAllowed(ctx context.Context, uid, tripID string, f entitlements.Feature) (bool, error) {
 	if h.plans == nil || h.planSource == nil {
 		return true, nil
 	}
@@ -141,7 +147,7 @@ func (h *handlers) multiCurrencyAllowed(ctx context.Context, uid, tripID string)
 	if err != nil {
 		return false, err
 	}
-	return h.plans.Check(user, &trip, entitlements.MultiCurrency).Allowed, nil
+	return h.plans.Check(user, &trip, f).Allowed, nil
 }
 
 // canChangeExpense says whether the caller may edit or delete e: the owner

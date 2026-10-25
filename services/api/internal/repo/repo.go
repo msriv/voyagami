@@ -87,6 +87,38 @@ type Polls interface {
 	Close(ctx context.Context, tripID, pollID, chosen string, now time.Time) (model.Poll, error)
 }
 
+// MeetPoints stores a trip's meet points. The caller has already checked that
+// the person may use the trip.
+type MeetPoints interface {
+	// Create stores a meet point. It returns ErrAlreadyExists if the ID is taken.
+	Create(ctx context.Context, tripID string, m model.MeetPoint) (model.MeetPoint, error)
+	// Get returns the meet point, or ErrNotFound.
+	Get(ctx context.Context, tripID, id string) (model.MeetPoint, error)
+	// List returns the trip's meet points, soonest first, ones with no time last.
+	List(ctx context.Context, tripID string) ([]model.MeetPoint, error)
+	// Update changes only the fields set in the patch. It returns ErrNotFound
+	// if the meet point does not exist.
+	Update(ctx context.Context, tripID, id string, p model.MeetPointPatch) (model.MeetPoint, error)
+	// SetConfirmed adds or removes the person from those coming, and returns
+	// the meet point. Doing it twice is harmless.
+	SetConfirmed(ctx context.Context, tripID, id, uid string, coming bool) (model.MeetPoint, error)
+	// Delete removes a meet point. Deleting a missing one is not an error.
+	Delete(ctx context.Context, tripID, id string) error
+}
+
+// Presence stores the locations people are sharing on a trip. It is throwaway:
+// entries end by themselves and are removed once over.
+type Presence interface {
+	// Put stores or replaces the person's shared location.
+	Put(ctx context.Context, tripID string, s model.Presence) error
+	// Get returns the person's entry, or ErrNotFound. It may already be over.
+	Get(ctx context.Context, tripID, uid string) (model.Presence, error)
+	// Delete stops the person's sharing. Stopping when not sharing is not an error.
+	Delete(ctx context.Context, tripID, uid string) error
+	// List returns locations still being shared at now, and removes the ones that ended.
+	List(ctx context.Context, tripID string, now time.Time) ([]model.Presence, error)
+}
+
 // Invites stores trip invite links. Invites are looked up by the hash of
 // their secret token.
 type Invites interface {

@@ -65,10 +65,7 @@ func pollToDoc(p model.Poll) pollDoc {
 	for _, o := range p.Options {
 		od := pollOptionDoc{ID: o.ID, Label: o.Label}
 		if o.Place != nil {
-			pd := placeDoc{Kind: "catalog", PlaceID: o.Place.PlaceID}
-			if o.Place.Custom() {
-				pd = placeDoc{Kind: "custom", Name: o.Place.Name, Lat: o.Place.Lat, Lng: o.Place.Lng, Address: o.Place.Address, Category: o.Place.Category}
-			}
+			pd := placeDocOf(*o.Place)
 			od.Place = &pd
 		}
 		d.Options = append(d.Options, od)
@@ -94,7 +91,8 @@ func pollFromDoc(id string, d pollDoc) model.Poll {
 	for _, od := range d.Options {
 		o := model.PollOption{ID: od.ID, Label: od.Label}
 		if pd := od.Place; pd != nil {
-			o.Place = &model.PlaceRef{PlaceID: pd.PlaceID, Name: pd.Name, Lat: pd.Lat, Lng: pd.Lng, Address: pd.Address, Category: pd.Category}
+			pl := placeOfDoc(*pd)
+			o.Place = &pl
 		}
 		p.Options = append(p.Options, o)
 	}

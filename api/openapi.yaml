@@ -990,6 +990,247 @@ paths:
           $ref: "#/components/responses/Conflict"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/meet-points:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: listMeetPoints
+      tags: [meetup]
+      summary: List meet points
+      description: Soonest first, ones with no time last. Ended ones stay in the list marked `ended`. Always free. Any active member can read.
+      responses:
+        "200":
+          description: The meet points.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetPointList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    post:
+      operationId: createMeetPoint
+      tags: [meetup]
+      summary: Propose a meet point
+      description: Owners and editors. A meet point ends 3 hours after its time, or a day after it is made when it has no time.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetPointCreate"
+      responses:
+        "201":
+          description: The meet point.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetPoint"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/meet-points/{meetPointId}:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: meetPointId
+        in: path
+        required: true
+        schema:
+          type: string
+    patch:
+      operationId: updateMeetPoint
+      tags: [meetup]
+      summary: Change a meet point
+      description: Owners and editors. Send only what changes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetPointUpdate"
+      responses:
+        "200":
+          description: The updated meet point.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetPoint"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    delete:
+      operationId: deleteMeetPoint
+      tags: [meetup]
+      summary: Delete a meet point
+      description: Owners and editors. Deleting one that is already gone succeeds.
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/meet-points/{meetPointId}/confirmation:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: meetPointId
+        in: path
+        required: true
+        schema:
+          type: string
+    put:
+      operationId: confirmMeetPoint
+      tags: [meetup]
+      summary: Say you are coming
+      description: Any active member, viewers included. Repeating it is harmless.
+      responses:
+        "200":
+          description: The meet point.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetPoint"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    delete:
+      operationId: unconfirmMeetPoint
+      tags: [meetup]
+      summary: Say you are not coming
+      description: Any active member. Repeating it is harmless.
+      responses:
+        "200":
+          description: The meet point.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetPoint"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/locations:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: listSharedLocations
+      tags: [meetup]
+      summary: Who is sharing their location
+      description: |
+        Only people who chose to share, and only until their sharing ends.
+        Any active member can read. Locations are never logged.
+      responses:
+        "200":
+          description: The shared locations.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SharedLocationList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/locations/me:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    put:
+      operationId: shareMyLocation
+      tags: [meetup]
+      summary: Share or update your location
+      description: |
+        Opt-in. The first call starts sharing for `durationMinutes` (default
+        60); later calls move the dot and keep or change the end time. Sharing
+        ends by itself, and with `meetPointId` it also ends when that meet
+        ends. More than one hour needs Plus (live crew map); anyone on the
+        trip, viewers included, can share. Only the caller's own location is
+        written.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShareLocation"
+      responses:
+        "200":
+          description: Your shared location.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SharedLocation"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    delete:
+      operationId: stopSharingMyLocation
+      tags: [meetup]
+      summary: Stop sharing your location
+      description: Removes your location at once. Stopping when not sharing succeeds.
+      responses:
+        "204":
+          description: Stopped.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/trips/{tripId}/members:
     parameters:
       - name: tripId
@@ -2371,6 +2612,117 @@ components:
           $ref: "#/components/schemas/Poll"
         stop:
           $ref: "#/components/schemas/Stop"
+    MeetPointCreate:
+      type: object
+      required: [name, place]
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        place:
+          $ref: "#/components/schemas/PlaceRef"
+        at:
+          type: string
+          format: date-time
+          description: When to meet. Absent means no time yet.
+    MeetPointUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        place:
+          $ref: "#/components/schemas/PlaceRef"
+        at:
+          type: string
+          format: date-time
+    MeetPoint:
+      type: object
+      required: [id, name, place, createdBy, confirmedBy, iAmComing, endsAt, status]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        place:
+          $ref: "#/components/schemas/PlaceRef"
+        at:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+        confirmedBy:
+          type: array
+          items:
+            type: string
+          description: IDs of members who are coming.
+        iAmComing:
+          type: boolean
+        endsAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [active, ended]
+    MeetPointList:
+      type: object
+      required: [meetPoints]
+      properties:
+        meetPoints:
+          type: array
+          items:
+            $ref: "#/components/schemas/MeetPoint"
+    ShareLocation:
+      type: object
+      required: [lat, lng]
+      properties:
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+        accuracyM:
+          type: integer
+          minimum: 0
+        durationMinutes:
+          type: integer
+          minimum: 1
+          maximum: 1440
+          description: How long to share, counted from when sharing starts. Defaults to 60. Ignored on updates while sharing.
+        meetPointId:
+          type: string
+          description: End sharing when this meet point ends.
+    SharedLocation:
+      type: object
+      required: [uid, lat, lng, accuracyM, updatedAt, endsAt]
+      properties:
+        uid:
+          type: string
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+        accuracyM:
+          type: integer
+        meetPointId:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+        endsAt:
+          type: string
+          format: date-time
+    SharedLocationList:
+      type: object
+      required: [locations]
+      properties:
+        locations:
+          type: array
+          items:
+            $ref: "#/components/schemas/SharedLocation"
     Member:
       type: object
       required: [uid, role, status, displayName, joinedAt]

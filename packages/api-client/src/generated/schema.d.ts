@@ -584,6 +584,140 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/trips/{tripId}/meet-points": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * List meet points
+         * @description Soonest first, ones with no time last. Ended ones stay in the list marked `ended`. Always free. Any active member can read.
+         */
+        get: operations["listMeetPoints"];
+        put?: never;
+        /**
+         * Propose a meet point
+         * @description Owners and editors. A meet point ends 3 hours after its time, or a day after it is made when it has no time.
+         */
+        post: operations["createMeetPoint"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/meet-points/{meetPointId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                meetPointId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a meet point
+         * @description Owners and editors. Deleting one that is already gone succeeds.
+         */
+        delete: operations["deleteMeetPoint"];
+        options?: never;
+        head?: never;
+        /**
+         * Change a meet point
+         * @description Owners and editors. Send only what changes.
+         */
+        patch: operations["updateMeetPoint"];
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/meet-points/{meetPointId}/confirmation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                meetPointId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Say you are coming
+         * @description Any active member, viewers included. Repeating it is harmless.
+         */
+        put: operations["confirmMeetPoint"];
+        post?: never;
+        /**
+         * Say you are not coming
+         * @description Any active member. Repeating it is harmless.
+         */
+        delete: operations["unconfirmMeetPoint"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Who is sharing their location
+         * @description Only people who chose to share, and only until their sharing ends.
+         *     Any active member can read. Locations are never logged.
+         */
+        get: operations["listSharedLocations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/locations/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Share or update your location
+         * @description Opt-in. The first call starts sharing for `durationMinutes` (default
+         *     60); later calls move the dot and keep or change the end time. Sharing
+         *     ends by itself, and with `meetPointId` it also ends when that meet
+         *     ends. More than one hour needs Plus (live crew map); anyone on the
+         *     trip, viewers included, can share. Only the caller's own location is
+         *     written.
+         */
+        put: operations["shareMyLocation"];
+        post?: never;
+        /**
+         * Stop sharing your location
+         * @description Removes your location at once. Stopping when not sharing succeeds.
+         */
+        delete: operations["stopSharingMyLocation"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/trips/{tripId}/members": {
         parameters: {
             query?: never;
@@ -1372,6 +1506,66 @@ export interface components {
         PollClosed: {
             poll: components["schemas"]["Poll"];
             stop?: components["schemas"]["Stop"];
+        };
+        MeetPointCreate: {
+            name: string;
+            place: components["schemas"]["PlaceRef"];
+            /**
+             * Format: date-time
+             * @description When to meet. Absent means no time yet.
+             */
+            at?: string;
+        };
+        MeetPointUpdate: {
+            name?: string;
+            place?: components["schemas"]["PlaceRef"];
+            /** Format: date-time */
+            at?: string;
+        };
+        MeetPoint: {
+            id: string;
+            name: string;
+            place: components["schemas"]["PlaceRef"];
+            /** Format: date-time */
+            at?: string;
+            createdBy: string;
+            /** @description IDs of members who are coming. */
+            confirmedBy: string[];
+            iAmComing: boolean;
+            /** Format: date-time */
+            endsAt: string;
+            /** @enum {string} */
+            status: "active" | "ended";
+        };
+        MeetPointList: {
+            meetPoints: components["schemas"]["MeetPoint"][];
+        };
+        ShareLocation: {
+            /** Format: double */
+            lat: number;
+            /** Format: double */
+            lng: number;
+            accuracyM?: number;
+            /** @description How long to share, counted from when sharing starts. Defaults to 60. Ignored on updates while sharing. */
+            durationMinutes?: number;
+            /** @description End sharing when this meet point ends. */
+            meetPointId?: string;
+        };
+        SharedLocation: {
+            uid: string;
+            /** Format: double */
+            lat: number;
+            /** Format: double */
+            lng: number;
+            accuracyM: number;
+            meetPointId?: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            endsAt: string;
+        };
+        SharedLocationList: {
+            locations: components["schemas"]["SharedLocation"][];
         };
         Member: {
             uid: string;
@@ -2498,6 +2692,251 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    listMeetPoints: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The meet points. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetPointList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    createMeetPoint: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MeetPointCreate"];
+            };
+        };
+        responses: {
+            /** @description The meet point. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetPoint"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    deleteMeetPoint: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                meetPointId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    updateMeetPoint: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                meetPointId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MeetPointUpdate"];
+            };
+        };
+        responses: {
+            /** @description The updated meet point. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetPoint"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    confirmMeetPoint: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                meetPointId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The meet point. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetPoint"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    unconfirmMeetPoint: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                meetPointId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The meet point. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetPoint"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    listSharedLocations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The shared locations. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SharedLocationList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    shareMyLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShareLocation"];
+            };
+        };
+        responses: {
+            /** @description Your shared location. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SharedLocation"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    stopSharingMyLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Stopped. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
             503: components["responses"]["Unavailable"];
         };
     };
