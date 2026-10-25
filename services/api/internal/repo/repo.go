@@ -95,6 +95,16 @@ type Expenses interface {
 	Delete(ctx context.Context, tripID, expenseID string) error
 }
 
+// Settlements stores payments members have marked as paid.
+type Settlements interface {
+	// Create stores a payment. It returns ErrAlreadyExists if the ID is taken.
+	Create(ctx context.Context, tripID string, s model.Settlement) (model.Settlement, error)
+	// Get returns the payment, or ErrNotFound.
+	Get(ctx context.Context, tripID, id string) (model.Settlement, error)
+	// List returns the trip's payments, oldest first.
+	List(ctx context.Context, tripID string) ([]model.Settlement, error)
+}
+
 // Tasks stores a trip's to-dos. The caller has already checked that the
 // person may use the trip.
 type Tasks interface {

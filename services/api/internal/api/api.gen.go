@@ -330,6 +330,15 @@ func (e UnitsTemperature) Valid() bool {
 	}
 }
 
+// Balances defines model for Balances.
+type Balances struct {
+	Balances []ExpenseShare `json:"balances"`
+
+	// Currency The trip's settlement currency.
+	Currency  string     `json:"currency"`
+	Transfers []Transfer `json:"transfers"`
+}
+
 // BestOrder defines model for BestOrder.
 type BestOrder struct {
 	// AfterMin Estimated travel minutes in the suggested order.
@@ -620,6 +629,33 @@ type SessionTokens struct {
 	UserId       string `json:"userId"`
 }
 
+// Settlement defines model for Settlement.
+type Settlement struct {
+	Amount   Money   `json:"amount"`
+	FromUid  string  `json:"fromUid"`
+	Id       string  `json:"id"`
+	MarkedBy string  `json:"markedBy"`
+	Method   *string `json:"method,omitempty"`
+	ToUid    string  `json:"toUid"`
+}
+
+// SettlementCreate defines model for SettlementCreate.
+type SettlementCreate struct {
+	// AmountMinor In the settlement currency.
+	AmountMinor int64   `json:"amountMinor"`
+	FromUid     string  `json:"fromUid"`
+	Id          *string `json:"id,omitempty"`
+
+	// Method The payment app used, or "manual".
+	Method *string `json:"method,omitempty"`
+	ToUid  string  `json:"toUid"`
+}
+
+// SettlementList defines model for SettlementList.
+type SettlementList struct {
+	Settlements []Settlement `json:"settlements"`
+}
+
 // SplitInput defines model for SplitInput.
 type SplitInput struct {
 	Method SplitInputMethod `json:"method"`
@@ -718,6 +754,13 @@ type TaskList struct {
 type TaskUpdate struct {
 	Done  *bool   `json:"done,omitempty"`
 	Title *string `json:"title,omitempty"`
+}
+
+// Transfer defines model for Transfer.
+type Transfer struct {
+	AmountMinor int64  `json:"amountMinor"`
+	FromUid     string `json:"fromUid"`
+	ToUid       string `json:"toUid"`
 }
 
 // TravelStyle The chips picked in onboarding. Any part may be left empty.
@@ -878,6 +921,9 @@ type CreateExpenseJSONRequestBody = ExpenseCreate
 // UpdateExpenseJSONRequestBody defines body for UpdateExpense for application/json ContentType.
 type UpdateExpenseJSONRequestBody = ExpenseUpdate
 
+// RecordSettlementJSONRequestBody defines body for RecordSettlement for application/json ContentType.
+type RecordSettlementJSONRequestBody = SettlementCreate
+
 // CreateStopJSONRequestBody defines body for CreateStop for application/json ContentType.
 type CreateStopJSONRequestBody = StopCreate
 
@@ -928,6 +974,9 @@ type ServerInterface interface {
 	// UpdateTrip Change or archive a trip
 	// (PATCH /v1/trips/{tripId})
 	UpdateTrip(w http.ResponseWriter, r *http.Request, tripId string)
+	// GetBalances Who owes whom
+	// (GET /v1/trips/{tripId}/balances)
+	GetBalances(w http.ResponseWriter, r *http.Request, tripId string)
 	// SuggestBestOrder Suggest a shorter order for a day
 	// (POST /v1/trips/{tripId}/days/{date}/best-order)
 	SuggestBestOrder(w http.ResponseWriter, r *http.Request, tripId string, date string)
@@ -949,6 +998,12 @@ type ServerInterface interface {
 	// UpdateExpense Change an expense
 	// (PATCH /v1/trips/{tripId}/expenses/{expenseId})
 	UpdateExpense(w http.ResponseWriter, r *http.Request, tripId string, expenseId string)
+	// ListSettlements List recorded payments
+	// (GET /v1/trips/{tripId}/settlements)
+	ListSettlements(w http.ResponseWriter, r *http.Request, tripId string)
+	// RecordSettlement Mark a payment as paid
+	// (POST /v1/trips/{tripId}/settlements)
+	RecordSettlement(w http.ResponseWriter, r *http.Request, tripId string)
 	// ListStops List a trip's stops
 	// (GET /v1/trips/{tripId}/stops)
 	ListStops(w http.ResponseWriter, r *http.Request, tripId string)
@@ -1176,6 +1231,32 @@ func (siw *ServerInterfaceWrapper) UpdateTrip(w http.ResponseWriter, r *http.Req
 	handler.ServeHTTP(w, r)
 }
 
+// GetBalances operation middleware
+func (siw *ServerInterfaceWrapper) GetBalances(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetBalances(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // SuggestBestOrder operation middleware
 func (siw *ServerInterfaceWrapper) SuggestBestOrder(w http.ResponseWriter, r *http.Request) {
 
@@ -1385,6 +1466,58 @@ func (siw *ServerInterfaceWrapper) UpdateExpense(w http.ResponseWriter, r *http.
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.UpdateExpense(w, r, tripId, expenseId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListSettlements operation middleware
+func (siw *ServerInterfaceWrapper) ListSettlements(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListSettlements(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RecordSettlement operation middleware
+func (siw *ServerInterfaceWrapper) RecordSettlement(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RecordSettlement(w, r, tripId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1775,6 +1908,9 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/expenses", wrapper.CreateExpense)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/expenses/{expenseId}", wrapper.DeleteExpense)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/trips/{tripId}/expenses/{expenseId}", wrapper.UpdateExpense)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/balances", wrapper.GetBalances)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/settlements", wrapper.ListSettlements)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/settlements", wrapper.RecordSettlement)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/stops", wrapper.ListStops)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/stops", wrapper.CreateStop)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/stops/{stopId}", wrapper.DeleteStop)
@@ -2441,6 +2577,70 @@ func (response UpdateTrip503JSONResponse) VisitUpdateTripResponse(w http.Respons
 	return err
 }
 
+type GetBalancesRequestObject struct {
+	TripId string `json:"tripId"`
+}
+
+type GetBalancesResponseObject interface {
+	VisitGetBalancesResponse(w http.ResponseWriter) error
+}
+
+type GetBalances200JSONResponse Balances
+
+func (response GetBalances200JSONResponse) VisitGetBalancesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetBalances401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response GetBalances401JSONResponse) VisitGetBalancesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetBalances404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response GetBalances404JSONResponse) VisitGetBalancesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetBalances503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response GetBalances503JSONResponse) VisitGetBalancesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type SuggestBestOrderRequestObject struct {
 	TripId string `json:"tripId"`
 	Date   string `json:"date"`
@@ -2991,6 +3191,163 @@ func (response UpdateExpense404JSONResponse) VisitUpdateExpenseResponse(w http.R
 type UpdateExpense503JSONResponse struct{ UnavailableJSONResponse }
 
 func (response UpdateExpense503JSONResponse) VisitUpdateExpenseResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListSettlementsRequestObject struct {
+	TripId string `json:"tripId"`
+}
+
+type ListSettlementsResponseObject interface {
+	VisitListSettlementsResponse(w http.ResponseWriter) error
+}
+
+type ListSettlements200JSONResponse SettlementList
+
+func (response ListSettlements200JSONResponse) VisitListSettlementsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListSettlements401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ListSettlements401JSONResponse) VisitListSettlementsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListSettlements404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ListSettlements404JSONResponse) VisitListSettlementsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListSettlements503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ListSettlements503JSONResponse) VisitListSettlementsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RecordSettlementRequestObject struct {
+	TripId string `json:"tripId"`
+	Body   *RecordSettlementJSONRequestBody
+}
+
+type RecordSettlementResponseObject interface {
+	VisitRecordSettlementResponse(w http.ResponseWriter) error
+}
+
+type RecordSettlement201JSONResponse Settlement
+
+func (response RecordSettlement201JSONResponse) VisitRecordSettlementResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RecordSettlement400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response RecordSettlement400JSONResponse) VisitRecordSettlementResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RecordSettlement401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response RecordSettlement401JSONResponse) VisitRecordSettlementResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RecordSettlement403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response RecordSettlement403JSONResponse) VisitRecordSettlementResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RecordSettlement404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response RecordSettlement404JSONResponse) VisitRecordSettlementResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RecordSettlement503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response RecordSettlement503JSONResponse) VisitRecordSettlementResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -3688,6 +4045,9 @@ type StrictServerInterface interface {
 	// UpdateTrip Change or archive a trip
 	// (PATCH /v1/trips/{tripId})
 	UpdateTrip(ctx context.Context, request UpdateTripRequestObject) (UpdateTripResponseObject, error)
+	// GetBalances Who owes whom
+	// (GET /v1/trips/{tripId}/balances)
+	GetBalances(ctx context.Context, request GetBalancesRequestObject) (GetBalancesResponseObject, error)
 	// SuggestBestOrder Suggest a shorter order for a day
 	// (POST /v1/trips/{tripId}/days/{date}/best-order)
 	SuggestBestOrder(ctx context.Context, request SuggestBestOrderRequestObject) (SuggestBestOrderResponseObject, error)
@@ -3709,6 +4069,12 @@ type StrictServerInterface interface {
 	// UpdateExpense Change an expense
 	// (PATCH /v1/trips/{tripId}/expenses/{expenseId})
 	UpdateExpense(ctx context.Context, request UpdateExpenseRequestObject) (UpdateExpenseResponseObject, error)
+	// ListSettlements List recorded payments
+	// (GET /v1/trips/{tripId}/settlements)
+	ListSettlements(ctx context.Context, request ListSettlementsRequestObject) (ListSettlementsResponseObject, error)
+	// RecordSettlement Mark a payment as paid
+	// (POST /v1/trips/{tripId}/settlements)
+	RecordSettlement(ctx context.Context, request RecordSettlementRequestObject) (RecordSettlementResponseObject, error)
 	// ListStops List a trip's stops
 	// (GET /v1/trips/{tripId}/stops)
 	ListStops(ctx context.Context, request ListStopsRequestObject) (ListStopsResponseObject, error)
@@ -4108,6 +4474,32 @@ func (sh *strictHandler) UpdateTrip(w http.ResponseWriter, r *http.Request, trip
 	}
 }
 
+// GetBalances operation middleware
+func (sh *strictHandler) GetBalances(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request GetBalancesRequestObject
+
+	request.TripId = tripId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetBalances(ctx, request.(GetBalancesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetBalances")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetBalancesResponseObject); ok {
+		if err := validResponse.VisitGetBalancesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // SuggestBestOrder operation middleware
 func (sh *strictHandler) SuggestBestOrder(w http.ResponseWriter, r *http.Request, tripId string, date string) {
 	var request SuggestBestOrderRequestObject
@@ -4308,6 +4700,65 @@ func (sh *strictHandler) UpdateExpense(w http.ResponseWriter, r *http.Request, t
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(UpdateExpenseResponseObject); ok {
 		if err := validResponse.VisitUpdateExpenseResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListSettlements operation middleware
+func (sh *strictHandler) ListSettlements(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request ListSettlementsRequestObject
+
+	request.TripId = tripId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListSettlements(ctx, request.(ListSettlementsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListSettlements")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListSettlementsResponseObject); ok {
+		if err := validResponse.VisitListSettlementsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RecordSettlement operation middleware
+func (sh *strictHandler) RecordSettlement(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request RecordSettlementRequestObject
+
+	request.TripId = tripId
+
+	var body RecordSettlementJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.RecordSettlement(ctx, request.(RecordSettlementRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RecordSettlement")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(RecordSettlementResponseObject); ok {
+		if err := validResponse.VisitRecordSettlementResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
