@@ -79,6 +79,22 @@ type Stops interface {
 	SetOrders(ctx context.Context, tripID string, orders map[string]string) error
 }
 
+// Expenses stores a trip's expenses. The caller has already checked that the
+// person may use the trip and may change the expense.
+type Expenses interface {
+	// Create stores an expense. It returns ErrAlreadyExists if the ID is taken.
+	Create(ctx context.Context, tripID string, e model.Expense) (model.Expense, error)
+	// Get returns the expense, or ErrNotFound if it is missing or deleted.
+	Get(ctx context.Context, tripID, expenseID string) (model.Expense, error)
+	// List returns expenses that are not deleted, newest date first.
+	List(ctx context.Context, tripID string) ([]model.Expense, error)
+	// Replace overwrites the expense's content and keeps who made it and when.
+	// It returns ErrNotFound if it is missing or deleted.
+	Replace(ctx context.Context, tripID string, e model.Expense) (model.Expense, error)
+	// Delete marks the expense deleted. Deleting a missing one is not an error.
+	Delete(ctx context.Context, tripID, expenseID string) error
+}
+
 // Tasks stores a trip's to-dos. The caller has already checked that the
 // person may use the trip.
 type Tasks interface {
