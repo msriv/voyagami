@@ -76,7 +76,17 @@ module "api" {
   min_instances         = 0
   allow_unauthenticated = true
 
-  depends_on = [module.apis]
+  env = {
+    GCP_PROJECT = var.project_id
+  }
+
+  # Signs sign-in tokens, so they survive restarts and are shared by instances.
+  # Add the value first with infra/scripts/seed-auth-secret.sh (see README).
+  secret_env = {
+    AUTH_SECRET = "auth-secret"
+  }
+
+  depends_on = [module.apis, google_secret_manager_secret_iam_member.api_secrets]
 }
 
 # What CI needs to push an image and deploy the service.
@@ -128,7 +138,8 @@ module "secrets" {
 
   # Empty containers. Add the value with:
   #   printf '%s' "$KEY" | gcloud secrets versions add google-maps-server-key --data-file=-
-  secret_ids = ["google-maps-server-key"]
+  # auth-secret gets a random value from infra/scripts/seed-auth-secret.sh.
+  secret_ids = ["google-maps-server-key", "auth-secret"]
 
   depends_on = [module.apis]
 }

@@ -24,7 +24,7 @@ modules/service-account/    service account with a minimal role list
 modules/firestore/         Firestore database (location cannot change later)
 modules/pubsub-topics/     Pub/Sub topics
 modules/storage-bucket/    private bucket with CORS for signed URLs
-modules/secrets/           empty Secret Manager secrets (values added by hand)
+modules/secrets/           empty Secret Manager secrets (values added by hand or by scripts/seed-auth-secret.sh)
 modules/cloud-run/     Cloud Run service (scale to zero, image owned by deploys)
 scripts/               one-time bootstrap helpers
 ```
@@ -53,6 +53,21 @@ Store them as GitHub repository variables `GCP_WORKLOAD_IDENTITY_PROVIDER` and `
 ## Applying later changes
 
 Run `terraform plan` then `terraform apply` in `infra/envs/dev` from Cloud Shell, as for the first apply. The first Cloud Run service starts on Google's placeholder image; deploying the API replaces the image and Terraform ignores that change.
+
+## Sign-in secret (AUTH_SECRET)
+
+Sign-in tokens are signed with `AUTH_SECRET`, read by Cloud Run from the Secret Manager secret `auth-secret`. Without it each process invents a secret and everyone is signed out on every restart or deploy. The value never goes through Terraform, so it stays out of state. `GCP_PROJECT` is set on the service too.
+
+First time (in Cloud Shell, in this order, because Cloud Run cannot start a revision that points at a secret with no value):
+
+```sh
+cd infra/envs/dev
+terraform apply -target=module.secrets -target=google_secret_manager_secret_iam_member.api_secrets
+../../scripts/seed-auth-secret.sh
+terraform apply
+```
+
+To rotate: `openssl rand -hex 32 | tr -d '\n' | gcloud secrets versions add auth-secret --data-file=-`, then deploy the API again (Cloud Run reads `latest` when a revision starts). Everyone signs in again, and the old version can be disabled.
 
 ## Deploying the API (dev)
 

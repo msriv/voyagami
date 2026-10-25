@@ -53,6 +53,12 @@ variable "env" {
   default     = {}
 }
 
+variable "secret_env" {
+  description = "Environment variables read from Secret Manager (name to secret ID, latest version). The runtime account needs secretAccessor on each."
+  type        = map(string)
+  default     = {}
+}
+
 variable "allow_unauthenticated" {
   description = "Let anyone reach the URL. The API does its own auth; the mobile app cannot present IAM tokens."
   type        = bool
