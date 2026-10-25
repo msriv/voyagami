@@ -213,6 +213,7 @@ export const en = {
     paidByYou: "Paid by you",
     paidByOther: "Paid by someone else",
     expenseLabel: "{{name}}, {{amount}}, {{date}}",
+    export: { button: "Export as CSV", title: "{{name}} expenses" },
     budget: {
       title: "Trip budget",
       set: "Set a budget",

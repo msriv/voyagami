@@ -1,3 +1,4 @@
+import { Share } from "react-native";
 import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
 import { json, mockApi, routes } from "../test-utils/api";
@@ -105,6 +106,37 @@ describe("Money", () => {
       expect(calls.some((c) => c.key === "DELETE /v1/trips/t1/expenses/e1")).toBe(true),
     );
     await waitFor(() => expect(screen.queryByText("Pho")).toBeNull());
+  });
+});
+
+describe("Export", () => {
+  it("shares the CSV for any member, and only when there is spending", async () => {
+    const share = jest
+      .spyOn(Share, "share")
+      .mockResolvedValue({ action: "sharedAction", activityType: undefined });
+    mockApi({
+      ...base("viewer", [expense("e1", "Pho", "2099-11-20", 50000)]),
+      "GET /v1/trips/t1/expenses/export": () =>
+        new Response("date,description\n2099-11-20,Pho\n", {
+          status: 200,
+          headers: { "Content-Type": "text/csv" },
+        }),
+    });
+    await renderRouter(routes, { initialUrl: "/trips/t1/money" });
+    await fireEvent.press(await screen.findByRole("button", { name: "Export as CSV" }));
+    await waitFor(() =>
+      expect(share).toHaveBeenCalledWith({
+        title: "Hanoi food week expenses",
+        message: "date,description\n2099-11-20,Pho\n",
+      }),
+    );
+  });
+
+  it("hides export when nothing was spent", async () => {
+    mockApi(base());
+    await renderRouter(routes, { initialUrl: "/trips/t1/money" });
+    expect(await screen.findByText("No spending yet.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Export as CSV" })).toBeNull();
   });
 });
 
