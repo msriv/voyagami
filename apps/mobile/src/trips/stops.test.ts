@@ -68,6 +68,16 @@ describe("stops", () => {
       expect(planMove(day, at("c"), { kind: "down" })).toBeUndefined();
     });
 
+    it("moves to a row, clamped to the day", () => {
+      const up = planMove(day, at("c"), { kind: "to", index: -5 });
+      expect(up?.body).toEqual({ beforeStopId: "a" });
+      expect(ids(up?.local ?? [], "2026-11-01")).toEqual(["c", "a", "b"]);
+      const end = planMove(day, at("a"), { kind: "to", index: 9 });
+      expect(end?.body).toEqual({ date: "2026-11-01" });
+      expect(ids(end?.local ?? [], "2026-11-01")).toEqual(["b", "c", "a"]);
+      expect(planMove(day, at("b"), { kind: "to", index: 1 })).toBeUndefined();
+    });
+
     it("moves to the end of another day", () => {
       const plan = planMove(day, at("a"), { kind: "day", date: "2026-11-02" });
       expect(plan?.body).toEqual({ date: "2026-11-02" });
