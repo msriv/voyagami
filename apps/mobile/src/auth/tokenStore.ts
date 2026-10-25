@@ -38,3 +38,8 @@ export async function saveOnboarded(done: boolean): Promise<void> {
   if (done) await SecureStore.setItemAsync(onboardedKey, "1");
   else await SecureStore.deleteItemAsync(onboardedKey);
 }
+
+/** Forgets everything kept on this device, so the next launch starts at Welcome. */
+export async function clearDevice(): Promise<void> {
+  await Promise.all([saveTokens(null), saveOnboarded(false)]);
+}

@@ -115,4 +115,16 @@ describe("sign in", () => {
     expect(await screen.findByRole("button", { name: "Get started" })).toBeTruthy();
     expect(mockStore.size).toBe(0);
   });
+
+  it("resets the app from Profile without calling the server", async () => {
+    mockStore.set("voyagami.accessToken", "a");
+    mockStore.set("voyagami.refreshToken", "r");
+    mockStore.set("voyagami.onboarded", "1");
+    const calls = mockApi({ "GET /v1/me": () => json(200, { id: "u1" }) });
+    await renderRouter(routes, { initialUrl: "/profile" });
+    await fireEvent.press(await screen.findByRole("button", { name: "Reset app and start over" }));
+    expect(await screen.findByRole("button", { name: "Get started" })).toBeTruthy();
+    expect(mockStore.size).toBe(0);
+    expect(calls.some((c) => c.key === "POST /v1/auth/sign-out")).toBe(false);
+  });
 });

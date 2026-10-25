@@ -11,7 +11,7 @@ import {
 } from "react";
 
 import { apiBaseUrl } from "./config";
-import { loadOnboarded, loadTokens, saveOnboarded, saveTokens } from "./tokenStore";
+import { clearDevice, loadOnboarded, loadTokens, saveOnboarded, saveTokens } from "./tokenStore";
 
 export type AuthStatus = "loading" | "signedOut" | "signedIn";
 
@@ -21,6 +21,8 @@ interface AuthContextValue {
   /** Keep the tokens from a successful sign-in. The router then moves to the signed-in screens. */
   signIn: (tokens: StoredTokens) => Promise<void>;
   signOut: () => Promise<void>;
+  /** Clears everything stored on this device without calling the server, then shows Welcome. */
+  resetDevice: () => Promise<void>;
   /** False until the person finishes or skips through first-run onboarding. */
   onboarded: boolean;
   finishOnboarding: () => Promise<void>;
@@ -94,6 +96,13 @@ export function AuthProvider({
     setStatus("signedOut");
   }, [api]);
 
+  const resetDevice = useCallback(async () => {
+    tokens.current = null;
+    await clearDevice().catch(() => undefined);
+    setOnboarded(false);
+    setStatus("signedOut");
+  }, []);
+
   const finishOnboarding = useCallback(async () => {
     setOnboarded(true);
     await saveOnboarded(true).catch(() => undefined);
@@ -105,12 +114,13 @@ export function AuthProvider({
       api,
       signIn,
       signOut,
+      resetDevice,
       onboarded,
       finishOnboarding,
       pendingPhone,
       setPendingPhone,
     }),
-    [status, api, signIn, signOut, onboarded, finishOnboarding, pendingPhone],
+    [status, api, signIn, signOut, resetDevice, onboarded, finishOnboarding, pendingPhone],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
