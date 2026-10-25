@@ -330,17 +330,17 @@ Write: editors; any member may tick a task assigned to them. Until the rules ope
 
 ### `trips/{tripId}/comments/{commentId}`
 
-Append-only. Comments are never edited in place (an edit is a new comment with `replaces`), so nothing conflicts.
+| Field        | Type                | Notes                                                       |
+| ------------ | ------------------- | ----------------------------------------------------------- |
+| `targetType` | `"stop"` / `"trip"` | More kinds (booking, poll) when their screens need threads. |
+| `targetId`   | string              | The stop's ID, or the trip's ID.                            |
+| `authorUid`  | string              |                                                             |
+| `body`       | string              | Free text, at most 2000 characters. Never logged.           |
+| `mentions`   | string[]            | Active members the author tagged, at most 10.               |
+| `createdAt`  | instant             |                                                             |
+| `editedAt`   | instant?            | Set when the author edits.                                  |
 
-| Field       | Type                                                           | Notes                    |
-| ----------- | -------------------------------------------------------------- | ------------------------ |
-| `target`    | `{ type: "stop" / "saved" / "booking" / "poll" / "trip", id }` |                          |
-| `authorUid` | string                                                         |                          |
-| `body`      | string                                                         | Free text. Never logged. |
-| `reactions` | `{ [uid]: string }`                                            | One reaction per person. |
-| `replaces`  | string?                                                        |                          |
-
-Write: any member creates their own comments. Any member may set or clear their own key in `reactions`, and nothing else on someone else's comment.
+API (VOY-138): `GET/POST /v1/trips/{id}/comments` (filter a thread with `targetType` and `targetId`), `PATCH/DELETE .../{commentId}`. Any member, viewers too, can comment; only the author edits; the author or the owner deletes. Edits happen in place because only the author ever writes a comment, so two people never conflict. Reactions and push for mentions come later (VOY-157).
 
 ### `trips/{tripId}/meetPoints/{meetPointId}`
 

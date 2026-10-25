@@ -48,6 +48,42 @@ func (e BookingKind) Valid() bool {
 	}
 }
 
+// Defines values for CommentTargetType.
+const (
+	CommentTargetTypeStop CommentTargetType = "stop"
+	CommentTargetTypeTrip CommentTargetType = "trip"
+)
+
+// Valid indicates whether the value is a known member of the CommentTargetType enum.
+func (e CommentTargetType) Valid() bool {
+	switch e {
+	case CommentTargetTypeStop:
+		return true
+	case CommentTargetTypeTrip:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CommentCreateTargetType.
+const (
+	CommentCreateTargetTypeStop CommentCreateTargetType = "stop"
+	CommentCreateTargetTypeTrip CommentCreateTargetType = "trip"
+)
+
+// Valid indicates whether the value is a known member of the CommentCreateTargetType enum.
+func (e CommentCreateTargetType) Valid() bool {
+	switch e {
+	case CommentCreateTargetTypeStop:
+		return true
+	case CommentCreateTargetTypeTrip:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for EntitlementsPlan.
 const (
 	Free EntitlementsPlan = "free"
@@ -597,6 +633,24 @@ func (e UnitsTemperature) Valid() bool {
 	}
 }
 
+// Defines values for ListCommentsParamsTargetType.
+const (
+	ListCommentsParamsTargetTypeStop ListCommentsParamsTargetType = "stop"
+	ListCommentsParamsTargetTypeTrip ListCommentsParamsTargetType = "trip"
+)
+
+// Valid indicates whether the value is a known member of the ListCommentsParamsTargetType enum.
+func (e ListCommentsParamsTargetType) Valid() bool {
+	switch e {
+	case ListCommentsParamsTargetTypeStop:
+		return true
+	case ListCommentsParamsTargetTypeTrip:
+		return true
+	default:
+		return false
+	}
+}
+
 // Balances defines model for Balances.
 type Balances struct {
 	Balances []ExpenseShare `json:"balances"`
@@ -737,6 +791,45 @@ type BudgetSummary struct {
 
 	// TargetMinor Absent when the trip has no budget, or the budget is in another currency.
 	TargetMinor *int64 `json:"targetMinor,omitempty"`
+}
+
+// Comment defines model for Comment.
+type Comment struct {
+	AuthorUid  string            `json:"authorUid"`
+	Body       string            `json:"body"`
+	CreatedAt  time.Time         `json:"createdAt"`
+	EditedAt   *time.Time        `json:"editedAt,omitempty"`
+	Id         string            `json:"id"`
+	Mentions   []string          `json:"mentions"`
+	TargetId   string            `json:"targetId"`
+	TargetType CommentTargetType `json:"targetType"`
+}
+
+// CommentTargetType defines model for Comment.TargetType.
+type CommentTargetType string
+
+// CommentCreate defines model for CommentCreate.
+type CommentCreate struct {
+	Body string `json:"body"`
+
+	// Mentions IDs of members to tag.
+	Mentions   *[]string               `json:"mentions,omitempty"`
+	TargetId   string                  `json:"targetId"`
+	TargetType CommentCreateTargetType `json:"targetType"`
+}
+
+// CommentCreateTargetType defines model for CommentCreate.TargetType.
+type CommentCreateTargetType string
+
+// CommentEdit defines model for CommentEdit.
+type CommentEdit struct {
+	Body     string    `json:"body"`
+	Mentions *[]string `json:"mentions,omitempty"`
+}
+
+// CommentList defines model for CommentList.
+type CommentList struct {
+	Comments []Comment `json:"comments"`
 }
 
 // DayOrder defines model for DayOrder.
@@ -1595,6 +1688,15 @@ type GetRateParams struct {
 	To string `form:"to" json:"to"`
 }
 
+// ListCommentsParams defines parameters for ListComments.
+type ListCommentsParams struct {
+	TargetType *ListCommentsParamsTargetType `form:"targetType,omitempty" json:"targetType,omitempty"`
+	TargetId   *string                       `form:"targetId,omitempty" json:"targetId,omitempty"`
+}
+
+// ListCommentsParamsTargetType defines parameters for ListComments.
+type ListCommentsParamsTargetType string
+
 // RequestOtpJSONRequestBody defines body for RequestOtp for application/json ContentType.
 type RequestOtpJSONRequestBody = OtpRequest
 
@@ -1621,6 +1723,12 @@ type CreateBookingJSONRequestBody = BookingCreate
 
 // UpdateBookingJSONRequestBody defines body for UpdateBooking for application/json ContentType.
 type UpdateBookingJSONRequestBody = BookingUpdate
+
+// CreateCommentJSONRequestBody defines body for CreateComment for application/json ContentType.
+type CreateCommentJSONRequestBody = CommentCreate
+
+// EditCommentJSONRequestBody defines body for EditComment for application/json ContentType.
+type EditCommentJSONRequestBody = CommentEdit
 
 // SetDayOrderJSONRequestBody defines body for SetDayOrder for application/json ContentType.
 type SetDayOrderJSONRequestBody = DayOrder
@@ -1735,6 +1843,18 @@ type ServerInterface interface {
 	// GetBudget Spend against the trip budget
 	// (GET /v1/trips/{tripId}/budget)
 	GetBudget(w http.ResponseWriter, r *http.Request, tripId string)
+	// ListComments List comments
+	// (GET /v1/trips/{tripId}/comments)
+	ListComments(w http.ResponseWriter, r *http.Request, tripId string, params ListCommentsParams)
+	// CreateComment Comment on a stop or the trip
+	// (POST /v1/trips/{tripId}/comments)
+	CreateComment(w http.ResponseWriter, r *http.Request, tripId string)
+	// DeleteComment Delete a comment
+	// (DELETE /v1/trips/{tripId}/comments/{commentId})
+	DeleteComment(w http.ResponseWriter, r *http.Request, tripId string, commentId string)
+	// EditComment Edit your comment
+	// (PATCH /v1/trips/{tripId}/comments/{commentId})
+	EditComment(w http.ResponseWriter, r *http.Request, tripId string, commentId string)
 	// SuggestBestOrder Suggest a shorter order for a day
 	// (POST /v1/trips/{tripId}/days/{date}/best-order)
 	SuggestBestOrder(w http.ResponseWriter, r *http.Request, tripId string, date string)
@@ -2283,6 +2403,157 @@ func (siw *ServerInterfaceWrapper) GetBudget(w http.ResponseWriter, r *http.Requ
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetBudget(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListComments operation middleware
+func (siw *ServerInterfaceWrapper) ListComments(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListCommentsParams
+
+	// ------------- Optional query parameter "targetType" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "targetType", r.URL.Query(), &params.TargetType, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "targetType"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "targetType", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "targetId" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "targetId", r.URL.Query(), &params.TargetId, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "targetId"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "targetId", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListComments(w, r, tripId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateComment operation middleware
+func (siw *ServerInterfaceWrapper) CreateComment(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateComment(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteComment operation middleware
+func (siw *ServerInterfaceWrapper) DeleteComment(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "commentId" -------------
+	var commentId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "commentId", r.PathValue("commentId"), &commentId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "commentId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteComment(w, r, tripId, commentId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// EditComment operation middleware
+func (siw *ServerInterfaceWrapper) EditComment(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "commentId" -------------
+	var commentId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "commentId", r.PathValue("commentId"), &commentId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "commentId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.EditComment(w, r, tripId, commentId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -3666,6 +3937,10 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/locations", wrapper.ListSharedLocations)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/locations/me", wrapper.StopSharingMyLocation)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/v1/trips/{tripId}/locations/me", wrapper.ShareMyLocation)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/comments", wrapper.ListComments)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/comments", wrapper.CreateComment)
+	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/comments/{commentId}", wrapper.DeleteComment)
+	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/trips/{tripId}/comments/{commentId}", wrapper.EditComment)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/members", wrapper.ListMembers)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/members/{uid}", wrapper.RemoveMember)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/trips/{tripId}/members/{uid}", wrapper.SetMemberRole)
@@ -4938,6 +5213,331 @@ func (response GetBudget404JSONResponse) VisitGetBudgetResponse(w http.ResponseW
 type GetBudget503JSONResponse struct{ UnavailableJSONResponse }
 
 func (response GetBudget503JSONResponse) VisitGetBudgetResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListCommentsRequestObject struct {
+	TripId string `json:"tripId"`
+	Params ListCommentsParams
+}
+
+type ListCommentsResponseObject interface {
+	VisitListCommentsResponse(w http.ResponseWriter) error
+}
+
+type ListComments200JSONResponse CommentList
+
+func (response ListComments200JSONResponse) VisitListCommentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListComments400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response ListComments400JSONResponse) VisitListCommentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListComments401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ListComments401JSONResponse) VisitListCommentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListComments404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ListComments404JSONResponse) VisitListCommentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListComments503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ListComments503JSONResponse) VisitListCommentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateCommentRequestObject struct {
+	TripId string `json:"tripId"`
+	Body   *CreateCommentJSONRequestBody
+}
+
+type CreateCommentResponseObject interface {
+	VisitCreateCommentResponse(w http.ResponseWriter) error
+}
+
+type CreateComment201JSONResponse Comment
+
+func (response CreateComment201JSONResponse) VisitCreateCommentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateComment400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CreateComment400JSONResponse) VisitCreateCommentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateComment401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CreateComment401JSONResponse) VisitCreateCommentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateComment404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CreateComment404JSONResponse) VisitCreateCommentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateComment503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response CreateComment503JSONResponse) VisitCreateCommentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteCommentRequestObject struct {
+	TripId    string `json:"tripId"`
+	CommentId string `json:"commentId"`
+}
+
+type DeleteCommentResponseObject interface {
+	VisitDeleteCommentResponse(w http.ResponseWriter) error
+}
+
+type DeleteComment204Response struct {
+}
+
+func (response DeleteComment204Response) VisitDeleteCommentResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteComment401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response DeleteComment401JSONResponse) VisitDeleteCommentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteComment403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response DeleteComment403JSONResponse) VisitDeleteCommentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteComment404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response DeleteComment404JSONResponse) VisitDeleteCommentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteComment503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response DeleteComment503JSONResponse) VisitDeleteCommentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type EditCommentRequestObject struct {
+	TripId    string `json:"tripId"`
+	CommentId string `json:"commentId"`
+	Body      *EditCommentJSONRequestBody
+}
+
+type EditCommentResponseObject interface {
+	VisitEditCommentResponse(w http.ResponseWriter) error
+}
+
+type EditComment200JSONResponse Comment
+
+func (response EditComment200JSONResponse) VisitEditCommentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type EditComment400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response EditComment400JSONResponse) VisitEditCommentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type EditComment401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response EditComment401JSONResponse) VisitEditCommentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type EditComment403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response EditComment403JSONResponse) VisitEditCommentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type EditComment404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response EditComment404JSONResponse) VisitEditCommentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type EditComment503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response EditComment503JSONResponse) VisitEditCommentResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -8203,6 +8803,18 @@ type StrictServerInterface interface {
 	// GetBudget Spend against the trip budget
 	// (GET /v1/trips/{tripId}/budget)
 	GetBudget(ctx context.Context, request GetBudgetRequestObject) (GetBudgetResponseObject, error)
+	// ListComments List comments
+	// (GET /v1/trips/{tripId}/comments)
+	ListComments(ctx context.Context, request ListCommentsRequestObject) (ListCommentsResponseObject, error)
+	// CreateComment Comment on a stop or the trip
+	// (POST /v1/trips/{tripId}/comments)
+	CreateComment(ctx context.Context, request CreateCommentRequestObject) (CreateCommentResponseObject, error)
+	// DeleteComment Delete a comment
+	// (DELETE /v1/trips/{tripId}/comments/{commentId})
+	DeleteComment(ctx context.Context, request DeleteCommentRequestObject) (DeleteCommentResponseObject, error)
+	// EditComment Edit your comment
+	// (PATCH /v1/trips/{tripId}/comments/{commentId})
+	EditComment(ctx context.Context, request EditCommentRequestObject) (EditCommentResponseObject, error)
 	// SuggestBestOrder Suggest a shorter order for a day
 	// (POST /v1/trips/{tripId}/days/{date}/best-order)
 	SuggestBestOrder(ctx context.Context, request SuggestBestOrderRequestObject) (SuggestBestOrderResponseObject, error)
@@ -8920,6 +9532,127 @@ func (sh *strictHandler) GetBudget(w http.ResponseWriter, r *http.Request, tripI
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetBudgetResponseObject); ok {
 		if err := validResponse.VisitGetBudgetResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListComments operation middleware
+func (sh *strictHandler) ListComments(w http.ResponseWriter, r *http.Request, tripId string, params ListCommentsParams) {
+	var request ListCommentsRequestObject
+
+	request.TripId = tripId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListComments(ctx, request.(ListCommentsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListComments")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListCommentsResponseObject); ok {
+		if err := validResponse.VisitListCommentsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateComment operation middleware
+func (sh *strictHandler) CreateComment(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request CreateCommentRequestObject
+
+	request.TripId = tripId
+
+	var body CreateCommentJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateComment(ctx, request.(CreateCommentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateComment")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateCommentResponseObject); ok {
+		if err := validResponse.VisitCreateCommentResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteComment operation middleware
+func (sh *strictHandler) DeleteComment(w http.ResponseWriter, r *http.Request, tripId string, commentId string) {
+	var request DeleteCommentRequestObject
+
+	request.TripId = tripId
+	request.CommentId = commentId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteComment(ctx, request.(DeleteCommentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteComment")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteCommentResponseObject); ok {
+		if err := validResponse.VisitDeleteCommentResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// EditComment operation middleware
+func (sh *strictHandler) EditComment(w http.ResponseWriter, r *http.Request, tripId string, commentId string) {
+	var request EditCommentRequestObject
+
+	request.TripId = tripId
+	request.CommentId = commentId
+
+	var body EditCommentJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.EditComment(ctx, request.(EditCommentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "EditComment")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(EditCommentResponseObject); ok {
+		if err := validResponse.VisitEditCommentResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

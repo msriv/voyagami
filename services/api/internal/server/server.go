@@ -57,6 +57,7 @@ type handlers struct {
 	invites     repo.Invites
 	polls       repo.Polls
 	meetPoints  repo.MeetPoints
+	comments    repo.Comments
 	presence    repo.Presence
 	rates       rates.Provider
 

@@ -718,6 +718,62 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/trips/{tripId}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * List comments
+         * @description Oldest first. Filter to one thread with `targetType` and `targetId`
+         *     (give both or neither). Any active member can read.
+         */
+        get: operations["listComments"];
+        put?: never;
+        /**
+         * Comment on a stop or the trip
+         * @description Any active member, viewers included. A stop must exist on the trip.
+         *     For the trip itself, `targetId` is the trip's ID. Mentions must be
+         *     active members.
+         */
+        post: operations["createComment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/comments/{commentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                commentId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a comment
+         * @description The author, or the trip owner. Deleting one that is already gone succeeds.
+         */
+        delete: operations["deleteComment"];
+        options?: never;
+        head?: never;
+        /**
+         * Edit your comment
+         * @description Only the author. Sets `editedAt`.
+         */
+        patch: operations["editComment"];
+        trace?: never;
+    };
     "/v1/trips/{tripId}/members": {
         parameters: {
             query?: never;
@@ -1566,6 +1622,34 @@ export interface components {
         };
         SharedLocationList: {
             locations: components["schemas"]["SharedLocation"][];
+        };
+        CommentCreate: {
+            /** @enum {string} */
+            targetType: "stop" | "trip";
+            targetId: string;
+            body: string;
+            /** @description IDs of members to tag. */
+            mentions?: string[];
+        };
+        CommentEdit: {
+            body: string;
+            mentions?: string[];
+        };
+        Comment: {
+            id: string;
+            /** @enum {string} */
+            targetType: "stop" | "trip";
+            targetId: string;
+            authorUid: string;
+            body: string;
+            mentions: string[];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            editedAt?: string;
+        };
+        CommentList: {
+            comments: components["schemas"]["Comment"][];
         };
         Member: {
             uid: string;
@@ -2936,6 +3020,122 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    listComments: {
+        parameters: {
+            query?: {
+                targetType?: "stop" | "trip";
+                targetId?: string;
+            };
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The comments. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommentList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    createComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentCreate"];
+            };
+        };
+        responses: {
+            /** @description The comment. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comment"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    deleteComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                commentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    editComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                commentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentEdit"];
+            };
+        };
+        responses: {
+            /** @description The updated comment. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comment"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             503: components["responses"]["Unavailable"];
         };
