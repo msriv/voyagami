@@ -75,7 +75,7 @@ func (h *handlers) entitlementsFor(user entitlements.User, trip *entitlements.Tr
 	}
 	for _, f := range entitlements.All() {
 		d := h.plans.Check(user, trip, f)
-		out.Features[string(f)] = api.EntitlementDecision{Allowed: d.Allowed, Limit: d.Limit, Used: d.Used, NeedsPlus: d.NeedsPlus}
+		out.Features[string(f)] = api.EntitlementDecision{Allowed: d.Allowed, Limit: d.Limit, Used: d.Used, NeedsPlus: d.NeedsPlus, ReadOnly: d.ReadOnly}
 	}
 	return out
 }

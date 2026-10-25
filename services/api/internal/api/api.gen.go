@@ -272,7 +272,10 @@ type EntitlementDecision struct {
 
 	// NeedsPlus True when the answer is no and Plus or a Trip Pass would change it.
 	NeedsPlus bool `json:"needsPlus"`
-	Used      int  `json:"used"`
+
+	// ReadOnly True when existing content is over the cap (after a downgrade). It is kept and can be read, but not changed.
+	ReadOnly bool `json:"readOnly"`
+	Used     int  `json:"used"`
 }
 
 // Entitlements defines model for Entitlements.

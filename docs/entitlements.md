@@ -22,7 +22,7 @@ d := svc.Check(user, trip, entitlements.BestOrder)
 - A Trip Pass opens trip features for the crew but never the account ones: upcoming-trip count, Ask drafts, dark mode.
 - Always free, whatever the table says: joining trips, settle-up, meet points, data export, offline plan and tickets.
 - Dev has no limits (`ForEnv("dev")`). Staging and prod use the Free values.
-- Downgrading never deletes data. A check that says no on content already over the limit means the content is read-only (VOY-115).
+- Downgrading never deletes data. When a person or trip is over a cap (for example after Plus ends), `Decision.ReadOnly` is true: the content stays and can be read, but it cannot be changed until the count is back under the cap or Plus returns. Being exactly at the cap is full, not read-only.
 
 ## Endpoints and app hook
 
@@ -34,5 +34,3 @@ d := svc.Check(user, trip, entitlements.BestOrder)
 - In the app, `useEntitlement(feature, tripId?)` reflects the answer. It allows nothing until the server answers or if the request fails.
 
 `DEV_PLAN=free` or `DEV_PLAN=plus` (dev only) forces every account onto that plan and, for `free`, turns the Free caps on, so plan gates can be tried.
-
-Next: the crew-unlock and downgrade tests (VOY-115).

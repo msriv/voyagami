@@ -91,3 +91,39 @@ func TestForEnv(t *testing.T) {
 		}
 	}
 }
+
+func TestDowngradeKeepsContentReadOnly(t *testing.T) {
+	free := New(Free())
+	tests := []struct {
+		name         string
+		user         User
+		trip         *Trip
+		feature      Feature
+		wantAllowed  bool
+		wantReadOnly bool
+	}{
+		{"at the cap is full, not read-only", User{Used: counts(UpcomingTrips, 2)}, nil, UpcomingTrips, false, false},
+		{"over the trip cap after a downgrade is read-only", User{Used: counts(UpcomingTrips, 5)}, nil, UpcomingTrips, false, true},
+		{"photos over the cap are read-only", User{}, &Trip{Used: counts(JournalPhotos, 80)}, JournalPhotos, false, true},
+		{"plus again lifts it", User{Plus: true, Used: counts(UpcomingTrips, 5)}, nil, UpcomingTrips, true, false},
+		{"a trip pass lifts it for the crew", User{}, &Trip{Pass: true, Used: counts(Files, 9)}, Files, true, false},
+		{"one plus member lifts it for the crew", User{}, &Trip{MemberPlus: true, Used: counts(ForwardedBookings, 9)}, ForwardedBookings, true, false},
+		{"the last plus member leaving makes it read-only", User{}, &Trip{Used: counts(ForwardedBookings, 9)}, ForwardedBookings, false, true},
+		{"a pass does not lift account limits", User{Used: counts(UpcomingTrips, 5)}, &Trip{Pass: true}, UpcomingTrips, false, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := free.Check(tt.user, tt.trip, tt.feature)
+			if got.Allowed != tt.wantAllowed || got.ReadOnly != tt.wantReadOnly {
+				t.Errorf("got allowed=%v readOnly=%v, want %v and %v", got.Allowed, got.ReadOnly, tt.wantAllowed, tt.wantReadOnly)
+			}
+		})
+	}
+}
+
+func TestAlwaysFreeIsNeverReadOnly(t *testing.T) {
+	d := New(Free()).Check(User{}, &Trip{}, SettleUp)
+	if !d.Allowed || d.ReadOnly {
+		t.Errorf("got %+v", d)
+	}
+}
