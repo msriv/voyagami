@@ -1,12 +1,14 @@
+import type { ComponentProps } from "react";
 import { Redirect, Tabs } from "expo-router";
 
 import { useAuth } from "@/auth";
+import { FloatingTabBar } from "@/ui/FloatingTabBar";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 
 export default function TabsLayout() {
   const { t } = useTranslation();
-  const { colors, fontFamily } = useTheme();
+  const { colors } = useTheme();
   const { onboarded } = useAuth();
 
   // First launch goes through onboarding once; after that, straight to Home.
@@ -14,15 +16,8 @@ export default function TabsLayout() {
 
   return (
     <Tabs
-      screenOptions={{
-        sceneStyle: { backgroundColor: colors.washi },
-        headerTitleStyle: { fontFamily: fontFamily.display, color: colors.ink },
-        headerStyle: { backgroundColor: colors.washi },
-        tabBarActiveTintColor: colors.indigo,
-        tabBarInactiveTintColor: colors.muted,
-        tabBarLabelStyle: { fontFamily: fontFamily.bodySemiBold },
-        tabBarStyle: { backgroundColor: colors.white, borderTopColor: colors.line },
-      }}
+      tabBar={(props) => <FloatingTabBar {...(props as unknown as ComponentProps<typeof FloatingTabBar>)} />}
+      screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.washi } }}
     >
       <Tabs.Screen
         name="index"

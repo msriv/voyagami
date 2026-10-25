@@ -24,8 +24,8 @@ describe("tab shell", () => {
       "GET /v1/trips": () => json(200, { trips: [] }),
     });
     await renderRouter(routes);
-    expect(await screen.findByRole("button", { name: "Home" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Explore" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Profile" })).toBeTruthy();
+    expect(await screen.findByRole("tab", { name: "Home" })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Explore" })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Profile" })).toBeTruthy();
   });
 });

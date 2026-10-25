@@ -10,6 +10,7 @@ import { useProfile } from "@/profile";
 import { partitionTrips, todayIso, type Trip } from "@/trips/summary";
 import { TripCard } from "@/trips/TripCard";
 import { Button, Card, Seal, Text } from "@/ui";
+import { Icon } from "@/ui/icons";
 
 export default function HomeScreen() {
   const { t } = useTranslation();
@@ -39,6 +40,7 @@ export default function HomeScreen() {
   const { upcoming, past } = partitionTrips(trips ?? [], today);
   const empty = trips !== undefined && trips.length === 0;
   const [next, ...later] = upcoming;
+  const initial = (name ?? "").trim().charAt(0).toUpperCase();
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "goodMorning" : hour < 18 ? "goodAfternoon" : "goodEvening";
 
@@ -81,9 +83,13 @@ export default function HomeScreen() {
               justifyContent: "center",
             }}
           >
-            <Text variant="bodyStrong" color="white">
-              {(name ?? "").trim().charAt(0).toUpperCase() || "·"}
-            </Text>
+            {initial ? (
+              <Text variant="bodyStrong" color="white">
+                {initial}
+              </Text>
+            ) : (
+              <Icon name="person" size={22} color={colors.white} />
+            )}
           </Pressable>
         </View>
 
