@@ -67,6 +67,8 @@ const base = (role = "owner", expenses: object[] = [], budget: object = {}) => (
       ...budget,
     }),
   "GET /v1/me": () => json(200, { id: "u1" }),
+  "GET /v1/trips/t1/members": () =>
+    json(200, { members: [{ uid: "u1", role: "owner", status: "active", displayName: "Asha" }] }),
   "GET /v1/trips/t1": () => json(200, trip(role)),
   "GET /v1/trips/t1/expenses": () => json(200, { expenses }),
 });
@@ -180,6 +182,23 @@ describe("Budget", () => {
   });
 });
 
+describe("Payer name", () => {
+  it("shows who paid", async () => {
+    mockApi({
+      ...base("owner", [expense("e1", "Pho", "2099-11-19", 50000, "u2")]),
+      "GET /v1/trips/t1/members": () =>
+        json(200, {
+          members: [
+            { uid: "u1", role: "owner", status: "active", displayName: "Asha" },
+            { uid: "u2", role: "editor", status: "active", displayName: "Ben" },
+          ],
+        }),
+    });
+    await renderRouter(routes, { initialUrl: "/trips/t1/money" });
+    expect(await screen.findByText("Paid by Ben")).toBeTruthy();
+  });
+});
+
 describe("Add expense", () => {
   it("saves an equal split to yourself in minor units", async () => {
     const calls = mockApi({
@@ -199,6 +218,34 @@ describe("Add expense", () => {
         split: { method: "equal", parts: [{ uid: "u1" }] },
       }),
     );
+  });
+
+  it("lets the crew pick who paid and who shares", async () => {
+    const calls = mockApi({
+      ...base(),
+      "GET /v1/trips/t1/members": () =>
+        json(200, {
+          members: [
+            { uid: "u1", role: "owner", status: "active", displayName: "Asha" },
+            { uid: "u2", role: "editor", status: "active", displayName: "Ben" },
+          ],
+        }),
+      "POST /v1/trips/t1/expenses": () => json(201, expense("e1", "Pho", "2099-11-19", 50000)),
+    });
+    await renderRouter(routes, { initialUrl: "/trips/t1/add-expense" });
+    await fireEvent.changeText(await screen.findByLabelText("What was it for?"), "Pho");
+    await fireEvent.changeText(screen.getByLabelText(/^Amount in VND/), "50000");
+    const ben = await screen.findAllByRole("button", { name: /Ben/ });
+    for (const chip of ben) await fireEvent.press(chip);
+    await fireEvent.press(screen.getByRole("button", { name: "Save expense" }));
+    await waitFor(() => {
+      const body = calls.find((c) => c.key === "POST /v1/trips/t1/expenses")?.body as {
+        paidByUid: string;
+        split: unknown;
+      };
+      expect(body.paidByUid).toBe("u2");
+      expect(body.split).toEqual({ method: "equal", parts: [{ uid: "u1" }] });
+    });
   });
 
   it("asks for a valid amount and a description", async () => {
