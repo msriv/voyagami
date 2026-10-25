@@ -1,10 +1,11 @@
-import Constants, { ExecutionEnvironment } from "expo-constants";
+import { requireOptionalNativeModule } from "expo";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAuth } from "@/auth";
+import { reporter } from "@/logging/remoteLog";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { Button, Text } from "@/ui";
@@ -16,12 +17,15 @@ const requests: Record<Ask, () => Promise<{ granted: boolean; unavailable?: true
   /* eslint-disable @typescript-eslint/no-require-imports -- loaded on tap, see above */
   contacts: async () => require("expo-contacts").requestPermissionsAsync(),
   location: async () => require("expo-location").requestForegroundPermissionsAsync(),
-  // Expo Go has no push module, and Metro reports that failed load as a fatal error that a
-  // try/catch cannot stop, so the module is never loaded there.
-  notifications: async () =>
-    Constants.executionEnvironment === ExecutionEnvironment.StoreClient
-      ? { granted: false, unavailable: true }
-      : require("expo-notifications").requestPermissionsAsync(),
+  // Expo Go has no push module, and Metro reports a failed load as a fatal error that a try/catch
+  // cannot stop, so ask for the native module first and never load the JS one without it.
+  notifications: async () => {
+    const present = Boolean(requireOptionalNativeModule("ExpoTopicSubscriptionModule"));
+    reporter.breadcrumb(`notifications module ${present ? "present" : "missing"}`);
+    return present
+      ? require("expo-notifications").requestPermissionsAsync()
+      : { granted: false, unavailable: true };
+  },
   /* eslint-enable @typescript-eslint/no-require-imports */
 };
 
