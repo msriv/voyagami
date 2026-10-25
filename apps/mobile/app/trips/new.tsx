@@ -3,7 +3,8 @@ import { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { signInErrorKey, useAuth } from "@/auth";
+import { signInErrorKey, useAuth, withDetail } from "@/auth";
+import { reportError } from "@/logging/remoteLog";
 import { useTranslation } from "@/i18n";
 import { useProfile } from "@/profile";
 import { useTheme } from "@/theme";
@@ -69,8 +70,15 @@ export default function NewTripScreen() {
       );
       router.replace("/");
     } catch (e) {
+      reportError("create-trip", e);
       const key = signInErrorKey(e);
-      setError(t(key === "offline" ? "newTrip.errors.offline" : "newTrip.errors.generic"));
+      setError(
+        withDetail(
+          t(key === "offline" ? "newTrip.errors.offline" : "newTrip.errors.generic"),
+          e,
+          true,
+        ),
+      );
     } finally {
       setBusy(false);
     }
