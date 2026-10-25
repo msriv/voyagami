@@ -34,7 +34,7 @@ const trip = (role: string, status = "planned") => ({
 });
 
 describe("Trip overview", () => {
-  it("shows the trip, its days and the coming-soon sections", async () => {
+  it("shows the trip, its days and the section buttons", async () => {
     mockApi({
       "GET /v1/me": () => json(200, { id: "u1" }),
       "GET /v1/trips/t1": () => json(200, trip("owner")),
@@ -44,7 +44,7 @@ describe("Trip overview", () => {
     expect(await screen.findByText("Hanoi food week")).toBeTruthy();
     expect(screen.getByText("Your role: Owner")).toBeTruthy();
     expect(screen.getAllByLabelText(/^Day \d/)).toHaveLength(3);
-    expect(screen.getByRole("button", { name: "Journal, coming soon" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Journal" })).toBeTruthy();
   });
 
   it("says when the trip cannot be found", async () => {
