@@ -191,7 +191,7 @@ Write: **server only** (join, role change, removal, leave). Read: any active mem
 
 ### `invites/{inviteId}`
 
-Server-owned. `inviteId` is a hash of the secret in the link, so the link can be looked up without a query and the secret is never stored. Read and written by the API only.
+Server-owned. `inviteId` is a hash of the secret in the link, so the link can be looked up without a query and the secret is never stored. Read and written by the API only. Only the owner creates, lists or revokes invites. A link expires after 7 days unless the owner picks another time. Joining counts one use in a transaction and is always free. Someone already on the trip who opens the link gets the trip back and no use is counted. A missing, revoked, expired or used-up link looks the same to the caller (404).
 
 | Field       | Type                    | Notes          |
 | ----------- | ----------------------- | -------------- |

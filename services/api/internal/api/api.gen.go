@@ -92,6 +92,42 @@ func (e ExpenseSplitMethod) Valid() bool {
 	}
 }
 
+// Defines values for InviteRole.
+const (
+	InviteRoleEditor InviteRole = "editor"
+	InviteRoleViewer InviteRole = "viewer"
+)
+
+// Valid indicates whether the value is a known member of the InviteRole enum.
+func (e InviteRole) Valid() bool {
+	switch e {
+	case InviteRoleEditor:
+		return true
+	case InviteRoleViewer:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for InviteCreateRole.
+const (
+	InviteCreateRoleEditor InviteCreateRole = "editor"
+	InviteCreateRoleViewer InviteCreateRole = "viewer"
+)
+
+// Valid indicates whether the value is a known member of the InviteCreateRole enum.
+func (e InviteCreateRole) Valid() bool {
+	switch e {
+	case InviteCreateRoleEditor:
+		return true
+	case InviteCreateRoleViewer:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for JournalEntryVisibility.
 const (
 	JournalEntryVisibilityCrew    JournalEntryVisibility = "crew"
@@ -188,6 +224,66 @@ func (e MeUpdateRegionSource) Valid() bool {
 	case MeUpdateRegionSourceConfirmed:
 		return true
 	case MeUpdateRegionSourceDevice:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MemberRole.
+const (
+	MemberRoleEditor MemberRole = "editor"
+	MemberRoleOwner  MemberRole = "owner"
+	MemberRoleViewer MemberRole = "viewer"
+)
+
+// Valid indicates whether the value is a known member of the MemberRole enum.
+func (e MemberRole) Valid() bool {
+	switch e {
+	case MemberRoleEditor:
+		return true
+	case MemberRoleOwner:
+		return true
+	case MemberRoleViewer:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MemberStatus.
+const (
+	MemberStatusActive  MemberStatus = "active"
+	MemberStatusLeft    MemberStatus = "left"
+	MemberStatusRemoved MemberStatus = "removed"
+)
+
+// Valid indicates whether the value is a known member of the MemberStatus enum.
+func (e MemberStatus) Valid() bool {
+	switch e {
+	case MemberStatusActive:
+		return true
+	case MemberStatusLeft:
+		return true
+	case MemberStatusRemoved:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MemberRoleChangeRole.
+const (
+	MemberRoleChangeRoleEditor MemberRoleChangeRole = "editor"
+	MemberRoleChangeRoleViewer MemberRoleChangeRole = "viewer"
+)
+
+// Valid indicates whether the value is a known member of the MemberRoleChangeRole enum.
+func (e MemberRoleChangeRole) Valid() bool {
+	switch e {
+	case MemberRoleChangeRoleEditor:
+		return true
+	case MemberRoleChangeRoleViewer:
 		return true
 	default:
 		return false
@@ -331,19 +427,19 @@ func (e TravelStyleSpend) Valid() bool {
 
 // Defines values for TripRole.
 const (
-	Editor TripRole = "editor"
-	Owner  TripRole = "owner"
-	Viewer TripRole = "viewer"
+	TripRoleEditor TripRole = "editor"
+	TripRoleOwner  TripRole = "owner"
+	TripRoleViewer TripRole = "viewer"
 )
 
 // Valid indicates whether the value is a known member of the TripRole enum.
 func (e TripRole) Valid() bool {
 	switch e {
-	case Editor:
+	case TripRoleEditor:
 		return true
-	case Owner:
+	case TripRoleOwner:
 		return true
-	case Viewer:
+	case TripRoleViewer:
 		return true
 	default:
 		return false
@@ -370,22 +466,22 @@ func (e TripBudgetScope) Valid() bool {
 
 // Defines values for TripStatus.
 const (
-	Active  TripStatus = "active"
-	Draft   TripStatus = "draft"
-	Past    TripStatus = "past"
-	Planned TripStatus = "planned"
+	TripStatusActive  TripStatus = "active"
+	TripStatusDraft   TripStatus = "draft"
+	TripStatusPast    TripStatus = "past"
+	TripStatusPlanned TripStatus = "planned"
 )
 
 // Valid indicates whether the value is a known member of the TripStatus enum.
 func (e TripStatus) Valid() bool {
 	switch e {
-	case Active:
+	case TripStatusActive:
 		return true
-	case Draft:
+	case TripStatusDraft:
 		return true
-	case Past:
+	case TripStatusPast:
 		return true
-	case Planned:
+	case TripStatusPlanned:
 		return true
 	default:
 		return false
@@ -732,6 +828,56 @@ type Health struct {
 	Status string `json:"status"`
 }
 
+// Invite defines model for Invite.
+type Invite struct {
+	CreatedAt time.Time  `json:"createdAt"`
+	CreatedBy string     `json:"createdBy"`
+	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
+	Id        string     `json:"id"`
+
+	// MaxUses Absent means unlimited.
+	MaxUses  *int       `json:"maxUses,omitempty"`
+	Revoked  bool       `json:"revoked"`
+	Role     InviteRole `json:"role"`
+	UseCount int        `json:"useCount"`
+}
+
+// InviteRole defines model for Invite.Role.
+type InviteRole string
+
+// InviteCreate defines model for InviteCreate.
+type InviteCreate struct {
+	// ExpiresInHours Defaults to 168 (7 days).
+	ExpiresInHours *int `json:"expiresInHours,omitempty"`
+
+	// MaxUses Absent means unlimited.
+	MaxUses *int `json:"maxUses,omitempty"`
+
+	// Role Defaults to editor.
+	Role *InviteCreateRole `json:"role,omitempty"`
+}
+
+// InviteCreateRole Defaults to editor.
+type InviteCreateRole string
+
+// InviteCreated defines model for InviteCreated.
+type InviteCreated struct {
+	Invite Invite `json:"invite"`
+
+	// Token Secret. Shown once.
+	Token string `json:"token"`
+}
+
+// InviteJoin defines model for InviteJoin.
+type InviteJoin struct {
+	Token string `json:"token"`
+}
+
+// InviteList defines model for InviteList.
+type InviteList struct {
+	Invites []Invite `json:"invites"`
+}
+
 // JournalEntry defines model for JournalEntry.
 type JournalEntry struct {
 	AuthorUid  string                 `json:"authorUid"`
@@ -817,6 +963,35 @@ type MeUpdate struct {
 
 // MeUpdateRegionSource `device` when guessed from the phone, `confirmed` once the person chose.
 type MeUpdateRegionSource string
+
+// Member defines model for Member.
+type Member struct {
+	DisplayName string       `json:"displayName"`
+	JoinedAt    time.Time    `json:"joinedAt"`
+	PhotoUrl    *string      `json:"photoUrl,omitempty"`
+	Role        MemberRole   `json:"role"`
+	Status      MemberStatus `json:"status"`
+	Uid         string       `json:"uid"`
+}
+
+// MemberRole defines model for Member.Role.
+type MemberRole string
+
+// MemberStatus defines model for Member.Status.
+type MemberStatus string
+
+// MemberList defines model for MemberList.
+type MemberList struct {
+	Members []Member `json:"members"`
+}
+
+// MemberRoleChange defines model for MemberRoleChange.
+type MemberRoleChange struct {
+	Role MemberRoleChangeRole `json:"role"`
+}
+
+// MemberRoleChangeRole defines model for MemberRoleChange.Role.
+type MemberRoleChangeRole string
 
 // Money defines model for Money.
 type Money struct {
@@ -1187,6 +1362,9 @@ type VerifyOtpJSONRequestBody = OtpVerifyRequest
 // RefreshSessionJSONRequestBody defines body for RefreshSession for application/json ContentType.
 type RefreshSessionJSONRequestBody = RefreshRequest
 
+// JoinTripJSONRequestBody defines body for JoinTrip for application/json ContentType.
+type JoinTripJSONRequestBody = InviteJoin
+
 // UpdateMeJSONRequestBody defines body for UpdateMe for application/json ContentType.
 type UpdateMeJSONRequestBody = MeUpdate
 
@@ -1211,8 +1389,14 @@ type CreateExpenseJSONRequestBody = ExpenseCreate
 // UpdateExpenseJSONRequestBody defines body for UpdateExpense for application/json ContentType.
 type UpdateExpenseJSONRequestBody = ExpenseUpdate
 
+// CreateInviteJSONRequestBody defines body for CreateInvite for application/json ContentType.
+type CreateInviteJSONRequestBody = InviteCreate
+
 // PutJournalEntryJSONRequestBody defines body for PutJournalEntry for application/json ContentType.
 type PutJournalEntryJSONRequestBody = JournalWrite
+
+// SetMemberRoleJSONRequestBody defines body for SetMemberRole for application/json ContentType.
+type SetMemberRoleJSONRequestBody = MemberRoleChange
 
 // RecordSettlementJSONRequestBody defines body for RecordSettlement for application/json ContentType.
 type RecordSettlementJSONRequestBody = SettlementCreate
@@ -1246,6 +1430,9 @@ type ServerInterface interface {
 	// SignOut End this device's session
 	// (POST /v1/auth/sign-out)
 	SignOut(w http.ResponseWriter, r *http.Request)
+	// JoinTrip Join a trip with an invite token
+	// (POST /v1/invites/join)
+	JoinTrip(w http.ResponseWriter, r *http.Request)
 	// GetMe Get the signed-in person
 	// (GET /v1/me)
 	GetMe(w http.ResponseWriter, r *http.Request)
@@ -1309,6 +1496,15 @@ type ServerInterface interface {
 	// UpdateExpense Change an expense
 	// (PATCH /v1/trips/{tripId}/expenses/{expenseId})
 	UpdateExpense(w http.ResponseWriter, r *http.Request, tripId string, expenseId string)
+	// ListInvites List invite links
+	// (GET /v1/trips/{tripId}/invites)
+	ListInvites(w http.ResponseWriter, r *http.Request, tripId string)
+	// CreateInvite Create an invite link
+	// (POST /v1/trips/{tripId}/invites)
+	CreateInvite(w http.ResponseWriter, r *http.Request, tripId string)
+	// RevokeInvite Revoke an invite link
+	// (DELETE /v1/trips/{tripId}/invites/{inviteId})
+	RevokeInvite(w http.ResponseWriter, r *http.Request, tripId string, inviteId string)
 	// ListJournal List journal entries
 	// (GET /v1/trips/{tripId}/journal)
 	ListJournal(w http.ResponseWriter, r *http.Request, tripId string)
@@ -1318,6 +1514,15 @@ type ServerInterface interface {
 	// PutJournalEntry Write your entry for a day
 	// (PUT /v1/trips/{tripId}/journal/{date})
 	PutJournalEntry(w http.ResponseWriter, r *http.Request, tripId string, date string)
+	// ListMembers List the crew
+	// (GET /v1/trips/{tripId}/members)
+	ListMembers(w http.ResponseWriter, r *http.Request, tripId string)
+	// RemoveMember Remove a member or leave the trip
+	// (DELETE /v1/trips/{tripId}/members/{uid})
+	RemoveMember(w http.ResponseWriter, r *http.Request, tripId string, uid string)
+	// SetMemberRole Change a member's role
+	// (PATCH /v1/trips/{tripId}/members/{uid})
+	SetMemberRole(w http.ResponseWriter, r *http.Request, tripId string, uid string)
 	// ListSettlements List recorded payments
 	// (GET /v1/trips/{tripId}/settlements)
 	ListSettlements(w http.ResponseWriter, r *http.Request, tripId string)
@@ -1420,6 +1625,20 @@ func (siw *ServerInterfaceWrapper) SignOut(w http.ResponseWriter, r *http.Reques
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.SignOut(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// JoinTrip operation middleware
+func (siw *ServerInterfaceWrapper) JoinTrip(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.JoinTrip(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1969,6 +2188,93 @@ func (siw *ServerInterfaceWrapper) UpdateExpense(w http.ResponseWriter, r *http.
 	handler.ServeHTTP(w, r)
 }
 
+// ListInvites operation middleware
+func (siw *ServerInterfaceWrapper) ListInvites(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListInvites(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateInvite operation middleware
+func (siw *ServerInterfaceWrapper) CreateInvite(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateInvite(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RevokeInvite operation middleware
+func (siw *ServerInterfaceWrapper) RevokeInvite(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "inviteId" -------------
+	var inviteId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "inviteId", r.PathValue("inviteId"), &inviteId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "inviteId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RevokeInvite(w, r, tripId, inviteId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListJournal operation middleware
 func (siw *ServerInterfaceWrapper) ListJournal(w http.ResponseWriter, r *http.Request) {
 
@@ -2056,6 +2362,102 @@ func (siw *ServerInterfaceWrapper) PutJournalEntry(w http.ResponseWriter, r *htt
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PutJournalEntry(w, r, tripId, date)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListMembers operation middleware
+func (siw *ServerInterfaceWrapper) ListMembers(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListMembers(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RemoveMember operation middleware
+func (siw *ServerInterfaceWrapper) RemoveMember(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "uid" -------------
+	var uid string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "uid", r.PathValue("uid"), &uid, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "uid", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RemoveMember(w, r, tripId, uid)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetMemberRole operation middleware
+func (siw *ServerInterfaceWrapper) SetMemberRole(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "uid" -------------
+	var uid string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "uid", r.PathValue("uid"), &uid, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "uid", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetMemberRole(w, r, tripId, uid)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -2510,6 +2912,13 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/journal", wrapper.ListJournal)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/journal/{date}", wrapper.DeleteJournalEntry)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/v1/trips/{tripId}/journal/{date}", wrapper.PutJournalEntry)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/members", wrapper.ListMembers)
+	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/members/{uid}", wrapper.RemoveMember)
+	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/trips/{tripId}/members/{uid}", wrapper.SetMemberRole)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/invites", wrapper.ListInvites)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/invites", wrapper.CreateInvite)
+	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/invites/{inviteId}", wrapper.RevokeInvite)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/invites/join", wrapper.JoinTrip)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/stops", wrapper.ListStops)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/stops", wrapper.CreateStop)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/stops/{stopId}", wrapper.DeleteStop)
@@ -2754,6 +3163,84 @@ func (response SignOut401JSONResponse) VisitSignOutResponse(w http.ResponseWrite
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type JoinTripRequestObject struct {
+	Body *JoinTripJSONRequestBody
+}
+
+type JoinTripResponseObject interface {
+	VisitJoinTripResponse(w http.ResponseWriter) error
+}
+
+type JoinTrip200JSONResponse Trip
+
+func (response JoinTrip200JSONResponse) VisitJoinTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type JoinTrip400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response JoinTrip400JSONResponse) VisitJoinTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type JoinTrip401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response JoinTrip401JSONResponse) VisitJoinTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type JoinTrip404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response JoinTrip404JSONResponse) VisitJoinTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type JoinTrip503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response JoinTrip503JSONResponse) VisitJoinTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
 	_, err := buf.WriteTo(w)
 	return err
 }
@@ -4267,6 +4754,250 @@ func (response UpdateExpense503JSONResponse) VisitUpdateExpenseResponse(w http.R
 	return err
 }
 
+type ListInvitesRequestObject struct {
+	TripId string `json:"tripId"`
+}
+
+type ListInvitesResponseObject interface {
+	VisitListInvitesResponse(w http.ResponseWriter) error
+}
+
+type ListInvites200JSONResponse InviteList
+
+func (response ListInvites200JSONResponse) VisitListInvitesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListInvites401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ListInvites401JSONResponse) VisitListInvitesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListInvites403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response ListInvites403JSONResponse) VisitListInvitesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListInvites404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ListInvites404JSONResponse) VisitListInvitesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListInvites503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ListInvites503JSONResponse) VisitListInvitesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateInviteRequestObject struct {
+	TripId string `json:"tripId"`
+	Body   *CreateInviteJSONRequestBody
+}
+
+type CreateInviteResponseObject interface {
+	VisitCreateInviteResponse(w http.ResponseWriter) error
+}
+
+type CreateInvite201JSONResponse InviteCreated
+
+func (response CreateInvite201JSONResponse) VisitCreateInviteResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateInvite400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CreateInvite400JSONResponse) VisitCreateInviteResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateInvite401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CreateInvite401JSONResponse) VisitCreateInviteResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateInvite403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response CreateInvite403JSONResponse) VisitCreateInviteResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateInvite404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CreateInvite404JSONResponse) VisitCreateInviteResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateInvite503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response CreateInvite503JSONResponse) VisitCreateInviteResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RevokeInviteRequestObject struct {
+	TripId   string `json:"tripId"`
+	InviteId string `json:"inviteId"`
+}
+
+type RevokeInviteResponseObject interface {
+	VisitRevokeInviteResponse(w http.ResponseWriter) error
+}
+
+type RevokeInvite204Response struct {
+}
+
+func (response RevokeInvite204Response) VisitRevokeInviteResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type RevokeInvite401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response RevokeInvite401JSONResponse) VisitRevokeInviteResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RevokeInvite403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response RevokeInvite403JSONResponse) VisitRevokeInviteResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RevokeInvite404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response RevokeInvite404JSONResponse) VisitRevokeInviteResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RevokeInvite503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response RevokeInvite503JSONResponse) VisitRevokeInviteResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListJournalRequestObject struct {
 	TripId string `json:"tripId"`
 }
@@ -4487,6 +5218,237 @@ func (response PutJournalEntry404JSONResponse) VisitPutJournalEntryResponse(w ht
 type PutJournalEntry503JSONResponse struct{ UnavailableJSONResponse }
 
 func (response PutJournalEntry503JSONResponse) VisitPutJournalEntryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListMembersRequestObject struct {
+	TripId string `json:"tripId"`
+}
+
+type ListMembersResponseObject interface {
+	VisitListMembersResponse(w http.ResponseWriter) error
+}
+
+type ListMembers200JSONResponse MemberList
+
+func (response ListMembers200JSONResponse) VisitListMembersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListMembers401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ListMembers401JSONResponse) VisitListMembersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListMembers404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ListMembers404JSONResponse) VisitListMembersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListMembers503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ListMembers503JSONResponse) VisitListMembersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RemoveMemberRequestObject struct {
+	TripId string `json:"tripId"`
+	Uid    string `json:"uid"`
+}
+
+type RemoveMemberResponseObject interface {
+	VisitRemoveMemberResponse(w http.ResponseWriter) error
+}
+
+type RemoveMember204Response struct {
+}
+
+func (response RemoveMember204Response) VisitRemoveMemberResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type RemoveMember401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response RemoveMember401JSONResponse) VisitRemoveMemberResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RemoveMember403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response RemoveMember403JSONResponse) VisitRemoveMemberResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RemoveMember404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response RemoveMember404JSONResponse) VisitRemoveMemberResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RemoveMember503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response RemoveMember503JSONResponse) VisitRemoveMemberResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetMemberRoleRequestObject struct {
+	TripId string `json:"tripId"`
+	Uid    string `json:"uid"`
+	Body   *SetMemberRoleJSONRequestBody
+}
+
+type SetMemberRoleResponseObject interface {
+	VisitSetMemberRoleResponse(w http.ResponseWriter) error
+}
+
+type SetMemberRole200JSONResponse Member
+
+func (response SetMemberRole200JSONResponse) VisitSetMemberRoleResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetMemberRole400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response SetMemberRole400JSONResponse) VisitSetMemberRoleResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetMemberRole401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response SetMemberRole401JSONResponse) VisitSetMemberRoleResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetMemberRole403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response SetMemberRole403JSONResponse) VisitSetMemberRoleResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetMemberRole404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response SetMemberRole404JSONResponse) VisitSetMemberRoleResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetMemberRole503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response SetMemberRole503JSONResponse) VisitSetMemberRoleResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -5320,6 +6282,9 @@ type StrictServerInterface interface {
 	// SignOut End this device's session
 	// (POST /v1/auth/sign-out)
 	SignOut(ctx context.Context, request SignOutRequestObject) (SignOutResponseObject, error)
+	// JoinTrip Join a trip with an invite token
+	// (POST /v1/invites/join)
+	JoinTrip(ctx context.Context, request JoinTripRequestObject) (JoinTripResponseObject, error)
 	// GetMe Get the signed-in person
 	// (GET /v1/me)
 	GetMe(ctx context.Context, request GetMeRequestObject) (GetMeResponseObject, error)
@@ -5383,6 +6348,15 @@ type StrictServerInterface interface {
 	// UpdateExpense Change an expense
 	// (PATCH /v1/trips/{tripId}/expenses/{expenseId})
 	UpdateExpense(ctx context.Context, request UpdateExpenseRequestObject) (UpdateExpenseResponseObject, error)
+	// ListInvites List invite links
+	// (GET /v1/trips/{tripId}/invites)
+	ListInvites(ctx context.Context, request ListInvitesRequestObject) (ListInvitesResponseObject, error)
+	// CreateInvite Create an invite link
+	// (POST /v1/trips/{tripId}/invites)
+	CreateInvite(ctx context.Context, request CreateInviteRequestObject) (CreateInviteResponseObject, error)
+	// RevokeInvite Revoke an invite link
+	// (DELETE /v1/trips/{tripId}/invites/{inviteId})
+	RevokeInvite(ctx context.Context, request RevokeInviteRequestObject) (RevokeInviteResponseObject, error)
 	// ListJournal List journal entries
 	// (GET /v1/trips/{tripId}/journal)
 	ListJournal(ctx context.Context, request ListJournalRequestObject) (ListJournalResponseObject, error)
@@ -5392,6 +6366,15 @@ type StrictServerInterface interface {
 	// PutJournalEntry Write your entry for a day
 	// (PUT /v1/trips/{tripId}/journal/{date})
 	PutJournalEntry(ctx context.Context, request PutJournalEntryRequestObject) (PutJournalEntryResponseObject, error)
+	// ListMembers List the crew
+	// (GET /v1/trips/{tripId}/members)
+	ListMembers(ctx context.Context, request ListMembersRequestObject) (ListMembersResponseObject, error)
+	// RemoveMember Remove a member or leave the trip
+	// (DELETE /v1/trips/{tripId}/members/{uid})
+	RemoveMember(ctx context.Context, request RemoveMemberRequestObject) (RemoveMemberResponseObject, error)
+	// SetMemberRole Change a member's role
+	// (PATCH /v1/trips/{tripId}/members/{uid})
+	SetMemberRole(ctx context.Context, request SetMemberRoleRequestObject) (SetMemberRoleResponseObject, error)
 	// ListSettlements List recorded payments
 	// (GET /v1/trips/{tripId}/settlements)
 	ListSettlements(ctx context.Context, request ListSettlementsRequestObject) (ListSettlementsResponseObject, error)
@@ -5597,6 +6580,37 @@ func (sh *strictHandler) SignOut(w http.ResponseWriter, r *http.Request) {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(SignOutResponseObject); ok {
 		if err := validResponse.VisitSignOutResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// JoinTrip operation middleware
+func (sh *strictHandler) JoinTrip(w http.ResponseWriter, r *http.Request) {
+	var request JoinTripRequestObject
+
+	var body JoinTripJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.JoinTrip(ctx, request.(JoinTripRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "JoinTrip")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(JoinTripResponseObject); ok {
+		if err := validResponse.VisitJoinTripResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -6202,6 +7216,92 @@ func (sh *strictHandler) UpdateExpense(w http.ResponseWriter, r *http.Request, t
 	}
 }
 
+// ListInvites operation middleware
+func (sh *strictHandler) ListInvites(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request ListInvitesRequestObject
+
+	request.TripId = tripId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListInvites(ctx, request.(ListInvitesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListInvites")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListInvitesResponseObject); ok {
+		if err := validResponse.VisitListInvitesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateInvite operation middleware
+func (sh *strictHandler) CreateInvite(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request CreateInviteRequestObject
+
+	request.TripId = tripId
+
+	var body CreateInviteJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateInvite(ctx, request.(CreateInviteRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateInvite")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateInviteResponseObject); ok {
+		if err := validResponse.VisitCreateInviteResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RevokeInvite operation middleware
+func (sh *strictHandler) RevokeInvite(w http.ResponseWriter, r *http.Request, tripId string, inviteId string) {
+	var request RevokeInviteRequestObject
+
+	request.TripId = tripId
+	request.InviteId = inviteId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.RevokeInvite(ctx, request.(RevokeInviteRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RevokeInvite")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(RevokeInviteResponseObject); ok {
+		if err := validResponse.VisitRevokeInviteResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListJournal operation middleware
 func (sh *strictHandler) ListJournal(w http.ResponseWriter, r *http.Request, tripId string) {
 	var request ListJournalRequestObject
@@ -6282,6 +7382,93 @@ func (sh *strictHandler) PutJournalEntry(w http.ResponseWriter, r *http.Request,
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(PutJournalEntryResponseObject); ok {
 		if err := validResponse.VisitPutJournalEntryResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListMembers operation middleware
+func (sh *strictHandler) ListMembers(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request ListMembersRequestObject
+
+	request.TripId = tripId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListMembers(ctx, request.(ListMembersRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListMembers")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListMembersResponseObject); ok {
+		if err := validResponse.VisitListMembersResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RemoveMember operation middleware
+func (sh *strictHandler) RemoveMember(w http.ResponseWriter, r *http.Request, tripId string, uid string) {
+	var request RemoveMemberRequestObject
+
+	request.TripId = tripId
+	request.Uid = uid
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.RemoveMember(ctx, request.(RemoveMemberRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RemoveMember")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(RemoveMemberResponseObject); ok {
+		if err := validResponse.VisitRemoveMemberResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SetMemberRole operation middleware
+func (sh *strictHandler) SetMemberRole(w http.ResponseWriter, r *http.Request, tripId string, uid string) {
+	var request SetMemberRoleRequestObject
+
+	request.TripId = tripId
+	request.Uid = uid
+
+	var body SetMemberRoleJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SetMemberRole(ctx, request.(SetMemberRoleRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SetMemberRole")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SetMemberRoleResponseObject); ok {
+		if err := validResponse.VisitSetMemberRoleResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

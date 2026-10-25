@@ -480,6 +480,132 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/trips/{tripId}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * List the crew
+         * @description Everyone with a membership on the trip, oldest first. People who left
+         *     or were removed are included with that status so old expenses still
+         *     show a name. Any active member can read.
+         */
+        get: operations["listMembers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/members/{uid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                uid: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a member or leave the trip
+         * @description The owner can remove anyone else. Any member can remove themselves,
+         *     which is leaving. The owner cannot leave or be removed. Their
+         *     expenses and entries stay.
+         */
+        delete: operations["removeMember"];
+        options?: never;
+        head?: never;
+        /**
+         * Change a member's role
+         * @description Owner only. Switches an active member between editor and viewer. The owner's own role cannot change.
+         */
+        patch: operations["setMemberRole"];
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * List invite links
+         * @description Owner only. Returns no secrets; the token is shown only once, when the invite is created.
+         */
+        get: operations["listInvites"];
+        put?: never;
+        /**
+         * Create an invite link
+         * @description Owner only. The secret token is returned once and never stored;
+         *     the app builds the share link from it. Joining is always free. Invites
+         *     expire after 7 days unless `expiresInHours` says otherwise.
+         */
+        post: operations["createInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/invites/{inviteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                inviteId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Revoke an invite link
+         * @description Owner only. Revoking one that is already revoked succeeds. People who already joined stay.
+         */
+        delete: operations["revokeInvite"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/invites/join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Join a trip with an invite token
+         * @description Adds the caller to the trip with the invite's role. Always free. If the
+         *     caller is already on the trip, the trip is returned and no use is
+         *     counted. A missing, revoked, expired or used-up invite answers 404.
+         */
+        post: operations["joinTrip"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/trips/{tripId}/stops": {
         parameters: {
             query?: never;
@@ -1074,6 +1200,60 @@ export interface components {
             /** @enum {string} */
             scope: "perPerson" | "group";
             amount: components["schemas"]["Money"];
+        };
+        Member: {
+            uid: string;
+            /** @enum {string} */
+            role: "owner" | "editor" | "viewer";
+            /** @enum {string} */
+            status: "active" | "left" | "removed";
+            displayName: string;
+            photoUrl?: string;
+            /** Format: date-time */
+            joinedAt: string;
+        };
+        MemberList: {
+            members: components["schemas"]["Member"][];
+        };
+        MemberRoleChange: {
+            /** @enum {string} */
+            role: "editor" | "viewer";
+        };
+        Invite: {
+            id: string;
+            /** @enum {string} */
+            role: "editor" | "viewer";
+            createdBy: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            expiresAt?: string;
+            /** @description Absent means unlimited. */
+            maxUses?: number;
+            useCount: number;
+            revoked: boolean;
+        };
+        InviteList: {
+            invites: components["schemas"]["Invite"][];
+        };
+        InviteCreate: {
+            /**
+             * @description Defaults to editor.
+             * @enum {string}
+             */
+            role?: "editor" | "viewer";
+            /** @description Defaults to 168 (7 days). */
+            expiresInHours?: number;
+            /** @description Absent means unlimited. */
+            maxUses?: number;
+        };
+        InviteCreated: {
+            invite: components["schemas"]["Invite"];
+            /** @description Secret. Shown once. */
+            token: string;
+        };
+        InviteJoin: {
+            token: string;
         };
         JournalWrite: {
             text: string;
@@ -1986,6 +2166,198 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    listMembers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The members. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    removeMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                uid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The member is no longer on the trip. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    setMemberRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                uid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberRoleChange"];
+            };
+        };
+        responses: {
+            /** @description The updated member. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Member"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    listInvites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The invites, newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    createInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InviteCreate"];
+            };
+        };
+        responses: {
+            /** @description The invite and its token. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteCreated"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    revokeInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                inviteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revoked. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    joinTrip: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InviteJoin"];
+            };
+        };
+        responses: {
+            /** @description The trip, with the caller's role. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Trip"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
             503: components["responses"]["Unavailable"];
         };

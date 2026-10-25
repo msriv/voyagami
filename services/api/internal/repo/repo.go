@@ -64,6 +64,25 @@ type Trips interface {
 	EndMembership(ctx context.Context, tripID, uid string, status model.MemberStatus) error
 }
 
+// Invites stores trip invite links. Invites are looked up by the hash of
+// their secret token.
+type Invites interface {
+	// Create stores an invite. It returns ErrAlreadyExists if the ID is taken.
+	Create(ctx context.Context, i model.Invite) error
+	// Get returns the invite, or ErrNotFound.
+	Get(ctx context.Context, id string) (model.Invite, error)
+	// List returns the trip's invites, newest first.
+	List(ctx context.Context, tripID string) ([]model.Invite, error)
+	// Revoke ends an invite that belongs to the trip. Revoking one that is
+	// already revoked is not an error. It returns ErrNotFound if the invite
+	// does not exist or belongs to another trip.
+	Revoke(ctx context.Context, tripID, id string, now time.Time) error
+	// Use counts one join and returns the invite. In one step it checks the
+	// invite is usable at now, so two people cannot take the last use. It
+	// returns ErrNotFound if the invite is missing, revoked, expired or used up.
+	Use(ctx context.Context, id string, now time.Time) (model.Invite, error)
+}
+
 // Stops stores the places on a trip's days.
 type Stops interface {
 	// Create stores a new stop. It returns ErrAlreadyExists if the ID is taken.

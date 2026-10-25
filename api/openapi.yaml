@@ -803,6 +803,209 @@ paths:
           $ref: "#/components/responses/NotFound"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/members:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: listMembers
+      tags: [crew]
+      summary: List the crew
+      description: |
+        Everyone with a membership on the trip, oldest first. People who left
+        or were removed are included with that status so old expenses still
+        show a name. Any active member can read.
+      responses:
+        "200":
+          description: The members.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/members/{uid}:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: uid
+        in: path
+        required: true
+        schema:
+          type: string
+    patch:
+      operationId: setMemberRole
+      tags: [crew]
+      summary: Change a member's role
+      description: Owner only. Switches an active member between editor and viewer. The owner's own role cannot change.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberRoleChange"
+      responses:
+        "200":
+          description: The updated member.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    delete:
+      operationId: removeMember
+      tags: [crew]
+      summary: Remove a member or leave the trip
+      description: |
+        The owner can remove anyone else. Any member can remove themselves,
+        which is leaving. The owner cannot leave or be removed. Their
+        expenses and entries stay.
+      responses:
+        "204":
+          description: The member is no longer on the trip.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/invites:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: listInvites
+      tags: [crew]
+      summary: List invite links
+      description: Owner only. Returns no secrets; the token is shown only once, when the invite is created.
+      responses:
+        "200":
+          description: The invites, newest first.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InviteList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    post:
+      operationId: createInvite
+      tags: [crew]
+      summary: Create an invite link
+      description: |
+        Owner only. The secret token is returned once and never stored;
+        the app builds the share link from it. Joining is always free. Invites
+        expire after 7 days unless `expiresInHours` says otherwise.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteCreate"
+      responses:
+        "201":
+          description: The invite and its token.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InviteCreated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/invites/{inviteId}:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: inviteId
+        in: path
+        required: true
+        schema:
+          type: string
+    delete:
+      operationId: revokeInvite
+      tags: [crew]
+      summary: Revoke an invite link
+      description: Owner only. Revoking one that is already revoked succeeds. People who already joined stay.
+      responses:
+        "204":
+          description: Revoked.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/invites/join:
+    post:
+      operationId: joinTrip
+      tags: [crew]
+      summary: Join a trip with an invite token
+      description: |
+        Adds the caller to the trip with the invite's role. Always free. If the
+        caller is already on the trip, the trip is returned and no use is
+        counted. A missing, revoked, expired or used-up invite answers 404.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteJoin"
+      responses:
+        "200":
+          description: The trip, with the caller's role.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/trips/{tripId}/stops:
     parameters:
       - name: tripId
@@ -1841,6 +2044,105 @@ components:
           enum: [perPerson, group]
         amount:
           $ref: "#/components/schemas/Money"
+    Member:
+      type: object
+      required: [uid, role, status, displayName, joinedAt]
+      properties:
+        uid:
+          type: string
+        role:
+          type: string
+          enum: [owner, editor, viewer]
+        status:
+          type: string
+          enum: [active, left, removed]
+        displayName:
+          type: string
+        photoUrl:
+          type: string
+        joinedAt:
+          type: string
+          format: date-time
+    MemberList:
+      type: object
+      required: [members]
+      properties:
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/Member"
+    MemberRoleChange:
+      type: object
+      required: [role]
+      properties:
+        role:
+          type: string
+          enum: [editor, viewer]
+    Invite:
+      type: object
+      required: [id, role, createdBy, createdAt, useCount, revoked]
+      properties:
+        id:
+          type: string
+        role:
+          type: string
+          enum: [editor, viewer]
+        createdBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        maxUses:
+          type: integer
+          description: Absent means unlimited.
+        useCount:
+          type: integer
+        revoked:
+          type: boolean
+    InviteList:
+      type: object
+      required: [invites]
+      properties:
+        invites:
+          type: array
+          items:
+            $ref: "#/components/schemas/Invite"
+    InviteCreate:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [editor, viewer]
+          description: Defaults to editor.
+        expiresInHours:
+          type: integer
+          minimum: 1
+          maximum: 8760
+          description: Defaults to 168 (7 days).
+        maxUses:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          description: Absent means unlimited.
+    InviteCreated:
+      type: object
+      required: [invite, token]
+      properties:
+        invite:
+          $ref: "#/components/schemas/Invite"
+        token:
+          type: string
+          description: Secret. Shown once.
+    InviteJoin:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+          maxLength: 200
     JournalWrite:
       type: object
       required: [text]
