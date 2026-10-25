@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"syscall"
 	"time"
+	_ "time/tzdata" // distroless has no zoneinfo; trip validation loads IANA zones
 
 	"github.com/msriv/voyagami/services/api/internal/config"
 	"github.com/msriv/voyagami/services/api/internal/logging"
