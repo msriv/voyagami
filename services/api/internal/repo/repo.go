@@ -18,6 +18,9 @@ var (
 	ErrAlreadyExists = errors.New("already exists")
 	// ErrForbidden means the change breaks a trip rule, such as removing the owner.
 	ErrForbidden = errors.New("not allowed")
+	// ErrConflict means the change is not possible in the current state, such
+	// as voting in a closed poll.
+	ErrConflict = errors.New("conflict")
 	// ErrTokenReuse means a refresh token that was already replaced was
 	// presented again. The session is revoked.
 	ErrTokenReuse = errors.New("refresh token reused")
@@ -62,6 +65,26 @@ type Trips interface {
 	// EndMembership marks a member left or removed. The owner cannot be
 	// removed (ErrForbidden).
 	EndMembership(ctx context.Context, tripID, uid string, status model.MemberStatus) error
+}
+
+// Polls stores a trip's polls and the votes on them. The caller has already
+// checked that the person may use the trip.
+type Polls interface {
+	// Create stores a poll. It returns ErrAlreadyExists if the ID is taken.
+	Create(ctx context.Context, tripID string, p model.Poll) (model.Poll, error)
+	// Get returns the poll, or ErrNotFound.
+	Get(ctx context.Context, tripID, id string) (model.Poll, error)
+	// List returns the trip's polls, newest first.
+	List(ctx context.Context, tripID string) ([]model.Poll, error)
+	// Vote stores or replaces the member's vote. It returns ErrNotFound for a
+	// missing poll and ErrConflict if the poll is closed at now.
+	Vote(ctx context.Context, tripID, pollID string, v model.Vote, now time.Time) error
+	// Votes returns every vote on the poll, by voter.
+	Votes(ctx context.Context, tripID, pollID string) ([]model.Vote, error)
+	// Close counts the votes and ends the poll in one step. A non-empty chosen
+	// decides the winner. Closing a closed poll returns it unchanged. With no
+	// chosen and no clear winner it returns model.ErrPollNoWinner.
+	Close(ctx context.Context, tripID, pollID, chosen string, now time.Time) (model.Poll, error)
 }
 
 // Invites stores trip invite links. Invites are looked up by the hash of

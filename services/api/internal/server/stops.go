@@ -278,21 +278,25 @@ func placeFrom(p api.PlaceRef) model.PlaceRef {
 	}
 }
 
+func placeTo(p model.PlaceRef) api.PlaceRef {
+	if !p.Custom() {
+		id := p.PlaceID
+		return api.PlaceRef{PlaceId: &id}
+	}
+	name, lat, lng := p.Name, p.Lat, p.Lng
+	out := api.PlaceRef{Name: &name, Lat: &lat, Lng: &lng}
+	if a := p.Address; a != "" {
+		out.Address = &a
+	}
+	if c := api.PlaceRefCategory(p.Category); c != "" {
+		out.Category = &c
+	}
+	return out
+}
+
 func stopFrom(s model.Stop) api.Stop {
 	out := api.Stop{Id: s.ID, TripId: s.TripID, Date: s.Date, Order: s.Order, TimeZone: s.TimeZone}
-	if s.Place.Custom() {
-		name, lat, lng := s.Place.Name, s.Place.Lat, s.Place.Lng
-		out.Place = api.PlaceRef{Name: &name, Lat: &lat, Lng: &lng}
-		if a := s.Place.Address; a != "" {
-			out.Place.Address = &a
-		}
-		if c := api.PlaceRefCategory(s.Place.Category); c != "" {
-			out.Place.Category = &c
-		}
-	} else {
-		id := s.Place.PlaceID
-		out.Place = api.PlaceRef{PlaceId: &id}
-	}
+	out.Place = placeTo(s.Place)
 	if s.StartLocal != "" {
 		v := s.StartLocal
 		out.StartLocal = &v

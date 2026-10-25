@@ -55,6 +55,7 @@ type handlers struct {
 	bookings    BookingStore
 	journal     JournalStore
 	invites     repo.Invites
+	polls       repo.Polls
 	rates       rates.Provider
 
 	plans      *entitlements.Service

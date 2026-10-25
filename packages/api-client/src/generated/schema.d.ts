@@ -505,6 +505,85 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/trips/{tripId}/polls": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * List polls
+         * @description Newest first, with live vote counts and the caller's own vote. Who
+         *     voted for what is not shown. A poll past its `closesAt` reads as
+         *     closed. Any active member can read.
+         */
+        get: operations["listPolls"];
+        put?: never;
+        /**
+         * Start a poll
+         * @description Owners and editors. Two to ten options; an option can be a place, so the winner can go on the itinerary.
+         */
+        post: operations["createPoll"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/polls/{pollId}/vote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                pollId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Vote, or change your vote
+         * @description One vote per member, replaced each time, until the poll closes. Every
+         *     active member can vote, viewers included. Send one option, or several
+         *     when the poll allows many.
+         */
+        post: operations["votePoll"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/polls/{pollId}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                pollId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Close a poll
+         * @description Owners and editors. The option with most votes wins. With no votes or
+         *     a tie the answer is 409 and the closer picks one with `optionId`
+         *     (decided by the owner). `addToDate` puts the winner on that day of the
+         *     itinerary when it is a place. Closing a closed poll returns it.
+         */
+        post: operations["closePoll"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/trips/{tripId}/members": {
         parameters: {
             query?: never;
@@ -1233,6 +1312,67 @@ export interface components {
             /** @description The UTC day the rate is for, YYYY-MM-DD. */
             asOf: string;
         };
+        PollOptionInput: {
+            label: string;
+            place?: components["schemas"]["PlaceRef"];
+        };
+        PollCreate: {
+            question: string;
+            options: components["schemas"]["PollOptionInput"][];
+            /** @description Allow several options per vote. Defaults to one. */
+            multi?: boolean;
+            /**
+             * Format: date-time
+             * @description Votes stop at this time. Absent means open until closed by hand.
+             */
+            closesAt?: string;
+        };
+        PollOption: {
+            id: string;
+            label: string;
+            place?: components["schemas"]["PlaceRef"];
+            votes: number;
+        };
+        PollResult: {
+            /** @description Absent when the poll ran out of time with no clear winner. */
+            optionId?: string;
+            /** @enum {string} */
+            decidedBy: "vote" | "owner";
+        };
+        Poll: {
+            id: string;
+            question: string;
+            options: components["schemas"]["PollOption"][];
+            multi: boolean;
+            /** @enum {string} */
+            status: "open" | "closed";
+            /** Format: date-time */
+            closesAt?: string;
+            /** Format: date-time */
+            closedAt?: string;
+            createdBy: string;
+            /** @description Option IDs the caller picked, empty if they have not voted. */
+            myVote: string[];
+            /** @description How many people have voted. */
+            voters: number;
+            result?: components["schemas"]["PollResult"];
+        };
+        PollList: {
+            polls: components["schemas"]["Poll"][];
+        };
+        PollVote: {
+            optionIds: string[];
+        };
+        PollClose: {
+            /** @description Pick the winner by hand. Needed on a tie or with no votes. */
+            optionId?: string;
+            /** @description YYYY-MM-DD. Add the winning place to the itinerary on this day. */
+            addToDate?: string;
+        };
+        PollClosed: {
+            poll: components["schemas"]["Poll"];
+            stop?: components["schemas"]["Stop"];
+        };
         Member: {
             uid: string;
             /** @enum {string} */
@@ -1403,6 +1543,15 @@ export interface components {
         };
         /** @description The person is on the trip but their role does not allow this. */
         Forbidden: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description The request is fine but cannot be done in the current state. */
+        Conflict: {
             headers: {
                 [name: string]: unknown;
             };
@@ -2228,6 +2377,127 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    listPolls: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The polls. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PollList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    createPoll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PollCreate"];
+            };
+        };
+        responses: {
+            /** @description The new poll. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Poll"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    votePoll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                pollId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PollVote"];
+            };
+        };
+        responses: {
+            /** @description The poll with updated counts. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Poll"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    closePoll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                pollId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PollClose"];
+            };
+        };
+        responses: {
+            /** @description The closed poll, and the stop if one was added. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PollClosed"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             503: components["responses"]["Unavailable"];
         };
     };
