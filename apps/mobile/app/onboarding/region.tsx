@@ -13,7 +13,9 @@ import { useState } from "react";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { signInErrorKey, useAuth } from "@/auth";
+import { NetworkError } from "@voyagami/api-client";
+
+import { useAuth, withDetail } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { useProfile } from "@/profile";
@@ -68,7 +70,13 @@ export default function RegionScreen() {
       if (onboarded) router.back();
       else router.replace("/onboarding/style");
     } catch (e) {
-      setError(t(`signIn.errors.${signInErrorKey(e)}`));
+      setError(
+        withDetail(
+          t(e instanceof NetworkError ? "signIn.errors.offline" : "signIn.errors.generic"),
+          e,
+          true,
+        ),
+      );
     } finally {
       setBusy(false);
     }

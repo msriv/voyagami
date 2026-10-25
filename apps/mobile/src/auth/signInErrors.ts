@@ -14,3 +14,16 @@ export function signInErrorKey(error: unknown): SignInErrorKey {
   }
   return "generic";
 }
+
+/** The friendly message plus what actually went wrong, so a tester can say what they saw. */
+export function withDetail(message: string, error: unknown, always = false): string {
+  // Errors we already explain in plain words need no extra detail.
+  if (!always && signInErrorKey(error) !== "generic") return message;
+  const detail =
+    error instanceof ApiError
+      ? `${error.status} ${error.code}: ${error.message}`
+      : error instanceof Error
+        ? `${error.name}: ${error.message}`
+        : String(error);
+  return `${message} (${detail})`;
+}
