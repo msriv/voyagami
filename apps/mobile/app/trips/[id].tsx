@@ -192,13 +192,13 @@ export default function TripScreen() {
               {t("trip.sections")}
             </Text>
             {sections.map((key) =>
-              key === "itinerary" ? (
+              key === "itinerary" || key === "money" ? (
                 <Button
                   key={key}
                   label={t(`trip.${key}`)}
                   variant="secondary"
                   fullWidth
-                  onPress={() => router.push(`/trips/${trip.id}/itinerary`)}
+                  onPress={() => router.push(`/trips/${trip.id}/${key}`)}
                 />
               ) : (
                 // Placeholders until each section is built; disabled so nothing looks tappable that is not.
