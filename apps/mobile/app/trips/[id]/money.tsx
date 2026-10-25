@@ -308,6 +308,11 @@ export default function MoneyScreen() {
             ) : null}
           </>
         ) : null}
+        <Button
+          label={t("settle.open")}
+          variant="secondary"
+          onPress={() => router.push(`/trips/${id}/settle`)}
+        />
         {canEdit ? (
           <Button label={t("money.add")} onPress={() => router.push(`/trips/${id}/add-expense`)} />
         ) : null}
