@@ -13,6 +13,7 @@ import (
 	"github.com/msriv/voyagami/services/api/internal/config"
 	"github.com/msriv/voyagami/services/api/internal/entitlements"
 	"github.com/msriv/voyagami/services/api/internal/otp"
+	"github.com/msriv/voyagami/services/api/internal/rates"
 	"github.com/msriv/voyagami/services/api/internal/repo/firestorerepo"
 	"github.com/msriv/voyagami/services/api/internal/server"
 	"github.com/msriv/voyagami/services/api/internal/signin"
@@ -61,6 +62,7 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 			server.WithStops(firestorerepo.NewStops(client)),
 			server.WithTasks(firestorerepo.NewTasks(client)),
 			server.WithExpenses(firestorerepo.NewExpenses(client)),
+			server.WithRates(rates.NewCached(rates.NewFixed())),
 			server.WithInvites(firestorerepo.NewInvites(client)),
 			server.WithJournal(firestorerepo.NewJournal(client)),
 			server.WithBookings(firestorerepo.NewBookings(client)),
