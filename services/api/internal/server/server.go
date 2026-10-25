@@ -11,6 +11,7 @@ import (
 	"github.com/msriv/voyagami/services/api/internal/api"
 	"github.com/msriv/voyagami/services/api/internal/auth"
 	"github.com/msriv/voyagami/services/api/internal/entitlements"
+	"github.com/msriv/voyagami/services/api/internal/rates"
 	"github.com/msriv/voyagami/services/api/internal/repo"
 )
 
@@ -54,6 +55,7 @@ type handlers struct {
 	bookings    BookingStore
 	journal     JournalStore
 	invites     repo.Invites
+	rates       rates.Provider
 
 	plans      *entitlements.Service
 	planSource PlanSource

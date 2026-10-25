@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -1049,6 +1050,19 @@ type Rate struct {
 	Numerator   int64 `json:"numerator"`
 }
 
+// RateQuote defines model for RateQuote.
+type RateQuote struct {
+	// AsOf The UTC day the rate is for, YYYY-MM-DD.
+	AsOf string `json:"asOf"`
+	From string `json:"from"`
+
+	// Rate Original to settlement currency, as a ratio of minor units:
+	// settlement = original x numerator / denominator, rounded half away
+	// from zero. Saved with the expense; never changed by a later rate refresh.
+	Rate Rate   `json:"rate"`
+	To   string `json:"to"`
+}
+
 // RefreshRequest defines model for RefreshRequest.
 type RefreshRequest struct {
 	RefreshToken string `json:"refreshToken"`
@@ -1353,6 +1367,15 @@ type Unauthorized = Error
 // `method_not_allowed`, `internal`, `unavailable`, `timeout`.
 type Unavailable = Error
 
+// GetRateParams defines parameters for GetRate.
+type GetRateParams struct {
+	// From ISO 4217 code of the expense currency.
+	From string `form:"from" json:"from"`
+
+	// To ISO 4217 code of the trip's settlement currency.
+	To string `form:"to" json:"to"`
+}
+
 // RequestOtpJSONRequestBody defines body for RequestOtp for application/json ContentType.
 type RequestOtpJSONRequestBody = OtpRequest
 
@@ -1442,6 +1465,9 @@ type ServerInterface interface {
 	// GetMyEntitlements What the signed-in person's plan allows
 	// (GET /v1/me/entitlements)
 	GetMyEntitlements(w http.ResponseWriter, r *http.Request)
+	// GetRate Suggested exchange rate for a pair of currencies
+	// (GET /v1/rates)
+	GetRate(w http.ResponseWriter, r *http.Request, params GetRateParams)
 	// ListTrips List my trips
 	// (GET /v1/trips)
 	ListTrips(w http.ResponseWriter, r *http.Request)
@@ -1681,6 +1707,52 @@ func (siw *ServerInterfaceWrapper) GetMyEntitlements(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetMyEntitlements(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetRate operation middleware
+func (siw *ServerInterfaceWrapper) GetRate(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetRateParams
+
+	// ------------- Required query parameter "from" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "from", r.URL.Query(), &params.From, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "from"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "from", Err: err})
+		}
+		return
+	}
+
+	// ------------- Required query parameter "to" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "to", r.URL.Query(), &params.To, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "to"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "to", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetRate(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -2912,6 +2984,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/journal", wrapper.ListJournal)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/journal/{date}", wrapper.DeleteJournalEntry)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/v1/trips/{tripId}/journal/{date}", wrapper.PutJournalEntry)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/rates", wrapper.GetRate)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/members", wrapper.ListMembers)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/members/{uid}", wrapper.RemoveMember)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/trips/{tripId}/members/{uid}", wrapper.SetMemberRole)
@@ -3382,6 +3455,84 @@ func (response GetMyEntitlements401JSONResponse) VisitGetMyEntitlementsResponse(
 type GetMyEntitlements503JSONResponse struct{ UnavailableJSONResponse }
 
 func (response GetMyEntitlements503JSONResponse) VisitGetMyEntitlementsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRateRequestObject struct {
+	Params GetRateParams
+}
+
+type GetRateResponseObject interface {
+	VisitGetRateResponse(w http.ResponseWriter) error
+}
+
+type GetRate200JSONResponse RateQuote
+
+func (response GetRate200JSONResponse) VisitGetRateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRate400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response GetRate400JSONResponse) VisitGetRateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRate401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response GetRate401JSONResponse) VisitGetRateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRate404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response GetRate404JSONResponse) VisitGetRateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRate503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response GetRate503JSONResponse) VisitGetRateResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -6294,6 +6445,9 @@ type StrictServerInterface interface {
 	// GetMyEntitlements What the signed-in person's plan allows
 	// (GET /v1/me/entitlements)
 	GetMyEntitlements(ctx context.Context, request GetMyEntitlementsRequestObject) (GetMyEntitlementsResponseObject, error)
+	// GetRate Suggested exchange rate for a pair of currencies
+	// (GET /v1/rates)
+	GetRate(ctx context.Context, request GetRateRequestObject) (GetRateResponseObject, error)
 	// ListTrips List my trips
 	// (GET /v1/trips)
 	ListTrips(ctx context.Context, request ListTripsRequestObject) (ListTripsResponseObject, error)
@@ -6690,6 +6844,32 @@ func (sh *strictHandler) GetMyEntitlements(w http.ResponseWriter, r *http.Reques
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetMyEntitlementsResponseObject); ok {
 		if err := validResponse.VisitGetMyEntitlementsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetRate operation middleware
+func (sh *strictHandler) GetRate(w http.ResponseWriter, r *http.Request, params GetRateParams) {
+	var request GetRateRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetRate(ctx, request.(GetRateRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetRate")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetRateResponseObject); ok {
+		if err := validResponse.VisitGetRateResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

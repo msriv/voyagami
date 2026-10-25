@@ -803,6 +803,48 @@ paths:
           $ref: "#/components/responses/NotFound"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/rates:
+    get:
+      operationId: getRate
+      tags: [money]
+      summary: Suggested exchange rate for a pair of currencies
+      description: |
+        The rate to put on an expense that is in another currency than the
+        trip's settlement currency. It is in minor units, so it already
+        accounts for each currency's decimals: `settlement = original x
+        numerator / denominator`, rounded half away from zero. Cached for the
+        UTC day. The app should let the person override it; whatever rate the
+        expense is saved with is the one kept. Any signed-in person can ask.
+      parameters:
+        - name: from
+          in: query
+          required: true
+          description: ISO 4217 code of the expense currency.
+          schema:
+            type: string
+            pattern: "^[A-Za-z]{3}$"
+        - name: to
+          in: query
+          required: true
+          description: ISO 4217 code of the trip's settlement currency.
+          schema:
+            type: string
+            pattern: "^[A-Za-z]{3}$"
+      responses:
+        "200":
+          description: The suggested rate.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RateQuote"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/trips/{tripId}/members:
     parameters:
       - name: tripId
@@ -2044,6 +2086,19 @@ components:
           enum: [perPerson, group]
         amount:
           $ref: "#/components/schemas/Money"
+    RateQuote:
+      type: object
+      required: [from, to, rate, asOf]
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+        rate:
+          $ref: "#/components/schemas/Rate"
+        asOf:
+          type: string
+          description: The UTC day the rate is for, YYYY-MM-DD.
     Member:
       type: object
       required: [uid, role, status, displayName, joinedAt]

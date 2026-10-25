@@ -480,6 +480,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Suggested exchange rate for a pair of currencies
+         * @description The rate to put on an expense that is in another currency than the
+         *     trip's settlement currency. It is in minor units, so it already
+         *     accounts for each currency's decimals: `settlement = original x
+         *     numerator / denominator`, rounded half away from zero. Cached for the
+         *     UTC day. The app should let the person override it; whatever rate the
+         *     expense is saved with is the one kept. Any signed-in person can ask.
+         */
+        get: operations["getRate"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/trips/{tripId}/members": {
         parameters: {
             query?: never;
@@ -1200,6 +1225,13 @@ export interface components {
             /** @enum {string} */
             scope: "perPerson" | "group";
             amount: components["schemas"]["Money"];
+        };
+        RateQuote: {
+            from: string;
+            to: string;
+            rate: components["schemas"]["Rate"];
+            /** @description The UTC day the rate is for, YYYY-MM-DD. */
+            asOf: string;
         };
         Member: {
             uid: string;
@@ -2166,6 +2198,35 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    getRate: {
+        parameters: {
+            query: {
+                /** @description ISO 4217 code of the expense currency. */
+                from: string;
+                /** @description ISO 4217 code of the trip's settlement currency. */
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The suggested rate. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateQuote"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
             503: components["responses"]["Unavailable"];
         };
