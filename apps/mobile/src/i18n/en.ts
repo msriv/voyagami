@@ -696,9 +696,15 @@ export const en = {
     again: "Watch again",
     done: "Back to recap",
   },
+  errorScreen: {
+    title: "Something went wrong",
+    retry: "Try again",
+    reset: "Reset app and start over",
+  },
   profile: {
     homeRegion: "Home country",
     signOut: "Sign out",
+    resetApp: "Reset app and start over",
     traveller: "Traveller",
     sectionHome: "Home and region",
     sectionData: "Your data",

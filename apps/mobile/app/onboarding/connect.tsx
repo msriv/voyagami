@@ -1,6 +1,3 @@
-import * as Contacts from "expo-contacts";
-import * as Location from "expo-location";
-import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
@@ -13,10 +10,13 @@ import { Button, Text } from "@/ui";
 
 type Ask = "contacts" | "location" | "notifications";
 
+// Loaded on tap, not at start-up: a native module that Expo Go lacks must not crash this screen.
 const requests: Record<Ask, () => Promise<{ granted: boolean }>> = {
-  contacts: () => Contacts.requestPermissionsAsync(),
-  location: () => Location.requestForegroundPermissionsAsync(),
-  notifications: () => Notifications.requestPermissionsAsync(),
+  /* eslint-disable @typescript-eslint/no-require-imports -- loaded on tap, see above */
+  contacts: async () => require("expo-contacts").requestPermissionsAsync(),
+  location: async () => require("expo-location").requestForegroundPermissionsAsync(),
+  notifications: async () => require("expo-notifications").requestPermissionsAsync(),
+  /* eslint-enable @typescript-eslint/no-require-imports */
 };
 
 export default function ConnectScreen() {

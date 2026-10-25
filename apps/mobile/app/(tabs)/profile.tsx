@@ -12,7 +12,7 @@ import { Button, Card, Text } from "@/ui";
 export default function ProfileScreen() {
   const { t } = useTranslation();
   const { colors, radius } = useTheme();
-  const { signOut } = useAuth();
+  const { signOut, resetDevice } = useAuth();
   const { region, currency, locale, units, displayName } = useProfile();
   const router = useRouter();
   const name = displayName || t("profile.traveller");
@@ -84,6 +84,7 @@ export default function ProfileScreen() {
         </Card>
 
         <Button label={t("profile.signOut")} variant="secondary" onPress={() => void signOut()} />
+        <Button label={t("profile.resetApp")} variant="ghost" onPress={() => void resetDevice()} />
       </ScrollView>
     </SafeAreaView>
   );
