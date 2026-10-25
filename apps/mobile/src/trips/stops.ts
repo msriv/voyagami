@@ -67,3 +67,19 @@ export function planMove(
     local: stops.map((s) => (s.id === stop.id ? { ...s, date: move.date, order: END } : s)),
   };
 }
+
+/**
+ * Reads the two coordinate fields. Both blank gives a position of (0, 0), which
+ * stands for "no pin yet"; a half-filled or out-of-range pin gives undefined.
+ * shortcut: (0, 0) is stored as a real position, until the map pin and place search supply one.
+ */
+export function parsePin(lat: string, lng: string): { lat: number; lng: number } | undefined {
+  const a = lat.trim();
+  const b = lng.trim();
+  if (a === "" && b === "") return { lat: 0, lng: 0 };
+  const x = Number(a);
+  const y = Number(b);
+  if (a === "" || b === "" || !Number.isFinite(x) || !Number.isFinite(y)) return undefined;
+  if (Math.abs(x) > 90 || Math.abs(y) > 180) return undefined;
+  return { lat: x, lng: y };
+}
