@@ -440,6 +440,7 @@ export const en = {
     },
   },
   signIn: {
+    back: "Back",
     title: "Let's get you a passport.",
     intro: "Your crew finds you by phone number, so invites land in the right place.",
     phoneLabel: "Mobile number",

@@ -8,7 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { signInErrorKey, useAuth, withDetail } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
-import { Button, Input, Text } from "@/ui";
+import { Button, IconButton, Input, Text } from "@/ui";
 
 export default function SignInScreen() {
   const { t } = useTranslation();
@@ -48,10 +48,19 @@ export default function SignInScreen() {
       >
         <ScrollView
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ padding: 24, gap: 20, flexGrow: 1, justifyContent: "center" }}
+          contentContainerStyle={{ padding: 24, gap: 22, flexGrow: 1 }}
         >
+          <View style={{ flexDirection: "row" }}>
+            <IconButton
+              accessibilityLabel={t("signIn.back")}
+              variant="secondary"
+              onPress={() => router.back()}
+            >
+              <Text variant="bodyStrong">{"‹"}</Text>
+            </IconButton>
+          </View>
           <View style={{ gap: 8 }}>
-            <Text variant="display" heading>
+            <Text variant="display" heading style={{ fontSize: 36, lineHeight: 38 }}>
               {t("signIn.title")}
             </Text>
             <Text color="muted">{t("signIn.intro")}</Text>
@@ -69,7 +78,10 @@ export default function SignInScreen() {
             onSubmitEditing={sendCode}
           />
           <Button label={t("signIn.sendCode")} onPress={sendCode} loading={busy} fullWidth />
-          <Text variant="caption">{t("signIn.consent")}</Text>
+          <View style={{ flex: 1 }} />
+          <Text variant="caption" style={{ textAlign: "center" }}>
+            {t("signIn.consent")}
+          </Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
