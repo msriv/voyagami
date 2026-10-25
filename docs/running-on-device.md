@@ -4,6 +4,19 @@ D phases use the **development build**: the Voyagami app with the Expo dev clien
 
 You need Node 22 and pnpm (see the [README](../README.md)). Run `make setup` first.
 
+## Quickest on a real phone: Expo Go and the dev API
+
+No build, no accounts. Install **Expo Go** from the App Store or Google Play, then on your computer:
+
+```sh
+make setup
+pnpm --filter @voyagami/mobile phone
+```
+
+Scan the QR code with the phone (Camera on iPhone, Expo Go on Android). The phone and computer must be on the same Wi-Fi; add `--tunnel` if they cannot connect. The script points the app at the deployed dev API (`voyagami-api` on Cloud Run), so there is nothing to run locally. Sign in with any phone number and the code `123456`.
+
+Dev sign-in tokens stop working whenever the API restarts or scales to zero after being idle (VOY-211), so you may be asked to sign in again. Maps, push and purchases need the development build below.
+
 ## Fastest: a simulator or emulator on your computer
 
 No accounts and no EAS needed. The first run compiles the native app.
