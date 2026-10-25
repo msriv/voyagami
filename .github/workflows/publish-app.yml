@@ -37,4 +37,4 @@ jobs:
         working-directory: apps/mobile
         env:
           EXPO_PUBLIC_API_URL: ${{ vars.DEV_API_URL || 'https://voyagami-api-405147124521.asia-south1.run.app' }}
-        run: eas update --branch main --message "${GITHUB_SHA::7}" --non-interactive
+        run: eas update --branch main --message "${GITHUB_SHA::7}" --platform ios --platform android --non-interactive
