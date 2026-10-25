@@ -52,6 +52,7 @@ type handlers struct {
 	expenses    ExpenseStore
 	settlements SettlementStore
 	bookings    BookingStore
+	journal     JournalStore
 
 	plans      *entitlements.Service
 	planSource PlanSource

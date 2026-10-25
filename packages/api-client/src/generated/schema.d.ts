@@ -424,6 +424,62 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/trips/{tripId}/journal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * List journal entries
+         * @description Entries shared with the crew, plus the caller's own private ones,
+         *     newest day first and then by author. Other people's private entries
+         *     are never returned, not even to the owner. Any active member can read;
+         *     everyone else gets 404.
+         */
+        get: operations["listJournal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/journal/{date}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                /** @description The day, YYYY-MM-DD. */
+                date: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Write your entry for a day
+         * @description Creates or replaces the caller's own entry for that day. There is one
+         *     entry per person per day, so repeating the request is safe, which
+         *     suits saving drafts from a phone. Owners and editors only; nobody can
+         *     write for someone else.
+         */
+        put: operations["putJournalEntry"];
+        post?: never;
+        /**
+         * Delete your entry for a day
+         * @description Deletes only the caller's own entry. Deleting one that is already gone succeeds.
+         */
+        delete: operations["deleteJournalEntry"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/trips/{tripId}/stops": {
         parameters: {
             query?: never;
@@ -1018,6 +1074,30 @@ export interface components {
             /** @enum {string} */
             scope: "perPerson" | "group";
             amount: components["schemas"]["Money"];
+        };
+        JournalWrite: {
+            text: string;
+            /** @enum {string} */
+            mood?: "happy" | "excited" | "calm" | "grateful" | "tired" | "meh";
+            /**
+             * @description Defaults to crew. Private means only the author can read it.
+             * @enum {string}
+             */
+            visibility?: "crew" | "private";
+            /** @description Stops this day's note is about. */
+            stopIds?: string[];
+        };
+        JournalEntry: {
+            date: string;
+            authorUid: string;
+            /** @enum {string} */
+            visibility: "crew" | "private";
+            text: string;
+            mood?: string;
+            stopIds: string[];
+        };
+        JournalList: {
+            entries: components["schemas"]["JournalEntry"][];
         };
         Task: {
             id: string;
@@ -1822,6 +1902,90 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    listJournal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The entries. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JournalList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    putJournalEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                /** @description The day, YYYY-MM-DD. */
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JournalWrite"];
+            };
+        };
+        responses: {
+            /** @description The saved entry. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JournalEntry"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    deleteJournalEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                /** @description The day, YYYY-MM-DD. */
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             503: components["responses"]["Unavailable"];
         };

@@ -121,6 +121,18 @@ type Bookings interface {
 	Delete(ctx context.Context, tripID, id string) error
 }
 
+// Journal stores journal entries. It does not decide who may read a private
+// entry; the caller filters.
+type Journal interface {
+	// Put creates the entry, or replaces its content if that person already
+	// has one for the day. It keeps the original creation time.
+	Put(ctx context.Context, tripID string, e model.JournalEntry) (model.JournalEntry, error)
+	// List returns every entry on the trip, newest day first, then by author.
+	List(ctx context.Context, tripID string) ([]model.JournalEntry, error)
+	// Delete removes one person's entry for a day. Deleting a missing one is not an error.
+	Delete(ctx context.Context, tripID, date, authorUID string) error
+}
+
 // Tasks stores a trip's to-dos. The caller has already checked that the
 // person may use the trip.
 type Tasks interface {
