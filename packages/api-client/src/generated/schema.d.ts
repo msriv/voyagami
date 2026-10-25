@@ -318,6 +318,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/trips/{tripId}/bookings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * List a trip's bookings
+         * @description Soonest start first; ones with no start time come last. Any active member can read; everyone else gets 404.
+         */
+        get: operations["listBookings"];
+        put?: never;
+        /**
+         * Add a booking
+         * @description Owners and editors only. Typed in by hand; imports and file attachments come later.
+         */
+        post: operations["createBooking"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/bookings/{bookingId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                bookingId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a booking
+         * @description Owners and editors only. Deleting a booking that is already gone succeeds.
+         */
+        delete: operations["deleteBooking"];
+        options?: never;
+        head?: never;
+        /**
+         * Change a booking
+         * @description Owners and editors only. Changes only the fields that are sent. An empty `provider` clears it; times cannot be cleared yet.
+         */
+        patch: operations["updateBooking"];
+        trace?: never;
+    };
     "/v1/trips/{tripId}/stops": {
         parameters: {
             query?: never;
@@ -842,6 +895,46 @@ export interface components {
         };
         SettlementList: {
             settlements: components["schemas"]["Settlement"][];
+        };
+        BookingPlace: {
+            /** @description Airport or station code, if there is one. */
+            code?: string;
+            name: string;
+        };
+        BookingFields: {
+            /** @description Airline, hotel or operator. */
+            provider?: string;
+            /**
+             * Format: date-time
+             * @description UTC instant. An update can change it but not clear it yet.
+             */
+            startsAt?: string;
+            /** Format: date-time */
+            endsAt?: string;
+            /** @description IANA zone, so times show local at each end. */
+            startTimeZone?: string;
+            endTimeZone?: string;
+            from?: components["schemas"]["BookingPlace"];
+            to?: components["schemas"]["BookingPlace"];
+            price?: components["schemas"]["Money"];
+        };
+        Booking: components["schemas"]["BookingFields"] & {
+            id: string;
+            kind: components["schemas"]["BookingKind"];
+            title: string;
+        };
+        /** @enum {string} */
+        BookingKind: "flight" | "stay" | "train" | "bus" | "activity" | "other";
+        BookingCreate: components["schemas"]["BookingFields"] & {
+            kind: components["schemas"]["BookingKind"];
+            title: string;
+        };
+        BookingUpdate: components["schemas"]["BookingFields"] & {
+            kind?: components["schemas"]["BookingKind"];
+            title?: string;
+        };
+        BookingList: {
+            bookings: components["schemas"]["Booking"][];
         };
         Task: {
             id: string;
@@ -1475,6 +1568,119 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Settlement"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    listBookings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The bookings. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookingList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    createBooking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BookingCreate"];
+            };
+        };
+        responses: {
+            /** @description The new booking. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Booking"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    deleteBooking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                bookingId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    updateBooking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                bookingId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BookingUpdate"];
+            };
+        };
+        responses: {
+            /** @description The booking after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Booking"];
                 };
             };
             400: components["responses"]["BadRequest"];

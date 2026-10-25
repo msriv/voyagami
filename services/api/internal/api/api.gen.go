@@ -11,9 +11,40 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/oapi-codegen/runtime"
 )
+
+// Defines values for BookingKind.
+const (
+	BookingKindActivity BookingKind = "activity"
+	BookingKindBus      BookingKind = "bus"
+	BookingKindFlight   BookingKind = "flight"
+	BookingKindOther    BookingKind = "other"
+	BookingKindStay     BookingKind = "stay"
+	BookingKindTrain    BookingKind = "train"
+)
+
+// Valid indicates whether the value is a known member of the BookingKind enum.
+func (e BookingKind) Valid() bool {
+	switch e {
+	case BookingKindActivity:
+		return true
+	case BookingKindBus:
+		return true
+	case BookingKindFlight:
+		return true
+	case BookingKindOther:
+		return true
+	case BookingKindStay:
+		return true
+	case BookingKindTrain:
+		return true
+	default:
+		return false
+	}
+}
 
 // Defines values for EntitlementsPlan.
 const (
@@ -98,31 +129,31 @@ func (e MeUpdateRegionSource) Valid() bool {
 
 // Defines values for PlaceRefCategory.
 const (
-	Activity  PlaceRefCategory = "activity"
-	Food      PlaceRefCategory = "food"
-	Other     PlaceRefCategory = "other"
-	Shopping  PlaceRefCategory = "shopping"
-	Sights    PlaceRefCategory = "sights"
-	Stay      PlaceRefCategory = "stay"
-	Transport PlaceRefCategory = "transport"
+	PlaceRefCategoryActivity  PlaceRefCategory = "activity"
+	PlaceRefCategoryFood      PlaceRefCategory = "food"
+	PlaceRefCategoryOther     PlaceRefCategory = "other"
+	PlaceRefCategoryShopping  PlaceRefCategory = "shopping"
+	PlaceRefCategorySights    PlaceRefCategory = "sights"
+	PlaceRefCategoryStay      PlaceRefCategory = "stay"
+	PlaceRefCategoryTransport PlaceRefCategory = "transport"
 )
 
 // Valid indicates whether the value is a known member of the PlaceRefCategory enum.
 func (e PlaceRefCategory) Valid() bool {
 	switch e {
-	case Activity:
+	case PlaceRefCategoryActivity:
 		return true
-	case Food:
+	case PlaceRefCategoryFood:
 		return true
-	case Other:
+	case PlaceRefCategoryOther:
 		return true
-	case Shopping:
+	case PlaceRefCategoryShopping:
 		return true
-	case Sights:
+	case PlaceRefCategorySights:
 		return true
-	case Stay:
+	case PlaceRefCategoryStay:
 		return true
-	case Transport:
+	case PlaceRefCategoryTransport:
 		return true
 	default:
 		return false
@@ -356,6 +387,100 @@ type BestOrder struct {
 
 	// StopIds The stop IDs in the suggested order.
 	StopIds []string `json:"stopIds"`
+}
+
+// Booking defines model for Booking.
+type Booking struct {
+	EndTimeZone *string       `json:"endTimeZone,omitempty"`
+	EndsAt      *time.Time    `json:"endsAt,omitempty"`
+	From        *BookingPlace `json:"from,omitempty"`
+	Id          string        `json:"id"`
+	Kind        BookingKind   `json:"kind"`
+	Price       *Money        `json:"price,omitempty"`
+
+	// Provider Airline, hotel or operator.
+	Provider *string `json:"provider,omitempty"`
+
+	// StartTimeZone IANA zone, so times show local at each end.
+	StartTimeZone *string `json:"startTimeZone,omitempty"`
+
+	// StartsAt UTC instant. An update can change it but not clear it yet.
+	StartsAt *time.Time    `json:"startsAt,omitempty"`
+	Title    string        `json:"title"`
+	To       *BookingPlace `json:"to,omitempty"`
+}
+
+// BookingCreate defines model for BookingCreate.
+type BookingCreate struct {
+	EndTimeZone *string       `json:"endTimeZone,omitempty"`
+	EndsAt      *time.Time    `json:"endsAt,omitempty"`
+	From        *BookingPlace `json:"from,omitempty"`
+	Kind        BookingKind   `json:"kind"`
+	Price       *Money        `json:"price,omitempty"`
+
+	// Provider Airline, hotel or operator.
+	Provider *string `json:"provider,omitempty"`
+
+	// StartTimeZone IANA zone, so times show local at each end.
+	StartTimeZone *string `json:"startTimeZone,omitempty"`
+
+	// StartsAt UTC instant. An update can change it but not clear it yet.
+	StartsAt *time.Time    `json:"startsAt,omitempty"`
+	Title    string        `json:"title"`
+	To       *BookingPlace `json:"to,omitempty"`
+}
+
+// BookingFields defines model for BookingFields.
+type BookingFields struct {
+	EndTimeZone *string       `json:"endTimeZone,omitempty"`
+	EndsAt      *time.Time    `json:"endsAt,omitempty"`
+	From        *BookingPlace `json:"from,omitempty"`
+	Price       *Money        `json:"price,omitempty"`
+
+	// Provider Airline, hotel or operator.
+	Provider *string `json:"provider,omitempty"`
+
+	// StartTimeZone IANA zone, so times show local at each end.
+	StartTimeZone *string `json:"startTimeZone,omitempty"`
+
+	// StartsAt UTC instant. An update can change it but not clear it yet.
+	StartsAt *time.Time    `json:"startsAt,omitempty"`
+	To       *BookingPlace `json:"to,omitempty"`
+}
+
+// BookingKind defines model for BookingKind.
+type BookingKind string
+
+// BookingList defines model for BookingList.
+type BookingList struct {
+	Bookings []Booking `json:"bookings"`
+}
+
+// BookingPlace defines model for BookingPlace.
+type BookingPlace struct {
+	// Code Airport or station code, if there is one.
+	Code *string `json:"code,omitempty"`
+	Name string  `json:"name"`
+}
+
+// BookingUpdate defines model for BookingUpdate.
+type BookingUpdate struct {
+	EndTimeZone *string       `json:"endTimeZone,omitempty"`
+	EndsAt      *time.Time    `json:"endsAt,omitempty"`
+	From        *BookingPlace `json:"from,omitempty"`
+	Kind        *BookingKind  `json:"kind,omitempty"`
+	Price       *Money        `json:"price,omitempty"`
+
+	// Provider Airline, hotel or operator.
+	Provider *string `json:"provider,omitempty"`
+
+	// StartTimeZone IANA zone, so times show local at each end.
+	StartTimeZone *string `json:"startTimeZone,omitempty"`
+
+	// StartsAt UTC instant. An update can change it but not clear it yet.
+	StartsAt *time.Time    `json:"startsAt,omitempty"`
+	Title    *string       `json:"title,omitempty"`
+	To       *BookingPlace `json:"to,omitempty"`
 }
 
 // DayOrder defines model for DayOrder.
@@ -912,6 +1037,12 @@ type CreateTripJSONRequestBody = TripCreate
 // UpdateTripJSONRequestBody defines body for UpdateTrip for application/json ContentType.
 type UpdateTripJSONRequestBody = TripUpdate
 
+// CreateBookingJSONRequestBody defines body for CreateBooking for application/json ContentType.
+type CreateBookingJSONRequestBody = BookingCreate
+
+// UpdateBookingJSONRequestBody defines body for UpdateBooking for application/json ContentType.
+type UpdateBookingJSONRequestBody = BookingUpdate
+
 // SetDayOrderJSONRequestBody defines body for SetDayOrder for application/json ContentType.
 type SetDayOrderJSONRequestBody = DayOrder
 
@@ -977,6 +1108,18 @@ type ServerInterface interface {
 	// GetBalances Who owes whom
 	// (GET /v1/trips/{tripId}/balances)
 	GetBalances(w http.ResponseWriter, r *http.Request, tripId string)
+	// ListBookings List a trip's bookings
+	// (GET /v1/trips/{tripId}/bookings)
+	ListBookings(w http.ResponseWriter, r *http.Request, tripId string)
+	// CreateBooking Add a booking
+	// (POST /v1/trips/{tripId}/bookings)
+	CreateBooking(w http.ResponseWriter, r *http.Request, tripId string)
+	// DeleteBooking Delete a booking
+	// (DELETE /v1/trips/{tripId}/bookings/{bookingId})
+	DeleteBooking(w http.ResponseWriter, r *http.Request, tripId string, bookingId string)
+	// UpdateBooking Change a booking
+	// (PATCH /v1/trips/{tripId}/bookings/{bookingId})
+	UpdateBooking(w http.ResponseWriter, r *http.Request, tripId string, bookingId string)
 	// SuggestBestOrder Suggest a shorter order for a day
 	// (POST /v1/trips/{tripId}/days/{date}/best-order)
 	SuggestBestOrder(w http.ResponseWriter, r *http.Request, tripId string, date string)
@@ -1248,6 +1391,128 @@ func (siw *ServerInterfaceWrapper) GetBalances(w http.ResponseWriter, r *http.Re
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetBalances(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListBookings operation middleware
+func (siw *ServerInterfaceWrapper) ListBookings(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListBookings(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateBooking operation middleware
+func (siw *ServerInterfaceWrapper) CreateBooking(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateBooking(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteBooking operation middleware
+func (siw *ServerInterfaceWrapper) DeleteBooking(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "bookingId" -------------
+	var bookingId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "bookingId", r.PathValue("bookingId"), &bookingId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "bookingId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteBooking(w, r, tripId, bookingId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateBooking operation middleware
+func (siw *ServerInterfaceWrapper) UpdateBooking(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "bookingId" -------------
+	var bookingId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "bookingId", r.PathValue("bookingId"), &bookingId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "bookingId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateBooking(w, r, tripId, bookingId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1911,6 +2176,10 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/balances", wrapper.GetBalances)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/settlements", wrapper.ListSettlements)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/settlements", wrapper.RecordSettlement)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/bookings", wrapper.ListBookings)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/bookings", wrapper.CreateBooking)
+	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/bookings/{bookingId}", wrapper.DeleteBooking)
+	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/trips/{tripId}/bookings/{bookingId}", wrapper.UpdateBooking)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/stops", wrapper.ListStops)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/stops", wrapper.CreateStop)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/stops/{stopId}", wrapper.DeleteStop)
@@ -2630,6 +2899,330 @@ func (response GetBalances404JSONResponse) VisitGetBalancesResponse(w http.Respo
 type GetBalances503JSONResponse struct{ UnavailableJSONResponse }
 
 func (response GetBalances503JSONResponse) VisitGetBalancesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListBookingsRequestObject struct {
+	TripId string `json:"tripId"`
+}
+
+type ListBookingsResponseObject interface {
+	VisitListBookingsResponse(w http.ResponseWriter) error
+}
+
+type ListBookings200JSONResponse BookingList
+
+func (response ListBookings200JSONResponse) VisitListBookingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListBookings401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ListBookings401JSONResponse) VisitListBookingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListBookings404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ListBookings404JSONResponse) VisitListBookingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListBookings503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ListBookings503JSONResponse) VisitListBookingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateBookingRequestObject struct {
+	TripId string `json:"tripId"`
+	Body   *CreateBookingJSONRequestBody
+}
+
+type CreateBookingResponseObject interface {
+	VisitCreateBookingResponse(w http.ResponseWriter) error
+}
+
+type CreateBooking201JSONResponse Booking
+
+func (response CreateBooking201JSONResponse) VisitCreateBookingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateBooking400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CreateBooking400JSONResponse) VisitCreateBookingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateBooking401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CreateBooking401JSONResponse) VisitCreateBookingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateBooking403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response CreateBooking403JSONResponse) VisitCreateBookingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateBooking404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CreateBooking404JSONResponse) VisitCreateBookingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateBooking503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response CreateBooking503JSONResponse) VisitCreateBookingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteBookingRequestObject struct {
+	TripId    string `json:"tripId"`
+	BookingId string `json:"bookingId"`
+}
+
+type DeleteBookingResponseObject interface {
+	VisitDeleteBookingResponse(w http.ResponseWriter) error
+}
+
+type DeleteBooking204Response struct {
+}
+
+func (response DeleteBooking204Response) VisitDeleteBookingResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteBooking401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response DeleteBooking401JSONResponse) VisitDeleteBookingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteBooking403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response DeleteBooking403JSONResponse) VisitDeleteBookingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteBooking404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response DeleteBooking404JSONResponse) VisitDeleteBookingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteBooking503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response DeleteBooking503JSONResponse) VisitDeleteBookingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateBookingRequestObject struct {
+	TripId    string `json:"tripId"`
+	BookingId string `json:"bookingId"`
+	Body      *UpdateBookingJSONRequestBody
+}
+
+type UpdateBookingResponseObject interface {
+	VisitUpdateBookingResponse(w http.ResponseWriter) error
+}
+
+type UpdateBooking200JSONResponse Booking
+
+func (response UpdateBooking200JSONResponse) VisitUpdateBookingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateBooking400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response UpdateBooking400JSONResponse) VisitUpdateBookingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateBooking401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response UpdateBooking401JSONResponse) VisitUpdateBookingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateBooking403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response UpdateBooking403JSONResponse) VisitUpdateBookingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateBooking404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response UpdateBooking404JSONResponse) VisitUpdateBookingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateBooking503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response UpdateBooking503JSONResponse) VisitUpdateBookingResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -4048,6 +4641,18 @@ type StrictServerInterface interface {
 	// GetBalances Who owes whom
 	// (GET /v1/trips/{tripId}/balances)
 	GetBalances(ctx context.Context, request GetBalancesRequestObject) (GetBalancesResponseObject, error)
+	// ListBookings List a trip's bookings
+	// (GET /v1/trips/{tripId}/bookings)
+	ListBookings(ctx context.Context, request ListBookingsRequestObject) (ListBookingsResponseObject, error)
+	// CreateBooking Add a booking
+	// (POST /v1/trips/{tripId}/bookings)
+	CreateBooking(ctx context.Context, request CreateBookingRequestObject) (CreateBookingResponseObject, error)
+	// DeleteBooking Delete a booking
+	// (DELETE /v1/trips/{tripId}/bookings/{bookingId})
+	DeleteBooking(ctx context.Context, request DeleteBookingRequestObject) (DeleteBookingResponseObject, error)
+	// UpdateBooking Change a booking
+	// (PATCH /v1/trips/{tripId}/bookings/{bookingId})
+	UpdateBooking(ctx context.Context, request UpdateBookingRequestObject) (UpdateBookingResponseObject, error)
 	// SuggestBestOrder Suggest a shorter order for a day
 	// (POST /v1/trips/{tripId}/days/{date}/best-order)
 	SuggestBestOrder(ctx context.Context, request SuggestBestOrderRequestObject) (SuggestBestOrderResponseObject, error)
@@ -4493,6 +5098,126 @@ func (sh *strictHandler) GetBalances(w http.ResponseWriter, r *http.Request, tri
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetBalancesResponseObject); ok {
 		if err := validResponse.VisitGetBalancesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListBookings operation middleware
+func (sh *strictHandler) ListBookings(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request ListBookingsRequestObject
+
+	request.TripId = tripId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListBookings(ctx, request.(ListBookingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListBookings")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListBookingsResponseObject); ok {
+		if err := validResponse.VisitListBookingsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateBooking operation middleware
+func (sh *strictHandler) CreateBooking(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request CreateBookingRequestObject
+
+	request.TripId = tripId
+
+	var body CreateBookingJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateBooking(ctx, request.(CreateBookingRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateBooking")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateBookingResponseObject); ok {
+		if err := validResponse.VisitCreateBookingResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteBooking operation middleware
+func (sh *strictHandler) DeleteBooking(w http.ResponseWriter, r *http.Request, tripId string, bookingId string) {
+	var request DeleteBookingRequestObject
+
+	request.TripId = tripId
+	request.BookingId = bookingId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteBooking(ctx, request.(DeleteBookingRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteBooking")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteBookingResponseObject); ok {
+		if err := validResponse.VisitDeleteBookingResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateBooking operation middleware
+func (sh *strictHandler) UpdateBooking(w http.ResponseWriter, r *http.Request, tripId string, bookingId string) {
+	var request UpdateBookingRequestObject
+
+	request.TripId = tripId
+	request.BookingId = bookingId
+
+	var body UpdateBookingJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateBooking(ctx, request.(UpdateBookingRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateBooking")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdateBookingResponseObject); ok {
+		if err := validResponse.VisitUpdateBookingResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
