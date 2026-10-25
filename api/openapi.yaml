@@ -393,6 +393,42 @@ paths:
           $ref: "#/components/responses/NotFound"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/expenses/export:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: exportExpenses
+      tags: [expenses]
+      summary: Export expenses as CSV
+      description: |
+        Every expense that is not deleted, one row each, with the original and
+        converted amounts, the rate and each person's share. Amounts are
+        written as decimals using the currency's own minor digits. Free for
+        everyone on the trip. Starts with a byte order mark so spreadsheets
+        read non-ASCII names correctly. Text that starts with `=`, `+`, `-` or
+        `@` is prefixed with a quote so a spreadsheet cannot run it.
+      responses:
+        "200":
+          description: The CSV file.
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/trips/{tripId}/expenses/{expenseId}:
     parameters:
       - name: tripId

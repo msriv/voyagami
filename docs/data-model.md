@@ -384,6 +384,8 @@ The ID is a UUID made on the phone, so retries are safe. Balances are never stor
 
 API (VOY-147): `POST/GET /v1/trips/{id}/expenses`, `PATCH/DELETE .../{expenseId}`. A rate is a ratio of minor units, so `settlement = original x numerator / denominator`, rounded half away from zero; the server computes `settlement` and the shares (split logic, VOY-35) and stores `createdBy`. Everyone in an expense must be an active member. The owner can change any expense; an editor only ones they added or paid for; viewers read only. Deletes are tombstones.
 
+CSV export (VOY-154): `GET /v1/trips/{id}/expenses/export` returns every live expense as CSV to any member, free on every plan. Amounts are decimals using the currency's own minor digits, the file starts with a byte order mark, and text that starts with `=`, `+`, `-` or `@` gets a leading quote so a spreadsheet cannot run it.
+
 Write: editors and owners create and edit. A second currency on a trip is a Plus feature (whole-trip), so an expense whose `original.currency` differs from the settlement currency is created through the API, which checks the entitlements service. Rates come from the rate feed through the API; the app never invents one. Free-plan trips use one currency, so those expenses can be written directly. Editing a settled period is blocked while a `paid` settlement exists for it.
 
 ### `trips/{tripId}/settlements/{settlementId}`

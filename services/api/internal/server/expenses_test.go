@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/csv"
 	"encoding/json"
 	"log/slog"
 	"strconv"
@@ -427,5 +428,63 @@ func TestBudgetTarget(t *testing.T) {
 	}
 	if _, ok := budgetTarget(model.Trip{SettlementCurrency: "EUR"}, 3); ok {
 		t.Error("no budget should give no target")
+	}
+}
+
+func TestDecimal(t *testing.T) {
+	for _, c := range []struct {
+		amount   int64
+		currency string
+		want     string
+	}{
+		{12345, "USD", "123.45"}, {5, "USD", "0.05"}, {-5, "USD", "-0.05"}, {0, "USD", "0.00"},
+		{500, "JPY", "500"}, {250000, "VND", "250000"}, {-1, "JPY", "-1"}, {1234, "KWD", "1.234"},
+	} {
+		if got := decimal(c.amount, c.currency); got != c.want {
+			t.Errorf("decimal(%d, %s) = %q, want %q", c.amount, c.currency, got, c.want)
+		}
+	}
+}
+
+func TestExportExpenses(t *testing.T) {
+	trips := newFakeTrips()
+	v := tokenVerifier{"owner": "u-owner", "viewer": "u-viewer", "other": "u-other"}
+	h := NewHandler(slog.New(slog.DiscardHandler), v, WithTrips(trips), WithExpenses(newFakeExpenses()))
+	var trip api.Trip
+	_ = json.Unmarshal(call(h, "POST", "/v1/trips", "owner", tripBodyIn("JPY")).Body.Bytes(), &trip)
+	trips.members[trip.Id]["u-viewer"] = model.Member{UID: "u-viewer", Role: model.RoleViewer, Status: model.MemberActive, DisplayName: "Zoë Müller"}
+	o := trips.members[trip.Id]["u-owner"]
+	o.DisplayName = "=Mihir"
+	trips.members[trip.Id]["u-owner"] = o
+	path := "/v1/trips/" + trip.Id
+
+	spend := `{"description":"Ramen, \"deluxe\"\nlate","category":"+food","paidByUid":"u-owner","date":"2027-02-02","original":{"amountMinor":1000,"currency":"JPY"},` +
+		`"split":{"method":"equal","parts":[{"uid":"u-owner"},{"uid":"u-viewer"}]}}`
+	if c := call(h, "POST", path+"/expenses", "owner", spend).Code; c != 201 {
+		t.Fatalf("expense: %d", c)
+	}
+	rec := call(h, "GET", path+"/expenses/export", "viewer", "")
+	if rec.Code != 200 || !strings.HasPrefix(rec.Header().Get("Content-Type"), "text/csv") || !strings.Contains(rec.Header().Get("Content-Disposition"), "expenses.csv") {
+		t.Fatalf("export: %d %v", rec.Code, rec.Header())
+	}
+	rows, err := csv.NewReader(strings.NewReader(strings.TrimPrefix(rec.Body.String(), "\uFEFF"))).ReadAll()
+	if err != nil || len(rows) != 2 {
+		t.Fatalf("csv: %v %q", err, rec.Body)
+	}
+	got := rows[1]
+	want := []string{"2027-02-02", "Ramen, \"deluxe\"\nlate", "'+food", "'=Mihir", "1000", "JPY", "", "1000", "JPY", "equal", "'=Mihir: 500; Zoë Müller: 500"}
+	if len(got) != len(want) {
+		t.Fatalf("row: %q", got)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("column %d (%s): got %q, want %q", i, rows[0][i], got[i], want[i])
+		}
+	}
+	if !strings.HasPrefix(rec.Body.String(), "\uFEFF") {
+		t.Error("missing byte order mark")
+	}
+	if c := call(h, "GET", path+"/expenses/export", "other", "").Code; c != 404 {
+		t.Errorf("outsider: %d", c)
 	}
 }

@@ -235,6 +235,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/trips/{tripId}/expenses/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Export expenses as CSV
+         * @description Every expense that is not deleted, one row each, with the original and
+         *     converted amounts, the rate and each person's share. Amounts are
+         *     written as decimals using the currency's own minor digits. Free for
+         *     everyone on the trip. Starts with a byte order mark so spreadsheets
+         *     read non-ASCII names correctly. Text that starts with `=`, `+`, `-` or
+         *     `@` is prefixed with a quote so a spreadsheet cannot run it.
+         */
+        get: operations["exportExpenses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/trips/{tripId}/expenses/{expenseId}": {
         parameters: {
             query?: never;
@@ -1493,6 +1520,32 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    exportExpenses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The CSV file. */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+            401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
             503: components["responses"]["Unavailable"];
         };
