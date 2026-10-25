@@ -104,12 +104,31 @@ describe("Itinerary", () => {
     await waitFor(() => expect(screen.queryByText("Old Quarter walk")).toBeNull());
   });
 
+  it("reorders with the drag handle's accessibility action", async () => {
+    const calls = mockApi({
+      ...base("owner", [
+        stop("s1", "First", "2099-11-19", "a"),
+        stop("s2", "Second", "2099-11-19", "b"),
+      ]),
+      "PATCH /v1/trips/t1/stops/s1": () => json(200, stop("s1", "First", "2099-11-19", "c")),
+    });
+    await renderRouter(routes, { initialUrl: "/trips/t1/itinerary" });
+    const handle = await screen.findByLabelText("Reorder First. Drag up or down.");
+    await fireEvent(handle, "accessibilityAction", { nativeEvent: { actionName: "increment" } });
+    await waitFor(() =>
+      expect(calls.find((c) => c.key === "PATCH /v1/trips/t1/stops/s1")?.body).toEqual({
+        date: "2099-11-19",
+      }),
+    );
+  });
+
   it("is read-only for viewers", async () => {
     mockApi(base("viewer", [stop("s1", "Old Quarter walk", "2099-11-19", "a")]));
     await renderRouter(routes, { initialUrl: "/trips/t1/itinerary" });
     expect(await screen.findByText("Old Quarter walk")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Add a stop" })).toBeNull();
     expect(screen.queryByRole("button", { name: /^Edit/ })).toBeNull();
+    expect(screen.queryByLabelText(/^Reorder/)).toBeNull();
   });
 
   it("asks for dates on a trip without fixed days", async () => {

@@ -112,6 +112,7 @@ export const en = {
         generic: "Something went wrong. Try again.",
       },
     },
+    dragHandle: "Reorder {{name}}. Drag up or down.",
     moveHeading: "Move",
     moveUp: "Move up",
     moveDown: "Move down",

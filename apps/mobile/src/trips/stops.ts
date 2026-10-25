@@ -24,7 +24,8 @@ export function displayTime(startLocal: string, locale: string): string {
   return formatTime(at, locale, { timeZone: "UTC" });
 }
 
-export type Move = { kind: "up" } | { kind: "down" } | { kind: "day"; date: string };
+export type Move =
+  { kind: "up" } | { kind: "down" } | { kind: "to"; index: number } | { kind: "day"; date: string };
 
 /** Sorts after any real order key, so a stop moved to the end of a day shows there at once. */
 const END = "￿";
@@ -48,6 +49,18 @@ export function planMove(
           ? { ...s, order: stop.order }
           : s,
     );
+  if (move.kind === "to") {
+    const index = Math.max(0, Math.min(day.length - 1, move.index));
+    if (i < 0 || index === i) return undefined;
+    const ids = day.map((s) => s.id);
+    ids.splice(i, 1);
+    ids.splice(index, 0, stop.id);
+    const next = ids[index + 1];
+    return {
+      body: next ? { beforeStopId: next } : { date: stop.date },
+      local: applyOrder(stops, stop.date, ids),
+    };
+  }
   if (move.kind === "up") {
     const prev = day[i - 1];
     return prev ? { body: { beforeStopId: prev.id }, local: swapWith(prev) } : undefined;

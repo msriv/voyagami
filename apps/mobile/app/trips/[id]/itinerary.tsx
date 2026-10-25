@@ -12,6 +12,7 @@ import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { daysInRange, isoToDate } from "@/trips/dates";
 import { BestOrder } from "@/trips/BestOrder";
+import { DraggableStop } from "@/trips/DraggableStop";
 import { displayTime, isValidTime, planMove, stopsOn, type Move, type Stop } from "@/trips/stops";
 import type { Trip } from "@/trips/summary";
 import { Button, Card, Chip, IconButton, Input, Sheet, Text } from "@/ui";
@@ -225,30 +226,42 @@ export default function ItineraryScreen() {
               const placeName = s.place.name ?? "";
               const when = s.startLocal ? displayTime(s.startLocal, locale) : "";
               return (
-                <Card key={s.id}>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={
-                      canEdit
-                        ? t("itinerary.editStop", { name: placeName })
-                        : when
-                          ? t("itinerary.stopLabel", { name: placeName, time: when })
-                          : t("itinerary.stopLabelNoTime", { name: placeName })
-                    }
-                    disabled={!canEdit}
-                    onPress={() => open(s)}
-                    style={{ minHeight: hitArea.min, gap: 2, borderRadius: radius.button }}
-                  >
-                    {when ? <Text variant="caption">{when}</Text> : null}
-                    <Text variant="bodyStrong">{placeName}</Text>
-                    {s.durationMin ? (
-                      <Text variant="caption">
-                        {t("itinerary.minutes", { count: s.durationMin })}
-                      </Text>
-                    ) : null}
-                    {s.note ? <Text color="muted">{s.note}</Text> : null}
-                  </Pressable>
-                </Card>
+                <DraggableStop
+                  key={s.id}
+                  enabled={canEdit}
+                  label={t("itinerary.dragHandle", { name: placeName })}
+                  onDrop={(rows) =>
+                    void move(s, {
+                      kind: "to",
+                      index: todays.findIndex((x) => x.id === s.id) + rows,
+                    })
+                  }
+                >
+                  <Card>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        canEdit
+                          ? t("itinerary.editStop", { name: placeName })
+                          : when
+                            ? t("itinerary.stopLabel", { name: placeName, time: when })
+                            : t("itinerary.stopLabelNoTime", { name: placeName })
+                      }
+                      disabled={!canEdit}
+                      onPress={() => open(s)}
+                      style={{ minHeight: hitArea.min, gap: 2, borderRadius: radius.button }}
+                    >
+                      {when ? <Text variant="caption">{when}</Text> : null}
+                      <Text variant="bodyStrong">{placeName}</Text>
+                      {s.durationMin ? (
+                        <Text variant="caption">
+                          {t("itinerary.minutes", { count: s.durationMin })}
+                        </Text>
+                      ) : null}
+                      {s.note ? <Text color="muted">{s.note}</Text> : null}
+                    </Pressable>
+                  </Card>
+                </DraggableStop>
               );
             })}
             {canEdit && current ? (
