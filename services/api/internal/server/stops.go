@@ -274,6 +274,7 @@ func placeFrom(p api.PlaceRef) model.PlaceRef {
 	return model.PlaceRef{
 		PlaceID: strings.TrimSpace(strOr(p.PlaceId)), Name: strings.TrimSpace(strOr(p.Name)),
 		Lat: floatOr0(p.Lat), Lng: floatOr0(p.Lng),
+		Address: strings.TrimSpace(strOr(p.Address)), Category: string(categoryOr(p.Category)),
 	}
 }
 
@@ -282,6 +283,12 @@ func stopFrom(s model.Stop) api.Stop {
 	if s.Place.Custom() {
 		name, lat, lng := s.Place.Name, s.Place.Lat, s.Place.Lng
 		out.Place = api.PlaceRef{Name: &name, Lat: &lat, Lng: &lng}
+		if a := s.Place.Address; a != "" {
+			out.Place.Address = &a
+		}
+		if c := api.PlaceRefCategory(s.Place.Category); c != "" {
+			out.Place.Category = &c
+		}
 	} else {
 		id := s.Place.PlaceID
 		out.Place = api.PlaceRef{PlaceId: &id}
@@ -320,4 +327,11 @@ func floatOr0(f *float64) float64 {
 		return 0
 	}
 	return *f
+}
+
+func categoryOr(c *api.PlaceRefCategory) api.PlaceRefCategory {
+	if c == nil {
+		return ""
+	}
+	return *c
 }

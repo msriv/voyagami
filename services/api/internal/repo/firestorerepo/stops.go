@@ -29,6 +29,9 @@ type placeDoc struct {
 	Name    string  `firestore:"name,omitempty"`
 	Lat     float64 `firestore:"lat,omitempty"`
 	Lng     float64 `firestore:"lng,omitempty"`
+
+	Address  string `firestore:"address,omitempty"`
+	Category string `firestore:"category,omitempty"`
 }
 
 type stopDoc struct {
@@ -51,7 +54,7 @@ func (s *Stops) ref(tripID, stopID string) *firestore.DocumentRef {
 func stopToDoc(st model.Stop) stopDoc {
 	p := placeDoc{Kind: "catalog", PlaceID: st.Place.PlaceID}
 	if st.Place.Custom() {
-		p = placeDoc{Kind: "custom", Name: st.Place.Name, Lat: st.Place.Lat, Lng: st.Place.Lng}
+		p = placeDoc{Kind: "custom", Name: st.Place.Name, Lat: st.Place.Lat, Lng: st.Place.Lng, Address: st.Place.Address, Category: st.Place.Category}
 	}
 	return stopDoc{Date: st.Date, Order: st.Order, Place: p, StartLocal: st.StartLocal, DurationMin: st.DurationMin,
 		TimeZone: st.TimeZone, Note: st.Note}
@@ -64,7 +67,7 @@ func stopFromSnap(snap *firestore.DocumentSnapshot, tripID string) (model.Stop, 
 	}
 	return model.Stop{
 		ID: snap.Ref.ID, TripID: tripID, Date: d.Date, Order: d.Order,
-		Place:      model.PlaceRef{PlaceID: d.Place.PlaceID, Name: d.Place.Name, Lat: d.Place.Lat, Lng: d.Place.Lng},
+		Place:      model.PlaceRef{PlaceID: d.Place.PlaceID, Name: d.Place.Name, Lat: d.Place.Lat, Lng: d.Place.Lng, Address: d.Place.Address, Category: d.Place.Category},
 		StartLocal: d.StartLocal, DurationMin: d.DurationMin, TimeZone: d.TimeZone, Note: d.Note,
 		DeletedAt: d.DeletedAt, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt,
 	}, nil

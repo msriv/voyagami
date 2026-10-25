@@ -824,6 +824,14 @@ components:
         lng:
           type: number
           format: double
+        address:
+          type: string
+          maxLength: 300
+          description: Optional, for a pin the person dropped.
+        category:
+          type: string
+          enum: [food, sights, activity, shopping, stay, transport, other]
+          description: Optional, for a pin the person dropped.
     StopFields:
       type: object
       properties:

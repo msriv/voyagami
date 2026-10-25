@@ -45,7 +45,7 @@ Rate { value: string, asOf: string /* YYYY-MM-DD */, source: string }
 
 ```
 PlaceRef = { kind: "catalog", placeId: string }
-         | { kind: "custom", name: string, lat: number, lng: number }
+         | { kind: "custom", name: string, lat: number, lng: number, address?: string, category?: string }
 ```
 
 A custom place is a pin the person dropped. A catalog place is a document in `places`.
@@ -247,7 +247,7 @@ Write: `title` by editors; `travel` and `lastOptimisedAt` **server**. "Best orde
 
 Write: editors and owners. Concurrent edits to different fields both survive.
 
-The API (`/v1/trips/{tripId}/stops`) assigns `order` with `internal/fracindex`: a stop goes to the end of its day, or just before another stop, and moving a stop between days or within a day writes only that one document. A deleted stop gets `deletedAt` and is hidden from the list, not erased. A `place` is stored as `{kind: "catalog", placeId}` or `{kind: "custom", name, lat, lng}`.
+The API (`/v1/trips/{tripId}/stops`) assigns `order` with `internal/fracindex`: a stop goes to the end of its day, or just before another stop, and moving a stop between days or within a day writes only that one document. A deleted stop gets `deletedAt` and is hidden from the list, not erased. A `place` is stored as `{kind: "catalog", placeId}` or `{kind: "custom", name, lat, lng, address?, category?}`. A dropped pin can carry an address (up to 300 characters) and a category: food, sights, activity, shopping, stay, transport or other.
 
 ### `trips/{tripId}/saved/{savedId}`
 
