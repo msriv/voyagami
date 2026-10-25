@@ -251,6 +251,7 @@ export const en = {
     add: "Add an expense",
     paidByYou: "Paid by you",
     paidByOther: "Paid by someone else",
+    paidByName: "Paid by {{name}}",
     expenseLabel: "{{name}}, {{amount}}, {{date}}",
     export: { button: "Export as CSV", title: "{{name}} expenses" },
     budget: {
@@ -291,13 +292,16 @@ export const en = {
       shopping: "Shopping",
       other: "Other",
     },
+    paidByLabel: "Who paid?",
+    sharedByLabel: "Who shares it?",
+    you: "You",
     dayLabel: "Day",
     dayChip: "Day {{n}}",
-    splitNote:
-      "Paid by you and kept to yourself for now. Splitting with the crew comes with invites.",
+    splitNote: "Shared equally between the people picked.",
     save: "Save expense",
     errors: {
       description: "Say what it was for.",
+      sharers: "Pick at least one person to share it.",
       amount: "Enter an amount more than zero, with up to {{digits}} decimals.",
       offline: "You're offline. Connect and try again.",
       generic: "Something went wrong. Try again.",

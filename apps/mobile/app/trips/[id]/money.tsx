@@ -20,7 +20,14 @@ type Budget = components["schemas"]["BudgetSummary"];
 
 type State =
   | { kind: "loading" }
-  | { kind: "ready"; trip: Trip; expenses: Expense[]; budget: Budget; me: string }
+  | {
+      kind: "ready";
+      trip: Trip;
+      expenses: Expense[];
+      budget: Budget;
+      me: string;
+      names: Record<string, string>;
+    }
   | { kind: "notFound" }
   | { kind: "error" };
 
@@ -42,13 +49,15 @@ export default function MoneyScreen() {
 
   const load = useCallback(async () => {
     try {
-      const [trip, { expenses }, budget, me] = await Promise.all([
+      const [trip, { expenses }, budget, me, { members }] = await Promise.all([
         api.unwrap(api.GET("/v1/trips/{tripId}", { params: { path: { tripId: id } } })),
         api.unwrap(api.GET("/v1/trips/{tripId}/expenses", { params: { path: { tripId: id } } })),
         api.unwrap(api.GET("/v1/trips/{tripId}/budget", { params: { path: { tripId: id } } })),
         api.unwrap(api.GET("/v1/me")),
+        api.unwrap(api.GET("/v1/trips/{tripId}/members", { params: { path: { tripId: id } } })),
       ]);
-      setState({ kind: "ready", trip, expenses, budget, me: me.id });
+      const names = Object.fromEntries(members.map((m) => [m.uid, m.displayName ?? ""]));
+      setState({ kind: "ready", trip, expenses, budget, me: me.id, names });
     } catch (e) {
       setState(
         e instanceof ApiError && e.code === "not_found" ? { kind: "notFound" } : { kind: "error" },
@@ -89,7 +98,7 @@ export default function MoneyScreen() {
     );
   }
 
-  const { trip, expenses, budget, me } = state;
+  const { trip, expenses, budget, me, names } = state;
   const currency = trip.settlementCurrency;
   const canEdit = trip.role !== "viewer";
   const total = budget.spentMinor;
@@ -109,6 +118,7 @@ export default function MoneyScreen() {
         kind: "ready",
         trip,
         me,
+        names,
         budget: await api.unwrap(
           api.GET("/v1/trips/{tripId}/budget", { params: { path: { tripId: id } } }),
         ),
@@ -268,7 +278,11 @@ export default function MoneyScreen() {
                       <View style={{ flex: 1 }}>
                         <Text variant="bodyStrong">{x.description}</Text>
                         <Text variant="caption">
-                          {t(x.paidByUid === me ? "money.paidByYou" : "money.paidByOther")}
+                          {x.paidByUid === me
+                            ? t("money.paidByYou")
+                            : names[x.paidByUid]
+                              ? t("money.paidByName", { name: names[x.paidByUid] as string })
+                              : t("money.paidByOther")}
                         </Text>
                       </View>
                       <Text variant="bodyStrong">{amount}</Text>
