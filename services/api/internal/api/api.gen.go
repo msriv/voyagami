@@ -72,6 +72,39 @@ func (e MeUpdateRegionSource) Valid() bool {
 	}
 }
 
+// Defines values for PlaceRefCategory.
+const (
+	Activity  PlaceRefCategory = "activity"
+	Food      PlaceRefCategory = "food"
+	Other     PlaceRefCategory = "other"
+	Shopping  PlaceRefCategory = "shopping"
+	Sights    PlaceRefCategory = "sights"
+	Stay      PlaceRefCategory = "stay"
+	Transport PlaceRefCategory = "transport"
+)
+
+// Valid indicates whether the value is a known member of the PlaceRefCategory enum.
+func (e PlaceRefCategory) Valid() bool {
+	switch e {
+	case Activity:
+		return true
+	case Food:
+		return true
+	case Other:
+		return true
+	case Shopping:
+		return true
+	case Sights:
+		return true
+	case Stay:
+		return true
+	case Transport:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for TravelStyleInterests.
 const (
 	Beaches        TravelStyleInterests = "beaches"
@@ -416,11 +449,19 @@ type OtpVerifyRequest struct {
 
 // PlaceRef A catalogue place by `placeId`, or a pin the person dropped (`name`, `lat`, `lng`).
 type PlaceRef struct {
-	Lat     *float64 `json:"lat,omitempty"`
-	Lng     *float64 `json:"lng,omitempty"`
-	Name    *string  `json:"name,omitempty"`
-	PlaceId *string  `json:"placeId,omitempty"`
+	// Address Optional, for a pin the person dropped.
+	Address *string `json:"address,omitempty"`
+
+	// Category Optional, for a pin the person dropped.
+	Category *PlaceRefCategory `json:"category,omitempty"`
+	Lat      *float64          `json:"lat,omitempty"`
+	Lng      *float64          `json:"lng,omitempty"`
+	Name     *string           `json:"name,omitempty"`
+	PlaceId  *string           `json:"placeId,omitempty"`
 }
+
+// PlaceRefCategory Optional, for a pin the person dropped.
+type PlaceRefCategory string
 
 // RefreshRequest defines model for RefreshRequest.
 type RefreshRequest struct {

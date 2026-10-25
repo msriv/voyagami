@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -221,6 +222,9 @@ func TestStopsFieldsDeleteAndErrors(t *testing.T) {
 		{"day outside the trip", "POST", r.path(""), "owner", `{"date":"2027-03-01","place":{"placeId":"p1"}}`, 400},
 		{"bad date", "POST", r.path(""), "owner", `{"date":"3 Feb","place":{"placeId":"p1"}}`, 400},
 		{"pin needs a name", "POST", r.path(""), "owner", `{"date":"` + day + `","place":{"lat":1,"lng":1}}`, 400},
+		{"pin with address and category", "POST", r.path(""), "owner", `{"date":"` + day + `","place":{"name":"Home stay","lat":21,"lng":105,"address":"12 Hang Bac","category":"stay"}}`, 201},
+		{"unknown category", "POST", r.path(""), "owner", `{"date":"` + day + `","place":{"name":"x","lat":21,"lng":105,"category":"spaceport"}}`, 400},
+		{"address too long", "POST", r.path(""), "owner", `{"date":"` + day + `","place":{"name":"x","lat":21,"lng":105,"address":"` + strings.Repeat("a", 301) + `"}}`, 400},
 		{"pin needs real coordinates", "POST", r.path(""), "owner", `{"date":"` + day + `","place":{"name":"x","lat":91,"lng":1}}`, 400},
 		{"bad time", "PATCH", r.path("/" + s.Id), "owner", `{"startLocal":"25:00"}`, 400},
 		{"move outside the trip", "PATCH", r.path("/" + s.Id), "owner", `{"date":"2030-01-01"}`, 400},
