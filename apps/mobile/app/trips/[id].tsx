@@ -26,6 +26,7 @@ export default function TripScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const locale = getLocales()[0]?.languageTag ?? "en";
   const [state, setState] = useState<State>({ kind: "loading" });
+  const [crew, setCrew] = useState<string[]>([]);
   const [menu, setMenu] = useState(false);
   const [name, setName] = useState("");
   const [formError, setFormError] = useState<string | undefined>();
@@ -38,6 +39,11 @@ export default function TripScreen() {
       );
       setState({ kind: "ready", trip });
       setName(trip.title);
+      // The avatar stack is decoration: a failure here must not block the trip.
+      api
+        .unwrap(api.GET("/v1/trips/{tripId}/members", { params: { path: { tripId: id } } }))
+        .then((r) => setCrew(r.members.map((m) => m.displayName ?? "")))
+        .catch(() => undefined);
     } catch (e) {
       setState(
         e instanceof ApiError && e.code === "not_found" ? { kind: "notFound" } : { kind: "error" },
@@ -150,6 +156,55 @@ export default function TripScreen() {
             <Text variant="caption" color="white">
               {t("trip.roleLine", { role: t(`trip.roles.${trip.role}`) })}
             </Text>
+          </View>
+          <View
+            style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
+          >
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("trip.crewLabel", { names: crew.filter(Boolean).join(", ") })}
+              onPress={() => router.push(`/trips/${trip.id}/crew`)}
+              style={{ flexDirection: "row", minHeight: 44, alignItems: "center" }}
+            >
+              {crew.slice(0, 4).map((n, i) => (
+                <View
+                  key={i}
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 17,
+                    borderWidth: 2,
+                    borderColor: colors.indigo,
+                    marginLeft: i === 0 ? 0 : -10,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: [colors.vermilion, colors.gold, colors.matcha, colors.white][
+                      i
+                    ],
+                  }}
+                >
+                  <Text variant="caption" style={{ fontWeight: "800" }}>
+                    {n.slice(0, 1).toUpperCase()}
+                  </Text>
+                </View>
+              ))}
+            </Pressable>
+            {trip.role === "owner" ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t("trip.invite")}
+                onPress={() => router.push(`/trips/${trip.id}/crew`)}
+                style={{
+                  minHeight: 44,
+                  paddingHorizontal: 16,
+                  borderRadius: 99,
+                  justifyContent: "center",
+                  backgroundColor: colors.white,
+                }}
+              >
+                <Text variant="bodyStrong">{t("trip.invite")}</Text>
+              </Pressable>
+            ) : null}
           </View>
         </View>
 
