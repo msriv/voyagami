@@ -87,11 +87,11 @@ describe("first-run routing", () => {
     expect(await screen.findByText("Allowed")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Allow Contacts" })).toBeDisabled();
     await fireEvent.press(screen.getByRole("button", { name: "Finish setup" }));
-    expect(await screen.findByText("Welcome, Asha")).toBeTruthy();
+    expect(await screen.findByText(/Good (morning|afternoon|evening), Asha/)).toBeTruthy();
     expect(mockStore.get("voyagami.onboarded")).toBe("1");
     first.unmount();
 
     await renderRouter(routes, { initialUrl: "/" });
-    expect(await screen.findByText("Welcome, Asha")).toBeTruthy();
+    expect(await screen.findByText(/Good (morning|afternoon|evening), Asha/)).toBeTruthy();
   });
 });

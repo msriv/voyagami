@@ -85,7 +85,7 @@ describe("sign in", () => {
     mockStore.set("voyagami.onboarded", "1");
     mockApi({ "GET /v1/me": () => json(200, { id: "u1", displayName: "Asha" }) });
     await renderRouter(routes);
-    expect(await screen.findByText("Welcome, Asha")).toBeTruthy();
+    expect(await screen.findByText(/Good (morning|afternoon|evening), Asha/)).toBeTruthy();
   });
 
   it("returns to sign in when the saved session is dead", async () => {
