@@ -6,7 +6,7 @@ name: Publish app (EAS Update)
 on:
   push:
     branches: [main]
-    paths: ['apps/mobile/**', 'packages/**', 'pnpm-lock.yaml']
+    paths: ["apps/mobile/**", "packages/**", "pnpm-lock.yaml"]
   workflow_dispatch:
 
 concurrency:
