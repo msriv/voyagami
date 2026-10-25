@@ -5,6 +5,15 @@ export const en = {
     explore: "Explore",
     profile: "Profile",
   },
+  countries: {
+    VN: "Vietnam",
+    IN: "India",
+    JP: "Japan",
+    ID: "Indonesia",
+    PT: "Portugal",
+    FR: "France",
+    US: "United States",
+  },
   newTrip: {
     title: "Where to?",
     close: "Close",

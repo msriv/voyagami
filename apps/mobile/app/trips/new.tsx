@@ -8,7 +8,7 @@ import { reportError } from "@/logging/remoteLog";
 import { useTranslation } from "@/i18n";
 import { useProfile } from "@/profile";
 import { useTheme } from "@/theme";
-import { suggestedDestinations, type Destination } from "@/trips/destinations";
+import { countryName, suggestedDestinations, type Destination } from "@/trips/destinations";
 import { DateRangePicker } from "@/trips/DateRangePicker";
 import type { DateRange } from "@/trips/dates";
 import { Button, Chip, IconButton, Input, Text } from "@/ui";
@@ -40,10 +40,7 @@ export default function NewTripScreen() {
   const first = stops[0];
   const { region } = useProfile();
   const abroad = stops.find((d) => region && d.countryCode !== region);
-  const foreign = abroad
-    ? (new Intl.DisplayNames([tag], { type: "region" }).of(abroad.countryCode) ??
-      abroad.countryCode)
-    : undefined;
+  const foreign = abroad ? countryName(abroad.countryCode) : undefined;
 
   async function save() {
     const code = currency.trim().toUpperCase();
