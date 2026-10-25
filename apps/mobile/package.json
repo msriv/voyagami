@@ -8,6 +8,7 @@
     "ios": "expo start --ios",
     "android": "expo start --android",
     "web": "expo start --web",
+    "phone": "EXPO_PUBLIC_API_URL=https://voyagami-api-405147124521.asia-south1.run.app expo start --go",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "jest",
