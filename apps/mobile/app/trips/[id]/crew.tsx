@@ -11,6 +11,7 @@ import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import type { Trip } from "@/trips/summary";
 import { Button, Card, Chip, IconButton, Sheet, Text } from "@/ui";
+import { Icon } from "@/ui/icons";
 
 type Member = components["schemas"]["Member"];
 type Invite = components["schemas"]["Invite"];
@@ -71,7 +72,7 @@ export default function CrewScreen() {
       variant="secondary"
       onPress={() => router.back()}
     >
-      <Text variant="bodyStrong">{"‹"}</Text>
+      <Icon name="back" color={colors.ink} />
     </IconButton>
   );
 
@@ -271,7 +272,7 @@ export default function CrewScreen() {
         onClose={() => setOpen(undefined)}
         title={open?.displayName ?? t("crew.title")}
         closeLabel={t("crew.close")}
-        closeIcon={<Text>{"×"}</Text>}
+        closeIcon={<Icon name="close" color={colors.ink} />}
       >
         <View style={{ gap: 12, paddingBottom: 12 }}>
           {open && isOwner && open.uid !== me ? (

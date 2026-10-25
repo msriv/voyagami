@@ -12,6 +12,7 @@ import { useProfile } from "@/profile";
 import { useTheme } from "@/theme";
 import { isoToDate } from "@/trips/dates";
 import { Button, Card, IconButton, Text } from "@/ui";
+import { Icon } from "@/ui/icons";
 
 type Recap = components["schemas"]["Recap"];
 type Trip = components["schemas"]["Trip"];
@@ -61,7 +62,7 @@ export default function RecapScreen() {
       variant="secondary"
       onPress={() => router.back()}
     >
-      <Text variant="bodyStrong">{"‹"}</Text>
+      <Icon name="back" color={colors.ink} />
     </IconButton>
   );
 

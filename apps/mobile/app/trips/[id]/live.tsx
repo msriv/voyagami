@@ -13,6 +13,7 @@ import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import type { Trip } from "@/trips/summary";
 import { Button, Card, Chip, IconButton, Input, Sheet, Text } from "@/ui";
+import { Icon } from "@/ui/icons";
 
 type Shared = components["schemas"]["SharedLocation"];
 type Meet = components["schemas"]["MeetPoint"];
@@ -106,7 +107,7 @@ export default function LiveScreen() {
       variant="secondary"
       onPress={() => router.back()}
     >
-      <Text variant="bodyStrong">{"‹"}</Text>
+      <Icon name="back" color={colors.ink} />
     </IconButton>
   );
 
@@ -286,7 +287,7 @@ export default function LiveScreen() {
         onClose={() => setProposing(false)}
         title={t("live.propose")}
         closeLabel={t("live.cancel")}
-        closeIcon={<Text>{"×"}</Text>}
+        closeIcon={<Icon name="close" color={colors.ink} />}
       >
         <View style={{ gap: 12, paddingBottom: 12 }}>
           <Input label={t("live.whereLabel")} value={where} onChangeText={setWhere} />

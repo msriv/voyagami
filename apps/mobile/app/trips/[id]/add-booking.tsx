@@ -13,6 +13,7 @@ import { isValidTime } from "@/trips/stops";
 import type { Trip } from "@/trips/summary";
 import { zonedToUtc } from "@/trips/zoned";
 import { Button, Chip, IconButton, Input, Text } from "@/ui";
+import { Icon } from "@/ui/icons";
 
 const kinds = ["flight", "stay", "train", "bus", "activity", "other"] as const;
 type Kind = (typeof kinds)[number];
@@ -93,7 +94,7 @@ export default function AddBookingScreen() {
             variant="secondary"
             onPress={() => router.back()}
           >
-            <Text variant="bodyStrong">{"‹"}</Text>
+            <Icon name="back" color={colors.ink} />
           </IconButton>
           <Text variant="title" heading style={{ flex: 1 }}>
             {t("addBooking.title")}

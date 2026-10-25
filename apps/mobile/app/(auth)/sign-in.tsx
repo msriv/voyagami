@@ -9,6 +9,7 @@ import { signInErrorKey, useAuth, withDetail } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { Button, IconButton, Input, Text } from "@/ui";
+import { Icon } from "@/ui/icons";
 
 export default function SignInScreen() {
   const { t } = useTranslation();
@@ -56,7 +57,7 @@ export default function SignInScreen() {
               variant="secondary"
               onPress={() => router.back()}
             >
-              <Text variant="bodyStrong">{"‹"}</Text>
+              <Icon name="back" color={colors.ink} />
             </IconButton>
           </View>
           <View style={{ gap: 8 }}>

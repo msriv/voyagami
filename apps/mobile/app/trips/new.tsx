@@ -12,6 +12,7 @@ import { suggestedDestinations, type Destination } from "@/trips/destinations";
 import { DateRangePicker } from "@/trips/DateRangePicker";
 import type { DateRange } from "@/trips/dates";
 import { Button, Chip, IconButton, Input, Text } from "@/ui";
+import { Icon } from "@/ui/icons";
 
 type Mode = "dates" | "flexible";
 
@@ -102,7 +103,7 @@ export default function NewTripScreen() {
               variant="secondary"
               onPress={() => router.back()}
             >
-              <Text variant="bodyStrong">{"×"}</Text>
+              <Icon name="close" color={colors.ink} />
             </IconButton>
           </View>
 
@@ -183,7 +184,7 @@ export default function NewTripScreen() {
                     variant="secondary"
                     onPress={() => setDays((d) => Math.min(60, d + 1))}
                   >
-                    <Text variant="title">{"+"}</Text>
+                    <Icon name="plus" color={colors.ink} />
                   </IconButton>
                 </View>
               </View>

@@ -12,6 +12,7 @@ import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import type { Trip } from "@/trips/summary";
 import { Button, Card, IconButton, Input, Sheet, Text } from "@/ui";
+import { Icon } from "@/ui/icons";
 
 type Comment = components["schemas"]["Comment"];
 
@@ -82,7 +83,7 @@ export default function CommentsScreen() {
       variant="secondary"
       onPress={() => router.back()}
     >
-      <Text variant="bodyStrong">{"‹"}</Text>
+      <Icon name="back" color={colors.ink} />
     </IconButton>
   );
 
@@ -233,7 +234,7 @@ export default function CommentsScreen() {
         onClose={() => setOpen(undefined)}
         title={t("comments.manage")}
         closeLabel={t("comments.close")}
-        closeIcon={<Text>{"×"}</Text>}
+        closeIcon={<Icon name="close" color={colors.ink} />}
       >
         <View style={{ gap: 12, paddingBottom: 12 }}>
           {open && open.authorUid === me ? (

@@ -11,6 +11,7 @@ import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { Button, Card, Chip, IconButton, Input, Text } from "@/ui";
+import { Icon } from "@/ui/icons";
 
 type Candidate = components["schemas"]["BookingCandidate"];
 
@@ -119,7 +120,7 @@ export default function ImportBookingScreen() {
             variant="secondary"
             onPress={() => router.back()}
           >
-            <Text variant="bodyStrong">{"‹"}</Text>
+            <Icon name="back" color={colors.ink} />
           </IconButton>
           <Text variant="title" heading style={{ flex: 1 }}>
             {found ? t("importBooking.reviewTitle") : t("importBooking.title")}

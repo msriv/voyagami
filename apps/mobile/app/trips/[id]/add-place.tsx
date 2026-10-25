@@ -10,6 +10,7 @@ import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { parsePin } from "@/trips/stops";
 import { Button, Chip, IconButton, Input, Text } from "@/ui";
+import { Icon } from "@/ui/icons";
 
 const categories = [
   "food",
@@ -82,7 +83,7 @@ export default function AddPlaceScreen() {
             variant="secondary"
             onPress={() => router.back()}
           >
-            <Text variant="bodyStrong">{"‹"}</Text>
+            <Icon name="back" color={colors.ink} />
           </IconButton>
           <Text variant="title" heading style={{ flex: 1 }}>
             {t("addPlace.title")}

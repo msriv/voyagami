@@ -14,6 +14,7 @@ import { isoToDate } from "@/trips/dates";
 import { parseAmount } from "@/trips/money";
 import type { Trip } from "@/trips/summary";
 import { Button, Card, Chip, IconButton, Input, Sheet, Text } from "@/ui";
+import { Icon } from "@/ui/icons";
 
 type Expense = components["schemas"]["Expense"];
 type Budget = components["schemas"]["BudgetSummary"];
@@ -78,7 +79,7 @@ export default function MoneyScreen() {
       variant="secondary"
       onPress={() => router.back()}
     >
-      <Text variant="bodyStrong">{"‹"}</Text>
+      <Icon name="back" color={colors.ink} />
     </IconButton>
   );
 
@@ -323,7 +324,7 @@ export default function MoneyScreen() {
         onClose={() => setOpen(undefined)}
         title={open?.description ?? t("money.deleteTitle")}
         closeLabel={t("money.close")}
-        closeIcon={<Text>{"×"}</Text>}
+        closeIcon={<Icon name="close" color={colors.ink} />}
       >
         <View style={{ gap: 12, paddingBottom: 12 }}>
           {open ? <Text>{formatMoney(open.settlement.amountMinor, currency, locale)}</Text> : null}
@@ -346,7 +347,7 @@ export default function MoneyScreen() {
         onClose={() => setSetting(false)}
         title={t("money.budget.title")}
         closeLabel={t("money.close")}
-        closeIcon={<Text>{"×"}</Text>}
+        closeIcon={<Icon name="close" color={colors.ink} />}
       >
         <View style={{ gap: 12, paddingBottom: 12 }}>
           <Input

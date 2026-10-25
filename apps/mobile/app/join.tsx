@@ -9,6 +9,7 @@ import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { Button, IconButton, Input, Text } from "@/ui";
+import { Icon } from "@/ui/icons";
 
 /**
  * Join a trip with the code from an invite link. The link opens this screen with the code filled in.
@@ -61,7 +62,7 @@ export default function JoinScreen() {
             variant="secondary"
             onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))}
           >
-            <Text variant="bodyStrong">{"‹"}</Text>
+            <Icon name="back" color={colors.ink} />
           </IconButton>
           <Text variant="title" heading style={{ flex: 1 }}>
             {t("join.title")}

@@ -5,6 +5,7 @@ import { Pressable, View } from "react-native";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { IconButton, Text } from "@/ui";
+import { Icon } from "@/ui/icons";
 
 import { daysBetween, isoToDate, monthCells, pickDay, type DateRange } from "./dates";
 
@@ -45,13 +46,13 @@ export function DateRangePicker({ value, onChange, locale, initialMonth }: DateR
     >
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <IconButton accessibilityLabel={t("newTrip.prevMonth")} onPress={() => shift(-1)}>
-          <Text variant="title">{"‹"}</Text>
+          <Icon name="back" color={colors.ink} />
         </IconButton>
         <Text variant="bodyStrong" heading>
           {formatMonth(Date.UTC(cursor.y, cursor.m, 1), locale)}
         </Text>
         <IconButton accessibilityLabel={t("newTrip.nextMonth")} onPress={() => shift(1)}>
-          <Text variant="title">{"›"}</Text>
+          <Icon name="forward" color={colors.ink} />
         </IconButton>
       </View>
       <Text variant="caption" accessibilityLiveRegion="polite">
