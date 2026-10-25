@@ -344,3 +344,88 @@ func TestSettleUp(t *testing.T) {
 		t.Fatalf("after payment: %+v", b)
 	}
 }
+
+func TestBudget(t *testing.T) {
+	trips := newFakeTrips()
+	v := tokenVerifier{"owner": "u-owner", "editor": "u-editor", "other": "u-other"}
+	h := NewHandler(slog.New(slog.DiscardHandler), v, WithTrips(trips), WithExpenses(newFakeExpenses()))
+	body := strings.Replace(newTripBody, `"settlementCurrency":"VND"`,
+		`"settlementCurrency":"VND","budget":{"scope":"perPerson","amount":{"amountMinor":100000,"currency":"VND"}}`, 1)
+	var trip api.Trip
+	if rec := call(h, "POST", "/v1/trips", "owner", body); rec.Code != 201 {
+		t.Fatalf("trip: %d %s", rec.Code, rec.Body)
+	} else {
+		_ = json.Unmarshal(rec.Body.Bytes(), &trip)
+	}
+	// Two people on the trip, so the target is 2 x 100000.
+	tr := trips.trips[trip.Id]
+	tr.MemberUIDs = []string{"u-owner", "u-editor"}
+	trips.trips[trip.Id] = tr
+	trips.members[trip.Id]["u-editor"] = model.Member{UID: "u-editor", Role: model.RoleEditor, Status: model.MemberActive}
+
+	path := "/v1/trips/" + trip.Id
+	spend := func(amount, category string) {
+		b := `{"description":"x","paidByUid":"u-owner","date":"2027-02-02","original":{"amountMinor":` + amount + `,"currency":"VND"},` +
+			category + `"split":{"method":"equal","parts":[{"uid":"u-owner"},{"uid":"u-editor"}]}}`
+		if c := call(h, "POST", path+"/expenses", "owner", b).Code; c != 201 {
+			t.Fatalf("expense: %d", c)
+		}
+	}
+	get := func() api.BudgetSummary {
+		var s api.BudgetSummary
+		rec := call(h, "GET", path+"/budget", "owner", "")
+		if rec.Code != 200 {
+			t.Fatalf("budget: %d %s", rec.Code, rec.Body)
+		}
+		_ = json.Unmarshal(rec.Body.Bytes(), &s)
+		return s
+	}
+
+	if s := get(); s.SpentMinor != 0 || s.OverBudget || s.TargetMinor == nil || *s.TargetMinor != 200000 || len(s.ByCategory) != 0 {
+		t.Fatalf("empty: %+v", s)
+	}
+	spend("150000", `"category":"food",`)
+	spend("30000", `"category":"food",`)
+	spend("10000", "")
+	s := get()
+	if s.SpentMinor != 190000 || *s.RemainingMinor != 10000 || s.OverBudget || len(s.ByCategory) != 2 ||
+		s.ByCategory[0].Category != "food" || s.ByCategory[0].SpentMinor != 180000 || s.ByCategory[1].Category != "" {
+		t.Fatalf("under: %+v", s)
+	}
+	spend("20000", "")
+	if s := get(); !s.OverBudget || *s.RemainingMinor != -10000 {
+		t.Fatalf("over: %+v", s)
+	}
+	if c := call(h, "GET", path+"/budget", "other", "").Code; c != 404 {
+		t.Errorf("outsider: %d", c)
+	}
+
+	// Only the owner sets the budget.
+	raise := `{"budget":{"scope":"group","amount":{"amountMinor":500000,"currency":"VND"}}}`
+	if c := call(h, "PATCH", path, "editor", raise).Code; c != 403 {
+		t.Errorf("editor sets budget: %d", c)
+	}
+	if c := call(h, "PATCH", path, "owner", raise).Code; c != 200 {
+		t.Errorf("owner sets budget: %d", c)
+	}
+	if s := get(); s.OverBudget || *s.TargetMinor != 500000 {
+		t.Errorf("after raise: %+v", s)
+	}
+	if c := call(h, "PATCH", path, "owner", `{"budget":{"scope":"weekly","amount":{"amountMinor":1,"currency":"VND"}}}`).Code; c != 400 {
+		t.Errorf("bad scope: %d", c)
+	}
+}
+
+func TestBudgetTarget(t *testing.T) {
+	trip := model.Trip{SettlementCurrency: "EUR", Budget: &model.Budget{Scope: "group", Amount: model.Money{AmountMinor: 5000, Currency: "USD"}}}
+	if _, ok := budgetTarget(trip, 3); ok {
+		t.Error("a budget in another currency should give no target")
+	}
+	trip.Budget.Amount.Currency = "EUR"
+	if got, ok := budgetTarget(trip, 3); !ok || got != 5000 {
+		t.Errorf("group: %d %v", got, ok)
+	}
+	if _, ok := budgetTarget(model.Trip{SettlementCurrency: "EUR"}, 3); ok {
+		t.Error("no budget should give no target")
+	}
+}

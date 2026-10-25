@@ -102,6 +102,7 @@ func (h *handlers) CreateTrip(ctx context.Context, req api.CreateTripRequestObje
 		TimeZone:           b.TimeZone,
 		SettlementCurrency: b.SettlementCurrency,
 		Status:             model.TripPlanned,
+		Budget:             budgetFrom(b.Budget),
 	}
 	created, err := h.trips.Create(ctx, trip, model.Member{UID: id.UserID, DisplayName: id.DisplayName})
 	if err != nil {
@@ -154,7 +155,7 @@ func (h *handlers) UpdateTrip(ctx context.Context, req api.UpdateTripRequestObje
 		return nil, err
 	}
 	b := req.Body
-	if role == model.RoleViewer || (b.Status != nil && role != model.RoleOwner) {
+	if role == model.RoleViewer || ((b.Status != nil || b.Budget != nil) && role != model.RoleOwner) {
 		return api.UpdateTrip403JSONResponse{ForbiddenJSONResponse: api.ForbiddenJSONResponse(errBody(ctx, codeForbidden, msgRoleDenied))}, nil
 	}
 	var patch model.TripPatch
@@ -171,6 +172,7 @@ func (h *handlers) UpdateTrip(ctx context.Context, req api.UpdateTripRequestObje
 		patch.Dates = &d
 	}
 	patch.TimeZone = b.TimeZone
+	patch.Budget = budgetFrom(b.Budget)
 	if b.Status != nil {
 		s := model.TripStatus(*b.Status)
 		patch.Status = &s
@@ -183,6 +185,13 @@ func (h *handlers) UpdateTrip(ctx context.Context, req api.UpdateTripRequestObje
 		return nil, err
 	}
 	return api.UpdateTrip200JSONResponse(tripFrom(updated, role)), nil
+}
+
+func budgetFrom(in *api.TripBudget) *model.Budget {
+	if in == nil {
+		return nil
+	}
+	return &model.Budget{Scope: string(in.Scope), Amount: model.Money{AmountMinor: in.Amount.AmountMinor, Currency: in.Amount.Currency}}
 }
 
 func destinationsFrom(in []api.Destination) []model.Destination {
@@ -230,6 +239,9 @@ func tripFrom(t model.Trip, role model.Role) api.Trip {
 			c := d.LocalCurrency
 			out.Destinations[i].LocalCurrency = &c
 		}
+	}
+	if b := t.Budget; b != nil {
+		out.Budget = &api.TripBudget{Scope: api.TripBudgetScope(b.Scope), Amount: api.Money{AmountMinor: b.Amount.AmountMinor, Currency: b.Amount.Currency}}
 	}
 	if t.Dates.Start != "" || t.Dates.End != "" {
 		start, end := t.Dates.Start, t.Dates.End

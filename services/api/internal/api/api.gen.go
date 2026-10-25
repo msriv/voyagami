@@ -283,6 +283,24 @@ func (e TripRole) Valid() bool {
 	}
 }
 
+// Defines values for TripBudgetScope.
+const (
+	Group     TripBudgetScope = "group"
+	PerPerson TripBudgetScope = "perPerson"
+)
+
+// Valid indicates whether the value is a known member of the TripBudgetScope enum.
+func (e TripBudgetScope) Valid() bool {
+	switch e {
+	case Group:
+		return true
+	case PerPerson:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for TripStatus.
 const (
 	Active  TripStatus = "active"
@@ -481,6 +499,26 @@ type BookingUpdate struct {
 	StartsAt *time.Time    `json:"startsAt,omitempty"`
 	Title    *string       `json:"title,omitempty"`
 	To       *BookingPlace `json:"to,omitempty"`
+}
+
+// BudgetSummary defines model for BudgetSummary.
+type BudgetSummary struct {
+	// ByCategory Biggest spend first. An empty category means the expenses had none.
+	ByCategory []struct {
+		Category   string `json:"category"`
+		SpentMinor int64  `json:"spentMinor"`
+	} `json:"byCategory"`
+
+	// Currency The trip's settlement currency.
+	Currency   string `json:"currency"`
+	OverBudget bool   `json:"overBudget"`
+
+	// RemainingMinor Target minus spent. Negative when over.
+	RemainingMinor *int64 `json:"remainingMinor,omitempty"`
+	SpentMinor     int64  `json:"spentMinor"`
+
+	// TargetMinor Absent when the trip has no budget, or the budget is in another currency.
+	TargetMinor *int64 `json:"targetMinor,omitempty"`
 }
 
 // DayOrder defines model for DayOrder.
@@ -906,6 +944,9 @@ type TravelStyleSpend string
 
 // Trip defines model for Trip.
 type Trip struct {
+	// Budget The optional trip budget. Only the owner can set it. Used by the budget summary when it is in the trip's settlement currency.
+	Budget *TripBudget `json:"budget,omitempty"`
+
 	// Dates Either `start` and `end`, or `flexible`, never both.
 	Dates        TripDates     `json:"dates"`
 	Destinations []Destination `json:"destinations"`
@@ -927,8 +968,20 @@ type Trip struct {
 // TripRole The caller's role on this trip.
 type TripRole string
 
+// TripBudget The optional trip budget. Only the owner can set it. Used by the budget summary when it is in the trip's settlement currency.
+type TripBudget struct {
+	Amount Money           `json:"amount"`
+	Scope  TripBudgetScope `json:"scope"`
+}
+
+// TripBudgetScope defines model for TripBudget.Scope.
+type TripBudgetScope string
+
 // TripCreate defines model for TripCreate.
 type TripCreate struct {
+	// Budget The optional trip budget. Only the owner can set it. Used by the budget summary when it is in the trip's settlement currency.
+	Budget *TripBudget `json:"budget,omitempty"`
+
 	// Dates Either `start` and `end`, or `flexible`, never both.
 	Dates              TripDates     `json:"dates"`
 	Destinations       []Destination `json:"destinations"`
@@ -962,6 +1015,9 @@ type TripStatus string
 
 // TripUpdate defines model for TripUpdate.
 type TripUpdate struct {
+	// Budget The optional trip budget. Only the owner can set it. Used by the budget summary when it is in the trip's settlement currency.
+	Budget *TripBudget `json:"budget,omitempty"`
+
 	// Dates Either `start` and `end`, or `flexible`, never both.
 	Dates        *TripDates     `json:"dates,omitempty"`
 	Destinations *[]Destination `json:"destinations,omitempty"`
@@ -1120,6 +1176,9 @@ type ServerInterface interface {
 	// UpdateBooking Change a booking
 	// (PATCH /v1/trips/{tripId}/bookings/{bookingId})
 	UpdateBooking(w http.ResponseWriter, r *http.Request, tripId string, bookingId string)
+	// GetBudget Spend against the trip budget
+	// (GET /v1/trips/{tripId}/budget)
+	GetBudget(w http.ResponseWriter, r *http.Request, tripId string)
 	// SuggestBestOrder Suggest a shorter order for a day
 	// (POST /v1/trips/{tripId}/days/{date}/best-order)
 	SuggestBestOrder(w http.ResponseWriter, r *http.Request, tripId string, date string)
@@ -1513,6 +1572,32 @@ func (siw *ServerInterfaceWrapper) UpdateBooking(w http.ResponseWriter, r *http.
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.UpdateBooking(w, r, tripId, bookingId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetBudget operation middleware
+func (siw *ServerInterfaceWrapper) GetBudget(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetBudget(w, r, tripId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -2180,6 +2265,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/bookings", wrapper.CreateBooking)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/bookings/{bookingId}", wrapper.DeleteBooking)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/trips/{tripId}/bookings/{bookingId}", wrapper.UpdateBooking)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/budget", wrapper.GetBudget)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/stops", wrapper.ListStops)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/stops", wrapper.CreateStop)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/stops/{stopId}", wrapper.DeleteStop)
@@ -3223,6 +3309,70 @@ func (response UpdateBooking404JSONResponse) VisitUpdateBookingResponse(w http.R
 type UpdateBooking503JSONResponse struct{ UnavailableJSONResponse }
 
 func (response UpdateBooking503JSONResponse) VisitUpdateBookingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetBudgetRequestObject struct {
+	TripId string `json:"tripId"`
+}
+
+type GetBudgetResponseObject interface {
+	VisitGetBudgetResponse(w http.ResponseWriter) error
+}
+
+type GetBudget200JSONResponse BudgetSummary
+
+func (response GetBudget200JSONResponse) VisitGetBudgetResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetBudget401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response GetBudget401JSONResponse) VisitGetBudgetResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetBudget404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response GetBudget404JSONResponse) VisitGetBudgetResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetBudget503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response GetBudget503JSONResponse) VisitGetBudgetResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -4653,6 +4803,9 @@ type StrictServerInterface interface {
 	// UpdateBooking Change a booking
 	// (PATCH /v1/trips/{tripId}/bookings/{bookingId})
 	UpdateBooking(ctx context.Context, request UpdateBookingRequestObject) (UpdateBookingResponseObject, error)
+	// GetBudget Spend against the trip budget
+	// (GET /v1/trips/{tripId}/budget)
+	GetBudget(ctx context.Context, request GetBudgetRequestObject) (GetBudgetResponseObject, error)
 	// SuggestBestOrder Suggest a shorter order for a day
 	// (POST /v1/trips/{tripId}/days/{date}/best-order)
 	SuggestBestOrder(ctx context.Context, request SuggestBestOrderRequestObject) (SuggestBestOrderResponseObject, error)
@@ -5218,6 +5371,32 @@ func (sh *strictHandler) UpdateBooking(w http.ResponseWriter, r *http.Request, t
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(UpdateBookingResponseObject); ok {
 		if err := validResponse.VisitUpdateBookingResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetBudget operation middleware
+func (sh *strictHandler) GetBudget(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request GetBudgetRequestObject
+
+	request.TripId = tripId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetBudget(ctx, request.(GetBudgetRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetBudget")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetBudgetResponseObject); ok {
+		if err := validResponse.VisitGetBudgetResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
