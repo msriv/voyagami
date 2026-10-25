@@ -1,17 +1,19 @@
 import { useFonts } from "expo-font";
-import { Stack, useRouter } from "expo-router";
+import { Stack, usePathname, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef } from "react";
 
 import { AuthProvider, useAuth } from "@/auth";
 import "@/i18n";
+import { installRemoteLog, reporter } from "@/logging/remoteLog";
 import { ProfileProvider } from "@/profile";
 import { fontAssets, ThemeProvider } from "@/theme";
 
 // Shows a render error on screen with Retry and Reset buttons instead of a blank screen.
 export { ErrorScreen as ErrorBoundary } from "@/ErrorScreen";
 
+installRemoteLog();
 void SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -42,6 +44,9 @@ function Screens() {
   const { status } = useAuth();
   const router = useRouter();
   const previous = useRef(status);
+  const pathname = usePathname();
+
+  useEffect(() => reporter.setRoute(pathname), [pathname]);
 
   // When the session changes after launch, the screen we were on is now guarded off, so go to the
   // new start screen. The first read after launch is skipped so deep links keep working.

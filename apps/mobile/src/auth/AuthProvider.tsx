@@ -10,8 +10,33 @@ import {
   type ReactNode,
 } from "react";
 
+import { reporter } from "@/logging/remoteLog";
+
 import { apiBaseUrl } from "./config";
 import { clearDevice, loadOnboarded, loadTokens, saveOnboarded, saveTokens } from "./tokenStore";
+
+/** Leaves a breadcrumb for every API call (method, path without query, status) and nothing else. */
+function withBreadcrumbs(base?: typeof fetch): typeof fetch {
+  return async (input, init) => {
+    const request = input as Request | URL | string;
+    const url =
+      typeof request === "string" ? request : "url" in request ? request.url : request.href;
+    const method = (
+      init?.method ?? (typeof request === "object" && "method" in request ? request.method : "GET")
+    ).toUpperCase();
+    const path = url.replace(/^https?:\/\/[^/]+/, "").replace(/\?.*$/, "");
+    try {
+      const response = await (base ?? globalThis.fetch)(input, init);
+      reporter.breadcrumb(`${method} ${path} ${response.status}`);
+      if (response.status >= 500) reporter.log("warn", `${method} ${path} ${response.status}`);
+      return response;
+    } catch (e) {
+      reporter.breadcrumb(`${method} ${path} failed`);
+      reporter.log("warn", `${method} ${path} network failure: ${String(e)}`);
+      throw e;
+    }
+  };
+}
 
 export type AuthStatus = "loading" | "signedOut" | "signedIn";
 
@@ -56,7 +81,7 @@ export function AuthProvider({
           await saveTokens(next);
         },
         onSignedOut: () => setStatus("signedOut"),
-        ...(fetchImpl ? { fetch: fetchImpl } : null),
+        fetch: withBreadcrumbs(fetchImpl),
       }),
     [fetchImpl],
   );
