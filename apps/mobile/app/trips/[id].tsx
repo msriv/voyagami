@@ -2,7 +2,7 @@ import { formatDate } from "@voyagami/locale";
 import { getLocales } from "expo-localization";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ApiError, NetworkError } from "@voyagami/api-client";
@@ -153,6 +153,34 @@ export default function TripScreen() {
           </View>
         </View>
 
+        <View
+          style={{
+            flexDirection: "row",
+            flexWrap: "wrap",
+            gap: 6,
+            paddingHorizontal: 20,
+            paddingTop: 14,
+          }}
+        >
+          {sections.map((key) => (
+            <Pressable
+              key={key}
+              accessibilityRole="button"
+              accessibilityLabel={t(`trip.${key}`)}
+              onPress={() => router.push(`/trips/${trip.id}/${key}`)}
+              style={{
+                minHeight: 44,
+                paddingHorizontal: 16,
+                borderRadius: 99,
+                justifyContent: "center",
+                backgroundColor: colors.white,
+              }}
+            >
+              <Text variant="bodyStrong">{t(`trip.${key}`)}</Text>
+            </Pressable>
+          ))}
+        </View>
+
         <View style={{ padding: 20, gap: 18 }}>
           {start && end ? (
             <View style={{ gap: 8 }}>
@@ -186,21 +214,6 @@ export default function TripScreen() {
               </ScrollView>
             </View>
           ) : null}
-
-          <View style={{ gap: 8 }}>
-            <Text variant="title" heading>
-              {t("trip.sections")}
-            </Text>
-            {sections.map((key) => (
-              <Button
-                key={key}
-                label={t(`trip.${key}`)}
-                variant="secondary"
-                fullWidth
-                onPress={() => router.push(`/trips/${trip.id}/${key}`)}
-              />
-            ))}
-          </View>
 
           {archived ? null : <TripTasks tripId={trip.id} canEdit={canEdit} />}
         </View>
