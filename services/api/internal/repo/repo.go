@@ -87,6 +87,22 @@ type Polls interface {
 	Close(ctx context.Context, tripID, pollID, chosen string, now time.Time) (model.Poll, error)
 }
 
+// Comments stores the notes on a trip's stops. The caller has already checked
+// that the person may use the trip and may change the comment.
+type Comments interface {
+	// Create stores a comment. It returns ErrAlreadyExists if the ID is taken.
+	Create(ctx context.Context, tripID string, c model.Comment) (model.Comment, error)
+	// Get returns the comment, or ErrNotFound.
+	Get(ctx context.Context, tripID, id string) (model.Comment, error)
+	// List returns the trip's comments, oldest first.
+	List(ctx context.Context, tripID string) ([]model.Comment, error)
+	// Edit replaces the body and mentions and stamps the edit time. It returns
+	// ErrNotFound if the comment does not exist.
+	Edit(ctx context.Context, tripID, id, body string, mentions []string, now time.Time) (model.Comment, error)
+	// Delete removes a comment. Deleting a missing one is not an error.
+	Delete(ctx context.Context, tripID, id string) error
+}
+
 // MeetPoints stores a trip's meet points. The caller has already checked that
 // the person may use the trip.
 type MeetPoints interface {

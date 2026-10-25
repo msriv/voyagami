@@ -1231,6 +1231,132 @@ paths:
           $ref: "#/components/responses/NotFound"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/comments:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: listComments
+      tags: [comments]
+      summary: List comments
+      description: |
+        Oldest first. Filter to one thread with `targetType` and `targetId`
+        (give both or neither). Any active member can read.
+      parameters:
+        - name: targetType
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [stop, trip]
+        - name: targetId
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The comments.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    post:
+      operationId: createComment
+      tags: [comments]
+      summary: Comment on a stop or the trip
+      description: |
+        Any active member, viewers included. A stop must exist on the trip.
+        For the trip itself, `targetId` is the trip's ID. Mentions must be
+        active members.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentCreate"
+      responses:
+        "201":
+          description: The comment.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/comments/{commentId}:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: commentId
+        in: path
+        required: true
+        schema:
+          type: string
+    patch:
+      operationId: editComment
+      tags: [comments]
+      summary: Edit your comment
+      description: Only the author. Sets `editedAt`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentEdit"
+      responses:
+        "200":
+          description: The updated comment.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    delete:
+      operationId: deleteComment
+      tags: [comments]
+      summary: Delete a comment
+      description: The author, or the trip owner. Deleting one that is already gone succeeds.
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/trips/{tripId}/members:
     parameters:
       - name: tripId
@@ -2723,6 +2849,69 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/SharedLocation"
+    CommentCreate:
+      type: object
+      required: [targetType, targetId, body]
+      properties:
+        targetType:
+          type: string
+          enum: [stop, trip]
+        targetId:
+          type: string
+        body:
+          type: string
+          maxLength: 2000
+        mentions:
+          type: array
+          maxItems: 10
+          items:
+            type: string
+          description: IDs of members to tag.
+    CommentEdit:
+      type: object
+      required: [body]
+      properties:
+        body:
+          type: string
+          maxLength: 2000
+        mentions:
+          type: array
+          maxItems: 10
+          items:
+            type: string
+    Comment:
+      type: object
+      required: [id, targetType, targetId, authorUid, body, mentions, createdAt]
+      properties:
+        id:
+          type: string
+        targetType:
+          type: string
+          enum: [stop, trip]
+        targetId:
+          type: string
+        authorUid:
+          type: string
+        body:
+          type: string
+        mentions:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        editedAt:
+          type: string
+          format: date-time
+    CommentList:
+      type: object
+      required: [comments]
+      properties:
+        comments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Comment"
     Member:
       type: object
       required: [uid, role, status, displayName, joinedAt]
