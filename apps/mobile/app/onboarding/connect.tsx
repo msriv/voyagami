@@ -1,3 +1,4 @@
+import Constants, { ExecutionEnvironment } from "expo-constants";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
@@ -11,11 +12,16 @@ import { Button, Text } from "@/ui";
 type Ask = "contacts" | "location" | "notifications";
 
 // Loaded on tap, not at start-up: a native module that Expo Go lacks must not crash this screen.
-const requests: Record<Ask, () => Promise<{ granted: boolean }>> = {
+const requests: Record<Ask, () => Promise<{ granted: boolean; unavailable?: true }>> = {
   /* eslint-disable @typescript-eslint/no-require-imports -- loaded on tap, see above */
   contacts: async () => require("expo-contacts").requestPermissionsAsync(),
   location: async () => require("expo-location").requestForegroundPermissionsAsync(),
-  notifications: async () => require("expo-notifications").requestPermissionsAsync(),
+  // Expo Go has no push module, and Metro reports that failed load as a fatal error that a
+  // try/catch cannot stop, so the module is never loaded there.
+  notifications: async () =>
+    Constants.executionEnvironment === ExecutionEnvironment.StoreClient
+      ? { granted: false, unavailable: true }
+      : require("expo-notifications").requestPermissionsAsync(),
   /* eslint-enable @typescript-eslint/no-require-imports */
 };
 
@@ -25,10 +31,14 @@ export default function ConnectScreen() {
   const router = useRouter();
   const { finishOnboarding } = useAuth();
   const [allowed, setAllowed] = useState<Partial<Record<Ask, boolean>>>({});
+  const [unavailable, setUnavailable] = useState<Partial<Record<Ask, boolean>>>({});
 
   async function allow(ask: Ask) {
     // A denied or failed ask is fine: every one is optional.
-    const result = await requests[ask]().catch(() => ({ granted: false }));
+    const result: { granted: boolean; unavailable?: true } = await requests[ask]().catch(() => ({
+      granted: false,
+    }));
+    if (result.unavailable) setUnavailable((u) => ({ ...u, [ask]: true }));
     setAllowed((a) => ({ ...a, [ask]: result.granted }));
   }
 
@@ -107,10 +117,14 @@ export default function ConnectScreen() {
               </View>
               <Button
                 label={
-                  allowed[ask] ? t("onboarding.connect.allowed") : t("onboarding.connect.allow")
+                  allowed[ask]
+                    ? t("onboarding.connect.allowed")
+                    : unavailable[ask]
+                      ? t("onboarding.connect.unavailable")
+                      : t("onboarding.connect.allow")
                 }
                 accessibilityLabel={`${t("onboarding.connect.allow")} ${t(`onboarding.connect.${ask}`)}`}
-                disabled={allowed[ask] === true}
+                disabled={allowed[ask] === true || unavailable[ask] === true}
                 onPress={() => void allow(ask)}
               />
             </View>

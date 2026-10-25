@@ -1,4 +1,5 @@
 import * as Contacts from "expo-contacts";
+import Constants, { ExecutionEnvironment } from "expo-constants";
 import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
 import { json, mockApi, routes } from "../test-utils/api";
@@ -55,6 +56,19 @@ describe("travel style", () => {
     expect(patch?.body).toEqual({
       travelStyle: { interests: ["beaches", "slowCafes"], pace: "slow", spend: "comfort" },
     });
+  });
+
+  it("does not load the notifications module in Expo Go and says it is unavailable", async () => {
+    await signedInAtStyle();
+    await fireEvent.press(screen.getByRole("button", { name: "Skip for now" }));
+    await screen.findByText("Let Voyagami help.");
+    const env = Constants as { executionEnvironment: ExecutionEnvironment };
+    const before = env.executionEnvironment;
+    env.executionEnvironment = ExecutionEnvironment.StoreClient;
+    await fireEvent.press(screen.getByRole("button", { name: "Allow Notifications" }));
+    expect(await screen.findByText("Not in Expo Go")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Allow Notifications" })).toBeDisabled();
+    env.executionEnvironment = before;
   });
 
   it("skips without calling the server", async () => {
