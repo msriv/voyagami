@@ -546,6 +546,8 @@ export const en = {
         "Gmail sync finds bookings on its own. It's part of Plus; you can switch it on later from any trip.",
       contacts: "Contacts",
       contactsWhy: "Find friends to invite. We never message anyone unless you tap send.",
+      location: "Location",
+      locationWhy: "Only during a trip, for crew meetups.",
       notifications: "Notifications",
       notificationsWhy: "Trip changes, new votes and who owes what.",
       allow: "Allow",

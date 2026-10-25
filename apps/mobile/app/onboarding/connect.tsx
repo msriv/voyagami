@@ -1,4 +1,5 @@
 import * as Contacts from "expo-contacts";
+import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -10,10 +11,11 @@ import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { Button, Text } from "@/ui";
 
-type Ask = "contacts" | "notifications";
+type Ask = "contacts" | "location" | "notifications";
 
 const requests: Record<Ask, () => Promise<{ granted: boolean }>> = {
   contacts: () => Contacts.requestPermissionsAsync(),
+  location: () => Location.requestForegroundPermissionsAsync(),
   notifications: () => Notifications.requestPermissionsAsync(),
 };
 
@@ -35,7 +37,11 @@ export default function ConnectScreen() {
     router.replace("/");
   }
 
-  const tiles: Record<Ask, string> = { contacts: colors.gold, notifications: colors.matcha };
+  const tiles: Record<Ask, string> = {
+    contacts: colors.gold,
+    location: colors.matcha,
+    notifications: colors.chipOff,
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.washi }}>
@@ -78,7 +84,7 @@ export default function ConnectScreen() {
             paddingVertical: 4,
           }}
         >
-          {(["contacts", "notifications"] as const).map((ask, i) => (
+          {(["contacts", "location", "notifications"] as const).map((ask, i) => (
             <View
               key={ask}
               style={{
