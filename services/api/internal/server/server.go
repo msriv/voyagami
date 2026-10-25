@@ -10,6 +10,7 @@ import (
 
 	"github.com/msriv/voyagami/services/api/internal/api"
 	"github.com/msriv/voyagami/services/api/internal/auth"
+	"github.com/msriv/voyagami/services/api/internal/devlog"
 	"github.com/msriv/voyagami/services/api/internal/entitlements"
 	"github.com/msriv/voyagami/services/api/internal/importer"
 	"github.com/msriv/voyagami/services/api/internal/rates"
@@ -34,6 +35,9 @@ func NewHandler(logger *slog.Logger, verifier auth.Verifier, opts ...Option) htt
 		},
 	})
 	mux := http.NewServeMux()
+	if h.devLogs != nil {
+		h.mountDevLogs(mux)
+	}
 	api.HandlerWithOptions(strict, api.StdHTTPServerOptions{
 		BaseRouter:  mux,
 		Middlewares: []api.MiddlewareFunc{requireAuth(logger, verifier)},
@@ -60,6 +64,7 @@ type handlers struct {
 	meetPoints  repo.MeetPoints
 	comments    repo.Comments
 	importer    importer.Parser
+	devLogs     devlog.Store
 	feed        repo.Feed
 	presence    repo.Presence
 	rates       rates.Provider
