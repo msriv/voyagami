@@ -2,7 +2,7 @@ import { formatDate, formatMoney, minorDigits } from "@voyagami/locale";
 import { getLocales } from "expo-localization";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Pressable, ScrollView, Share, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ApiError, NetworkError, type components } from "@voyagami/api-client";
@@ -115,6 +115,27 @@ export default function MoneyScreen() {
         expenses: expenses.filter((x) => x.id !== expense.id),
       });
       setOpen(undefined);
+    } catch (e) {
+      setError(t(e instanceof NetworkError ? "money.errors.offline" : "money.errors.generic"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /**
+   * Hands the CSV to the phone's share sheet as text.
+   * shortcut: shared as text, not a .csv file, until a file-sharing module is added.
+   */
+  async function exportCsv() {
+    setBusy(true);
+    setError(undefined);
+    try {
+      const { data, response } = await api.GET("/v1/trips/{tripId}/expenses/export", {
+        params: { path: { tripId: id } },
+        parseAs: "text",
+      });
+      if (!response.ok || typeof data !== "string") throw new ApiError(response.status, undefined);
+      await Share.share({ title: t("money.export.title", { name: trip.title }), message: data });
     } catch (e) {
       setError(t(e instanceof NetworkError ? "money.errors.offline" : "money.errors.generic"));
     } finally {
@@ -258,6 +279,21 @@ export default function MoneyScreen() {
           </View>
         ))}
 
+        {expenses.length > 0 ? (
+          <>
+            <Button
+              label={t("money.export.button")}
+              variant="secondary"
+              loading={busy}
+              onPress={() => void exportCsv()}
+            />
+            {error && !open && !setting ? (
+              <Text color="vermilion" accessibilityLiveRegion="polite">
+                {error}
+              </Text>
+            ) : null}
+          </>
+        ) : null}
         {canEdit ? (
           <Button label={t("money.add")} onPress={() => router.push(`/trips/${id}/add-expense`)} />
         ) : null}
