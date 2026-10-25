@@ -14,6 +14,7 @@ import { daysInRange, isoToDate } from "@/trips/dates";
 import { stopsOn, type Stop } from "@/trips/stops";
 import type { Trip } from "@/trips/summary";
 import { Button, Card, Chip, IconButton, Input, Text } from "@/ui";
+import { Icon } from "@/ui/icons";
 
 type Entry = components["schemas"]["JournalEntry"];
 
@@ -209,7 +210,7 @@ export default function JournalScreen() {
       variant="secondary"
       onPress={() => router.back()}
     >
-      <Text variant="bodyStrong">{"‹"}</Text>
+      <Icon name="back" color={colors.ink} />
     </IconButton>
   );
 

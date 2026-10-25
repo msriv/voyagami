@@ -13,6 +13,7 @@ import { daysInRange } from "@/trips/dates";
 import { parseAmount, todayIn } from "@/trips/money";
 import type { Trip } from "@/trips/summary";
 import { Button, Chip, IconButton, Input, Text } from "@/ui";
+import { Icon } from "@/ui/icons";
 
 type Member = components["schemas"]["Member"];
 
@@ -113,7 +114,7 @@ export default function AddExpenseScreen() {
             variant="secondary"
             onPress={() => router.back()}
           >
-            <Text variant="bodyStrong">{"‹"}</Text>
+            <Icon name="back" color={colors.ink} />
           </IconButton>
           <Text variant="title" heading style={{ flex: 1 }}>
             {t("addExpense.title")}

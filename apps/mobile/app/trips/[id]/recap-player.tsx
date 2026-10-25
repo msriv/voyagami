@@ -13,6 +13,7 @@ import { useTheme } from "@/theme";
 import { isoToDate } from "@/trips/dates";
 import { recapCards, type RecapCard } from "@/trips/recapCards";
 import { Button, IconButton, Text, useReducedMotion } from "@/ui";
+import { Icon } from "@/ui/icons";
 
 type Recap = components["schemas"]["Recap"];
 type Trip = components["schemas"]["Trip"];
@@ -92,7 +93,7 @@ export default function RecapPlayerScreen() {
       variant="secondary"
       onPress={() => router.back()}
     >
-      <Text variant="bodyStrong">{"×"}</Text>
+      <Icon name="close" color={colors.ink} />
     </IconButton>
   );
 
@@ -281,7 +282,7 @@ export default function RecapPlayerScreen() {
             disabled={index === 0}
             onPress={() => go(-1)}
           >
-            <Text variant="bodyStrong">{"‹"}</Text>
+            <Icon name="back" color={colors.ink} />
           </IconButton>
           {reduceMotion ? null : (
             <Button
@@ -296,7 +297,7 @@ export default function RecapPlayerScreen() {
             disabled={index === last}
             onPress={() => go(1)}
           >
-            <Text variant="bodyStrong">{"›"}</Text>
+            <Icon name="forward" color={colors.ink} />
           </IconButton>
         </View>
       </View>

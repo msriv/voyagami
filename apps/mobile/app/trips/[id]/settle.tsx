@@ -11,6 +11,7 @@ import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { Button, Card, IconButton, Text } from "@/ui";
+import { Icon } from "@/ui/icons";
 
 type Balances = components["schemas"]["Balances"];
 type Settlement = components["schemas"]["Settlement"];
@@ -69,7 +70,7 @@ export default function SettleScreen() {
       variant="secondary"
       onPress={() => router.back()}
     >
-      <Text variant="bodyStrong">{"‹"}</Text>
+      <Icon name="back" color={colors.ink} />
     </IconButton>
   );
 

@@ -10,6 +10,7 @@ import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import type { Trip } from "@/trips/summary";
 import { Button, Card, Chip, IconButton, Input, Sheet, Text } from "@/ui";
+import { Icon } from "@/ui/icons";
 
 type Poll = components["schemas"]["Poll"];
 
@@ -63,7 +64,7 @@ export default function PollsScreen() {
       variant="secondary"
       onPress={() => router.back()}
     >
-      <Text variant="bodyStrong">{"‹"}</Text>
+      <Icon name="back" color={colors.ink} />
     </IconButton>
   );
 
@@ -235,7 +236,7 @@ export default function PollsScreen() {
         onClose={() => setCreating(false)}
         title={t("polls.new")}
         closeLabel={t("polls.cancel")}
-        closeIcon={<Text>{"×"}</Text>}
+        closeIcon={<Icon name="close" color={colors.ink} />}
       >
         <View style={{ gap: 12, paddingBottom: 12 }}>
           <Input label={t("polls.question")} value={question} onChangeText={setQuestion} />

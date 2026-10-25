@@ -7,6 +7,7 @@ import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { Button, IconButton, Input, Text } from "@/ui";
+import { Icon } from "@/ui/icons";
 
 interface Task {
   id: string;
@@ -179,7 +180,7 @@ export function TripTasks({ tripId, canEdit }: { tripId: string; canEdit: boolea
               accessibilityLabel={t("tasks.delete", { title: task.title })}
               onPress={() => void remove(task)}
             >
-              <Text>{"×"}</Text>
+              <Icon name="close" color={colors.ink} />
             </IconButton>
           ) : null}
         </View>

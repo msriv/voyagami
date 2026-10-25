@@ -14,6 +14,7 @@ import { daysBetween, daysInRange, isoToDate } from "@/trips/dates";
 import type { Trip } from "@/trips/summary";
 import { TripTasks } from "@/trips/TripTasks";
 import { Button, Card, IconButton, Input, Sheet, Text, WavePattern } from "@/ui";
+import { Icon } from "@/ui/icons";
 
 type State =
   { kind: "loading" } | { kind: "ready"; trip: Trip } | { kind: "notFound" } | { kind: "error" };
@@ -77,7 +78,7 @@ export default function TripScreen() {
       variant="secondary"
       onPress={() => router.back()}
     >
-      <Text variant="bodyStrong">{"‹"}</Text>
+      <Icon name="back" color={colors.ink} />
     </IconButton>
   );
 
@@ -135,7 +136,7 @@ export default function TripScreen() {
               variant="secondary"
               onPress={() => setMenu(true)}
             >
-              <Text variant="bodyStrong">{"⋯"}</Text>
+              <Icon name="more" color={colors.ink} />
             </IconButton>
           </View>
           <View style={{ gap: 6 }}>
@@ -279,7 +280,7 @@ export default function TripScreen() {
         onClose={() => setMenu(false)}
         title={t("trip.menu")}
         closeLabel={t("trip.menuClose")}
-        closeIcon={<Text>{"×"}</Text>}
+        closeIcon={<Icon name="close" color={colors.ink} />}
       >
         {canEdit ? (
           <View style={{ gap: 12, paddingBottom: 12 }}>

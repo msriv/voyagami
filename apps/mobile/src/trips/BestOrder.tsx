@@ -7,6 +7,8 @@ import type { components } from "@voyagami/api-client";
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { Button, Sheet, Text } from "@/ui";
+import { colors as tokens } from "@/theme";
+import { Icon } from "@/ui/icons";
 
 import { applyOrder, stopsOn, type Stop } from "./stops";
 
@@ -123,7 +125,7 @@ export function BestOrder({ tripId, date, stops, onStops }: Props) {
         onClose={() => setSuggestion(undefined)}
         title={t("itinerary.best.title")}
         closeLabel={t("itinerary.best.close")}
-        closeIcon={<Text>{"×"}</Text>}
+        closeIcon={<Icon name="close" color={tokens.ink} />}
       >
         {suggestion ? (
           <View style={{ gap: 12, paddingBottom: 12 }}>

@@ -16,6 +16,7 @@ import { DraggableStop } from "@/trips/DraggableStop";
 import { displayTime, isValidTime, planMove, stopsOn, type Move, type Stop } from "@/trips/stops";
 import type { Trip } from "@/trips/summary";
 import { Button, Card, Chip, IconButton, Input, Sheet, Text } from "@/ui";
+import { Icon } from "@/ui/icons";
 
 type State =
   | { kind: "loading" }
@@ -70,7 +71,7 @@ export default function ItineraryScreen() {
       variant="secondary"
       onPress={() => router.back()}
     >
-      <Text variant="bodyStrong">{"‹"}</Text>
+      <Icon name="back" color={colors.ink} />
     </IconButton>
   );
 
@@ -297,7 +298,7 @@ export default function ItineraryScreen() {
         onClose={() => setEditing(undefined)}
         title={t("itinerary.editTitle")}
         closeLabel={t("itinerary.close")}
-        closeIcon={<Text>{"×"}</Text>}
+        closeIcon={<Icon name="close" color={colors.ink} />}
       >
         <View style={{ gap: 12, paddingBottom: 12 }}>
           <Input

@@ -157,7 +157,7 @@ export default function HomeScreen() {
                     justifyContent: "center",
                   }}
                 >
-                  <Text variant="title">{"+"}</Text>
+                  <Icon name="plus" color={colors.ink} />
                 </View>
                 <Text variant="caption" style={{ color: colors.ink, fontWeight: "700" }}>
                   {t(`home.quick.${key}Short`)}

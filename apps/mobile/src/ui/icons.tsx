@@ -1,6 +1,16 @@
 import Svg, { Circle, Path } from "react-native-svg";
 
-export type IconName = "home" | "compass" | "book" | "people" | "person";
+export type IconName =
+  | "back"
+  | "forward"
+  | "close"
+  | "more"
+  | "plus"
+  | "home"
+  | "compass"
+  | "book"
+  | "people"
+  | "person";
 
 // Stroke icons on a 24x24 grid, paths from design/boards/Main.dc.html. Bundled so no icon font is needed.
 export function Icon({ name, size = 24, color }: { name: IconName; size?: number; color: string }) {
@@ -16,6 +26,17 @@ export function Icon({ name, size = 24, color }: { name: IconName; size?: number
       strokeLinejoin="round"
       importantForAccessibility="no-hide-descendants"
     >
+      {name === "back" ? <Path d="M15 5l-7 7 7 7" /> : null}
+      {name === "forward" ? <Path d="M9 5l7 7-7 7" /> : null}
+      {name === "close" ? <Path d="M6 6l12 12M18 6L6 18" /> : null}
+      {name === "plus" ? <Path d="M12 5v14M5 12h14" /> : null}
+      {name === "more" ? (
+        <>
+          <Circle cx={5} cy={12} r={1} />
+          <Circle cx={12} cy={12} r={1} />
+          <Circle cx={19} cy={12} r={1} />
+        </>
+      ) : null}
       {name === "home" ? (
         <Path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />
       ) : null}
