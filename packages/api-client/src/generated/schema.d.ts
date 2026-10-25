@@ -491,6 +491,13 @@ export interface components {
             lat?: number;
             /** Format: double */
             lng?: number;
+            /** @description Optional, for a pin the person dropped. */
+            address?: string;
+            /**
+             * @description Optional, for a pin the person dropped.
+             * @enum {string}
+             */
+            category?: "food" | "sights" | "activity" | "shopping" | "stay" | "transport" | "other";
         };
         StopFields: {
             /** @description Start time as HH:mm, in the stop's time zone. */

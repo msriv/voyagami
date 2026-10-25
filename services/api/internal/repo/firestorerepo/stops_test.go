@@ -25,6 +25,14 @@ func TestStopsLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Create: %v", err)
 	}
+	withInfo := newStop(trip.ID, "2026-11-22", "k")
+	withInfo.Place.Address, withInfo.Place.Category = "Phung Hung, Hanoi", "sights"
+	if got, err := stops.Create(ctx, withInfo); err != nil || got.Place.Address != "Phung Hung, Hanoi" || got.Place.Category != "sights" {
+		t.Fatalf("address and category: %+v, %v", got, err)
+	}
+	if _, err := stops.Update(ctx, trip.ID, withInfo.ID, model.StopPatch{Deleted: true}); err != nil {
+		t.Fatal(err)
+	}
 	if a.Place.Name != "Train Street" || !a.Place.Custom() || a.CreatedAt.IsZero() {
 		t.Errorf("stop = %+v", a)
 	}
