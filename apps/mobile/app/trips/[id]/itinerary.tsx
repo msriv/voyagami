@@ -11,7 +11,7 @@ import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { daysInRange, isoToDate } from "@/trips/dates";
-import { displayTime, isValidTime, stopsOn, type Stop } from "@/trips/stops";
+import { displayTime, isValidTime, planMove, stopsOn, type Move, type Stop } from "@/trips/stops";
 import type { Trip } from "@/trips/summary";
 import { Button, Card, Chip, IconButton, Input, Sheet, Text } from "@/ui";
 
@@ -98,6 +98,11 @@ export default function ItineraryScreen() {
   const { trip, stops } = state;
   const canEdit = trip.role !== "viewer";
   const todays = current ? stopsOn(stops, current) : [];
+  // The stop being edited, as it is now: a move changes its day and place in the list.
+  const live =
+    editing?.kind === "edit"
+      ? (stops.find((s) => s.id === editing.stop.id) ?? editing.stop)
+      : undefined;
 
   function open(next: Editing) {
     setError(undefined);
@@ -154,6 +159,30 @@ export default function ItineraryScreen() {
       fail(e);
     } finally {
       setBusy(false);
+    }
+  }
+
+  /** Moves a stop and shows it at once; puts the list back if the server says no. */
+  async function move(stop: Stop, how: Move) {
+    const plan = planMove(stops, stop, how);
+    if (!plan) return;
+    setError(undefined);
+    setState({ kind: "ready", trip, stops: plan.local });
+    try {
+      const saved = await api.unwrap(
+        api.PATCH("/v1/trips/{tripId}/stops/{stopId}", {
+          params: { path: { tripId: id, stopId: stop.id } },
+          body: plan.body,
+        }),
+      );
+      setState((s) =>
+        s.kind === "ready"
+          ? { ...s, stops: s.stops.map((x) => (x.id === saved.id ? saved : x)) }
+          : s,
+      );
+    } catch (e) {
+      setState({ kind: "ready", trip, stops });
+      fail(e);
     }
   }
 
@@ -293,12 +322,46 @@ export default function ItineraryScreen() {
             loading={busy}
             onPress={() => void save()}
           />
-          {editing?.kind === "edit" ? (
+          {live ? (
+            <View style={{ gap: 8 }}>
+              <Text variant="bodyStrong">{t("itinerary.moveHeading")}</Text>
+              <Button
+                label={t("itinerary.moveUp")}
+                variant="secondary"
+                disabled={!planMove(stops, live, { kind: "up" })}
+                onPress={() => void move(live, { kind: "up" })}
+              />
+              <Button
+                label={t("itinerary.moveDown")}
+                variant="secondary"
+                disabled={!planMove(stops, live, { kind: "down" })}
+                onPress={() => void move(live, { kind: "down" })}
+              />
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                accessibilityLabel={t("itinerary.moveToDay")}
+                contentContainerStyle={{ gap: 8 }}
+              >
+                {days.map((d, i) =>
+                  d === live.date ? null : (
+                    <Chip
+                      key={d}
+                      label={t("itinerary.moveToDayN", { n: i + 1 })}
+                      selected={false}
+                      onPress={() => void move(live, { kind: "day", date: d })}
+                    />
+                  ),
+                )}
+              </ScrollView>
+            </View>
+          ) : null}
+          {live ? (
             <Button
               label={t("itinerary.remove")}
               variant="secondary"
               loading={busy}
-              onPress={() => void remove(editing.stop)}
+              onPress={() => void remove(live)}
             />
           ) : null}
           {error ? (

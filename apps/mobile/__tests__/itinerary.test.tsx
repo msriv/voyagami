@@ -144,4 +144,40 @@ describe("Itinerary", () => {
     await renderRouter(routes, { initialUrl: "/trips/t1/itinerary" });
     expect(await screen.findByText("Set dates for this trip to plan it day by day.")).toBeTruthy();
   });
+
+  it("moves a stop down, up and to another day, and puts it back if the server says no", async () => {
+    let fail = false;
+    const calls = mockApi({
+      ...base("owner", [
+        stop("s1", "First", "2099-11-19", "a"),
+        stop("s2", "Second", "2099-11-19", "b"),
+      ]),
+      "PATCH /v1/trips/t1/stops/s1": () =>
+        fail
+          ? json(500, { code: "internal", message: "x" })
+          : json(200, stop("s1", "First", "2099-11-19", "c")),
+    });
+    await renderRouter(routes, { initialUrl: "/trips/t1/itinerary" });
+    const names = () =>
+      screen
+        .getAllByRole("button", { name: /^Edit (First|Second)$/, includeHiddenElements: true })
+        .map((b) => b.props.accessibilityLabel);
+
+    await fireEvent.press(await screen.findByRole("button", { name: "Edit First" }));
+    expect(screen.getByRole("button", { name: "Move up" }).props.accessibilityState.disabled).toBe(
+      true,
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Move down" }));
+    await waitFor(() => expect(names()).toEqual(["Edit Second", "Edit First"]));
+    await waitFor(() =>
+      expect(calls.find((c) => c.key === "PATCH /v1/trips/t1/stops/s1")?.body).toEqual({
+        date: "2099-11-19",
+      }),
+    );
+
+    fail = true;
+    await fireEvent.press(screen.getByRole("button", { name: "Move up" }));
+    expect(await screen.findByText("Something went wrong. Try again.")).toBeTruthy();
+    await waitFor(() => expect(names()).toEqual(["Edit Second", "Edit First"]));
+  });
 });
