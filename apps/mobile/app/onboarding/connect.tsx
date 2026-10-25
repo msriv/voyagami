@@ -2,13 +2,13 @@ import * as Contacts from "expo-contacts";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
-import { Button, Card, Text } from "@/ui";
+import { Button, Text } from "@/ui";
 
 type Ask = "contacts" | "notifications";
 
@@ -35,34 +35,97 @@ export default function ConnectScreen() {
     router.replace("/");
   }
 
+  const tiles: Record<Ask, string> = { contacts: colors.gold, notifications: colors.matcha };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.washi }}>
-      <ScrollView contentContainerStyle={{ padding: 24, gap: 24 }}>
+      <ScrollView contentContainerStyle={{ padding: 24, gap: 16, flexGrow: 1 }}>
+        <View
+          style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
+        >
+          <View
+            accessible
+            accessibilityLabel={t("onboarding.step", { n: 2, total: 2 })}
+            style={{ flexDirection: "row", gap: 6 }}
+          >
+            {[0, 1].map((i) => (
+              <View
+                key={i}
+                style={{ width: 32, height: 6, borderRadius: 99, backgroundColor: colors.ink }}
+              />
+            ))}
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("onboarding.connect.later")}
+            onPress={() => void finish()}
+            style={{ minHeight: 44, justifyContent: "center" }}
+          >
+            <Text variant="bodyStrong">{t("onboarding.connect.later")}</Text>
+          </Pressable>
+        </View>
         <View style={{ gap: 8 }}>
           <Text variant="display" heading>
             {t("onboarding.connect.title")}
           </Text>
           <Text color="muted">{t("onboarding.connect.intro")}</Text>
         </View>
-        {(["contacts", "notifications"] as const).map((ask) => (
-          <Card key={ask}>
-            <View style={{ gap: 12 }}>
-              <Text variant="title" heading>
-                {t(`onboarding.connect.${ask}`)}
-              </Text>
-              <Text color="muted">{t(`onboarding.connect.${ask}Why`)}</Text>
+        <View
+          style={{
+            backgroundColor: colors.white,
+            borderRadius: 22,
+            paddingHorizontal: 16,
+            paddingVertical: 4,
+          }}
+        >
+          {(["contacts", "notifications"] as const).map((ask, i) => (
+            <View
+              key={ask}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+                paddingVertical: 12,
+                borderTopWidth: i === 0 ? 0 : 1,
+                borderTopColor: colors.line,
+              }}
+            >
+              <View
+                style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: tiles[ask] }}
+              />
+              <View style={{ flex: 1 }}>
+                <Text variant="bodyStrong">{t(`onboarding.connect.${ask}`)}</Text>
+                <Text variant="caption" color="muted">
+                  {t(`onboarding.connect.${ask}Why`)}
+                </Text>
+              </View>
               <Button
                 label={
                   allowed[ask] ? t("onboarding.connect.allowed") : t("onboarding.connect.allow")
                 }
                 accessibilityLabel={`${t("onboarding.connect.allow")} ${t(`onboarding.connect.${ask}`)}`}
-                variant="secondary"
                 disabled={allowed[ask] === true}
                 onPress={() => void allow(ask)}
               />
             </View>
-          </Card>
-        ))}
+          ))}
+        </View>
+        <View
+          style={{
+            borderWidth: 2,
+            borderStyle: "dashed",
+            borderColor: colors.line,
+            borderRadius: 18,
+            padding: 16,
+            gap: 6,
+          }}
+        >
+          <Text variant="bodyStrong">{t("onboarding.connect.autoTitle")}</Text>
+          <Text variant="caption" color="muted">
+            {t("onboarding.connect.autoBody")}
+          </Text>
+        </View>
+        <View style={{ flex: 1 }} />
         <Button label={t("onboarding.connect.finish")} onPress={() => void finish()} fullWidth />
       </ScrollView>
     </SafeAreaView>

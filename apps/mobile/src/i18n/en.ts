@@ -489,6 +489,7 @@ export const en = {
     },
   },
   onboarding: {
+    step: "Step {{n}} of {{total}}",
     welcome: {
       title: "Trips are better planned together.",
       titleStart: "Trips are better planned ",
@@ -535,7 +536,11 @@ export const en = {
     },
     connect: {
       title: "Let Voyagami help.",
-      intro: "Both are optional. You can change them later in your phone's settings.",
+      intro: "Each one is optional. Here's exactly what it's for.",
+      later: "Later",
+      autoTitle: "Want it fully automatic?",
+      autoBody:
+        "Gmail sync finds bookings on its own. It's part of Plus; you can switch it on later from any trip.",
       contacts: "Contacts",
       contactsWhy: "Find friends to invite. We never message anyone unless you tap send.",
       notifications: "Notifications",
@@ -546,12 +551,13 @@ export const en = {
     },
     style: {
       title: "How do you like to travel?",
-      intro: "Pick what fits. We use it to suggest places. You can change it later.",
+      intro: "Pick a few. This tunes Explore and Ask Voyagami.",
       interests: "What do you enjoy?",
       pace: "Pace",
       spend: "Spending",
       continue: "Continue",
       skip: "Skip for now",
+      skipShort: "Skip",
       interest: {
         mountains: "Mountains",
         beaches: "Beaches",
