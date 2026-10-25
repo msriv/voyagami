@@ -19,12 +19,25 @@
       "expo-secure-store",
       [
         "expo-contacts",
-        { "contactsPermission": "Voyagami uses your contacts to find friends to invite to a trip." }
+        {
+          "contactsPermission": "Voyagami uses your contacts to find friends to invite to a trip."
+        }
       ],
       "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/cc1bb2fe-4416-462d-9108-b25da6f9d835"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "cc1bb2fe-4416-462d-9108-b25da6f9d835"
+      }
     }
   }
 }
