@@ -23,7 +23,13 @@
           "contactsPermission": "Voyagami uses your contacts to find friends to invite to a trip."
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Voyagami shares where you are with your crew only while you choose to."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
