@@ -129,6 +129,13 @@ export default function HomeScreen() {
             onPress={() => router.push("/trips/new")}
           />
         ) : null}
+        {trips ? (
+          <Button
+            label={t("home.joinTrip")}
+            variant="secondary"
+            onPress={() => router.push("/join")}
+          />
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
