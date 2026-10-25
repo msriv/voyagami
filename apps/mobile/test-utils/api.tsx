@@ -20,6 +20,7 @@ import Comments from "../app/trips/[id]/comments";
 import Live from "../app/trips/[id]/live";
 import Polls from "../app/trips/[id]/polls";
 import Settle from "../app/trips/[id]/settle";
+import Recap from "../app/trips/[id]/recap";
 import Join from "../app/join";
 import Journal from "../app/trips/[id]/journal";
 import Money from "../app/trips/[id]/money";
@@ -49,6 +50,7 @@ export const routes: Record<string, ComponentType> = {
   "trips/[id]/live": Live,
   "trips/[id]/comments": Comments,
   "trips/[id]/settle": Settle,
+  "trips/[id]/recap": Recap,
   join: Join,
   "trips/[id]/add-booking": AddBooking,
   "trips/[id]/add-expense": AddExpense,

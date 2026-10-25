@@ -106,7 +106,7 @@ export default function TripScreen() {
       : t("trip.flexibleDays", { count: flexible?.days ?? 0 });
   const archived = trip.status === "past";
   const canEdit = trip.role !== "viewer";
-  const sections = ["itinerary", "bookings", "money", "journal", "crew"] as const;
+  const sections = ["itinerary", "bookings", "money", "journal", "crew", "recap"] as const;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.indigo }}>
