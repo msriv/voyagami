@@ -44,11 +44,12 @@ func NewHandler(logger *slog.Logger, verifier auth.Verifier, opts ...Option) htt
 
 // handlers implements the generated api.StrictServerInterface.
 type handlers struct {
-	signIn  SignIn
-	profile Profile
-	trips   TripStore
-	stops   StopStore
-	tasks   TaskStore
+	signIn   SignIn
+	profile  Profile
+	trips    TripStore
+	stops    StopStore
+	tasks    TaskStore
+	expenses ExpenseStore
 
 	plans      *entitlements.Service
 	planSource PlanSource

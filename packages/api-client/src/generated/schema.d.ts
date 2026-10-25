@@ -204,6 +204,66 @@ export interface paths {
         patch: operations["updateTask"];
         trace?: never;
     };
+    "/v1/trips/{tripId}/expenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * List a trip's expenses
+         * @description Expenses that are not deleted, newest date first. Any active member can read; everyone else gets 404.
+         */
+        get: operations["listExpenses"];
+        put?: never;
+        /**
+         * Add an expense
+         * @description Owners and editors only. The server converts `original` to the trip's
+         *     settlement currency (using `rate` when the currencies differ) and
+         *     splits the settlement amount with the split logic, so the shares always
+         *     add up to it exactly. Using a second currency is a Plus feature for
+         *     the whole trip. The payer and everyone in the split must be active
+         *     members.
+         */
+        post: operations["createExpense"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/expenses/{expenseId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                expenseId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete an expense
+         * @description Same role rules as changing one. The expense leaves balances at once. One that is already gone gives 404.
+         */
+        delete: operations["deleteExpense"];
+        options?: never;
+        head?: never;
+        /**
+         * Change an expense
+         * @description The owner can change any expense. An editor can change expenses they
+         *     added or paid for. Changes only the fields that are sent. When
+         *     `original` or `rate` changes, `split` must be sent again.
+         */
+        patch: operations["updateExpense"];
+        trace?: never;
+    };
     "/v1/trips/{tripId}/stops": {
         parameters: {
             query?: never;
@@ -613,6 +673,86 @@ export interface components {
              * @enum {string}
              */
             role: "owner" | "editor" | "viewer";
+        };
+        Money: {
+            /**
+             * Format: int64
+             * @description Integer minor units. JPY and VND have no minor digits, so 1000 is 1000 yen.
+             */
+            amountMinor: number;
+            /** @description ISO 4217 code. */
+            currency: string;
+        };
+        /**
+         * @description Original to settlement currency, as a ratio of minor units:
+         *     settlement = original x numerator / denominator, rounded half away
+         *     from zero. Saved with the expense; never changed by a later rate refresh.
+         */
+        Rate: {
+            /** Format: int64 */
+            numerator: number;
+            /** Format: int64 */
+            denominator: number;
+        };
+        SplitInput: {
+            /** @enum {string} */
+            method: "equal" | "exact" | "percent" | "shares";
+            parts: {
+                uid: string;
+                /**
+                 * Format: int64
+                 * @description Ignored for equal. Settlement minor units for exact, basis points (10000 is 100%) for percent, a weight for shares.
+                 */
+                value?: number;
+            }[];
+        };
+        ExpenseShare: {
+            uid: string;
+            /**
+             * Format: int64
+             * @description In the settlement currency.
+             */
+            amountMinor: number;
+        };
+        Expense: {
+            id: string;
+            description: string;
+            category?: string;
+            paidByUid: string;
+            /** @description Calendar date, YYYY-MM-DD. */
+            date: string;
+            original: components["schemas"]["Money"];
+            rate?: components["schemas"]["Rate"];
+            settlement: components["schemas"]["Money"];
+            split: {
+                /** @enum {string} */
+                method: "equal" | "exact" | "percent" | "shares";
+                shares: components["schemas"]["ExpenseShare"][];
+            };
+            createdBy: string;
+        };
+        ExpenseList: {
+            expenses: components["schemas"]["Expense"][];
+        };
+        ExpenseCreate: {
+            /** @description Optional ID made on the phone so a retry cannot add the expense twice. */
+            id?: string;
+            description: string;
+            category?: string;
+            paidByUid: string;
+            date: string;
+            original: components["schemas"]["Money"];
+            rate?: components["schemas"]["Rate"];
+            split: components["schemas"]["SplitInput"];
+        };
+        ExpenseUpdate: {
+            description?: string;
+            category?: string;
+            paidByUid?: string;
+            date?: string;
+            original?: components["schemas"]["Money"];
+            rate?: components["schemas"]["Rate"];
+            split?: components["schemas"]["SplitInput"];
         };
         Task: {
             id: string;
@@ -1052,6 +1192,119 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Task"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    listExpenses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The expenses. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    createExpense: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpenseCreate"];
+            };
+        };
+        responses: {
+            /** @description The new expense. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Expense"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    deleteExpense: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                expenseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    updateExpense: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                expenseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpenseUpdate"];
+            };
+        };
+        responses: {
+            /** @description The expense after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Expense"];
                 };
             };
             400: components["responses"]["BadRequest"];

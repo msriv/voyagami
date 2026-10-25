@@ -334,6 +334,124 @@ paths:
           $ref: "#/components/responses/NotFound"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/expenses:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: listExpenses
+      tags: [expenses]
+      summary: List a trip's expenses
+      description: Expenses that are not deleted, newest date first. Any active member can read; everyone else gets 404.
+      responses:
+        "200":
+          description: The expenses.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpenseList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    post:
+      operationId: createExpense
+      tags: [expenses]
+      summary: Add an expense
+      description: |
+        Owners and editors only. The server converts `original` to the trip's
+        settlement currency (using `rate` when the currencies differ) and
+        splits the settlement amount with the split logic, so the shares always
+        add up to it exactly. Using a second currency is a Plus feature for
+        the whole trip. The payer and everyone in the split must be active
+        members.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpenseCreate"
+      responses:
+        "201":
+          description: The new expense.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Expense"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/expenses/{expenseId}:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: expenseId
+        in: path
+        required: true
+        schema:
+          type: string
+    patch:
+      operationId: updateExpense
+      tags: [expenses]
+      summary: Change an expense
+      description: |
+        The owner can change any expense. An editor can change expenses they
+        added or paid for. Changes only the fields that are sent. When
+        `original` or `rate` changes, `split` must be sent again.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpenseUpdate"
+      responses:
+        "200":
+          description: The expense after the change.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Expense"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    delete:
+      operationId: deleteExpense
+      tags: [expenses]
+      summary: Delete an expense
+      description: Same role rules as changing one. The expense leaves balances at once. One that is already gone gives 404.
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/trips/{tripId}/stops:
     parameters:
       - name: tripId
@@ -1036,6 +1154,149 @@ components:
           type: string
           enum: [owner, editor, viewer]
           description: The caller's role on this trip.
+    Money:
+      type: object
+      required: [amountMinor, currency]
+      properties:
+        amountMinor:
+          type: integer
+          format: int64
+          description: Integer minor units. JPY and VND have no minor digits, so 1000 is 1000 yen.
+        currency:
+          type: string
+          pattern: "^[A-Z]{3}$"
+          description: ISO 4217 code.
+    Rate:
+      type: object
+      description: |
+        Original to settlement currency, as a ratio of minor units:
+        settlement = original x numerator / denominator, rounded half away
+        from zero. Saved with the expense; never changed by a later rate refresh.
+      required: [numerator, denominator]
+      properties:
+        numerator:
+          type: integer
+          format: int64
+          minimum: 1
+        denominator:
+          type: integer
+          format: int64
+          minimum: 1
+    SplitInput:
+      type: object
+      required: [method, parts]
+      properties:
+        method:
+          type: string
+          enum: [equal, exact, percent, shares]
+        parts:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            type: object
+            required: [uid]
+            properties:
+              uid:
+                type: string
+              value:
+                type: integer
+                format: int64
+                description: Ignored for equal. Settlement minor units for exact, basis points (10000 is 100%) for percent, a weight for shares.
+    ExpenseShare:
+      type: object
+      required: [uid, amountMinor]
+      properties:
+        uid:
+          type: string
+        amountMinor:
+          type: integer
+          format: int64
+          description: In the settlement currency.
+    Expense:
+      type: object
+      required: [id, description, paidByUid, date, original, settlement, split, createdBy]
+      properties:
+        id:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        paidByUid:
+          type: string
+        date:
+          type: string
+          description: Calendar date, YYYY-MM-DD.
+        original:
+          $ref: "#/components/schemas/Money"
+        rate:
+          $ref: "#/components/schemas/Rate"
+        settlement:
+          $ref: "#/components/schemas/Money"
+        split:
+          type: object
+          required: [method, shares]
+          properties:
+            method:
+              type: string
+              enum: [equal, exact, percent, shares]
+            shares:
+              type: array
+              items:
+                $ref: "#/components/schemas/ExpenseShare"
+        createdBy:
+          type: string
+    ExpenseList:
+      type: object
+      required: [expenses]
+      properties:
+        expenses:
+          type: array
+          items:
+            $ref: "#/components/schemas/Expense"
+    ExpenseCreate:
+      type: object
+      required: [description, paidByUid, date, original, split]
+      properties:
+        id:
+          type: string
+          description: Optional ID made on the phone so a retry cannot add the expense twice.
+        description:
+          type: string
+          maxLength: 120
+        category:
+          type: string
+          maxLength: 40
+        paidByUid:
+          type: string
+        date:
+          type: string
+        original:
+          $ref: "#/components/schemas/Money"
+        rate:
+          $ref: "#/components/schemas/Rate"
+        split:
+          $ref: "#/components/schemas/SplitInput"
+    ExpenseUpdate:
+      type: object
+      properties:
+        description:
+          type: string
+          maxLength: 120
+        category:
+          type: string
+          maxLength: 40
+        paidByUid:
+          type: string
+        date:
+          type: string
+        original:
+          $ref: "#/components/schemas/Money"
+        rate:
+          $ref: "#/components/schemas/Rate"
+        split:
+          $ref: "#/components/schemas/SplitInput"
     Task:
       type: object
       required: [id, title, done]

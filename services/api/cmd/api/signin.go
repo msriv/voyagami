@@ -60,6 +60,7 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 			server.WithTrips(trips),
 			server.WithStops(firestorerepo.NewStops(client)),
 			server.WithTasks(firestorerepo.NewTasks(client)),
+			server.WithExpenses(firestorerepo.NewExpenses(client)),
 			server.WithEntitlements(entitlements.New(limitsFor(cfg)), planSource{firestorerepo.NewEntitlements(client), trips, cfg.DevPlan}),
 		},
 		close: func() { _ = client.Close() },
