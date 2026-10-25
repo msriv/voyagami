@@ -187,6 +187,11 @@ export default function CrewScreen() {
           </Text>
         </View>
         <Text color="muted">{trip.title}</Text>
+        <Button
+          label={t("crew.polls")}
+          variant="secondary"
+          onPress={() => router.push(`/trips/${id}/polls`)}
+        />
 
         {active.map((m) => (
           <Card key={m.uid}>
