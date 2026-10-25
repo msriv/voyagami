@@ -1697,6 +1697,11 @@ type ListCommentsParams struct {
 // ListCommentsParamsTargetType defines parameters for ListComments.
 type ListCommentsParamsTargetType string
 
+// StreamTripChangesParams defines parameters for StreamTripChanges.
+type StreamTripChangesParams struct {
+	LastEventID *string `json:"Last-Event-ID,omitempty"`
+}
+
 // RequestOtpJSONRequestBody defines body for RequestOtp for application/json ContentType.
 type RequestOtpJSONRequestBody = OtpRequest
 
@@ -1864,6 +1869,9 @@ type ServerInterface interface {
 	// GetTripEntitlements What a trip allows the signed-in person
 	// (GET /v1/trips/{tripId}/entitlements)
 	GetTripEntitlements(w http.ResponseWriter, r *http.Request, tripId string)
+	// StreamTripChanges Stream changes to a trip
+	// (GET /v1/trips/{tripId}/events)
+	StreamTripChanges(w http.ResponseWriter, r *http.Request, tripId string, params StreamTripChangesParams)
 	// ListExpenses List a trip's expenses
 	// (GET /v1/trips/{tripId}/expenses)
 	ListExpenses(w http.ResponseWriter, r *http.Request, tripId string)
@@ -2650,6 +2658,56 @@ func (siw *ServerInterfaceWrapper) GetTripEntitlements(w http.ResponseWriter, r 
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetTripEntitlements(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// StreamTripChanges operation middleware
+func (siw *ServerInterfaceWrapper) StreamTripChanges(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params StreamTripChangesParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "Last-Event-ID" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Last-Event-ID")]; found {
+		var LastEventID string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Last-Event-ID", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Last-Event-ID", valueList[0], &LastEventID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Last-Event-ID", Err: err})
+			return
+		}
+
+		params.LastEventID = &LastEventID
+
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.StreamTripChanges(w, r, tripId, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -3937,6 +3995,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/locations", wrapper.ListSharedLocations)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/locations/me", wrapper.StopSharingMyLocation)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/v1/trips/{tripId}/locations/me", wrapper.ShareMyLocation)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/events", wrapper.StreamTripChanges)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/comments", wrapper.ListComments)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/comments", wrapper.CreateComment)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/comments/{commentId}", wrapper.DeleteComment)
@@ -5775,6 +5834,100 @@ func (response GetTripEntitlements404JSONResponse) VisitGetTripEntitlementsRespo
 type GetTripEntitlements503JSONResponse struct{ UnavailableJSONResponse }
 
 func (response GetTripEntitlements503JSONResponse) VisitGetTripEntitlementsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StreamTripChangesRequestObject struct {
+	TripId string `json:"tripId"`
+	Params StreamTripChangesParams
+}
+
+type StreamTripChangesResponseObject interface {
+	VisitStreamTripChangesResponse(w http.ResponseWriter) error
+}
+
+type StreamTripChanges200TexteventStreamResponse struct {
+	Body          io.Reader
+	ContentLength int64
+}
+
+func (response StreamTripChanges200TexteventStreamResponse) VisitStreamTripChangesResponse(w http.ResponseWriter) error {
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	if response.ContentLength != 0 {
+		w.Header().Set("Content-Length", fmt.Sprint(response.ContentLength))
+	}
+	w.WriteHeader(200)
+
+	if closer, ok := response.Body.(io.ReadCloser); ok {
+		defer closer.Close()
+	}
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		// If w doesn't support flushing, fall back to io.Copy.
+		_, err := io.Copy(w, response.Body)
+		return err
+	}
+	// text/event-stream messages are typically small; use a
+	// modest buffer and flush after each chunk so clients see
+	// events immediately instead of waiting on OS buffering.
+	buf := make([]byte, 4096)
+	for {
+		n, err := response.Body.Read(buf)
+		if n > 0 {
+			if _, writeErr := w.Write(buf[:n]); writeErr != nil {
+				return writeErr
+			}
+			flusher.Flush()
+		}
+		if err != nil {
+			if err == io.EOF {
+				return nil
+			}
+			return err
+		}
+	}
+}
+
+type StreamTripChanges401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response StreamTripChanges401JSONResponse) VisitStreamTripChangesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StreamTripChanges404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response StreamTripChanges404JSONResponse) VisitStreamTripChangesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StreamTripChanges503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response StreamTripChanges503JSONResponse) VisitStreamTripChangesResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -8824,6 +8977,9 @@ type StrictServerInterface interface {
 	// GetTripEntitlements What a trip allows the signed-in person
 	// (GET /v1/trips/{tripId}/entitlements)
 	GetTripEntitlements(ctx context.Context, request GetTripEntitlementsRequestObject) (GetTripEntitlementsResponseObject, error)
+	// StreamTripChanges Stream changes to a trip
+	// (GET /v1/trips/{tripId}/events)
+	StreamTripChanges(ctx context.Context, request StreamTripChangesRequestObject) (StreamTripChangesResponseObject, error)
 	// ListExpenses List a trip's expenses
 	// (GET /v1/trips/{tripId}/expenses)
 	ListExpenses(ctx context.Context, request ListExpensesRequestObject) (ListExpensesResponseObject, error)
@@ -9740,6 +9896,33 @@ func (sh *strictHandler) GetTripEntitlements(w http.ResponseWriter, r *http.Requ
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetTripEntitlementsResponseObject); ok {
 		if err := validResponse.VisitGetTripEntitlementsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// StreamTripChanges operation middleware
+func (sh *strictHandler) StreamTripChanges(w http.ResponseWriter, r *http.Request, tripId string, params StreamTripChangesParams) {
+	var request StreamTripChangesRequestObject
+
+	request.TripId = tripId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.StreamTripChanges(ctx, request.(StreamTripChangesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "StreamTripChanges")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(StreamTripChangesResponseObject); ok {
+		if err := validResponse.VisitStreamTripChangesResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

@@ -58,6 +58,7 @@ type handlers struct {
 	polls       repo.Polls
 	meetPoints  repo.MeetPoints
 	comments    repo.Comments
+	feed        repo.Feed
 	presence    repo.Presence
 	rates       rates.Provider
 
@@ -98,6 +99,9 @@ type statusRecorder struct {
 	http.ResponseWriter
 	status int
 }
+
+// Unwrap lets http.ResponseController reach the real writer to flush streams.
+func (r *statusRecorder) Unwrap() http.ResponseWriter { return r.ResponseWriter }
 
 func (r *statusRecorder) WriteHeader(status int) {
 	r.status = status

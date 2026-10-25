@@ -46,6 +46,9 @@ type muxErrorWriter struct {
 	swapped bool
 }
 
+// Unwrap lets http.ResponseController reach the real writer to flush streams.
+func (m *muxErrorWriter) Unwrap() http.ResponseWriter { return m.ResponseWriter }
+
 func (m *muxErrorWriter) WriteHeader(status int) {
 	if (status == http.StatusNotFound || status == http.StatusMethodNotAllowed) &&
 		m.Header().Get("Content-Type") != "application/json" {
