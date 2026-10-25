@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { signInErrorKey, useAuth } from "@/auth";
+import { signInErrorKey, useAuth, withDetail } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { Button, Input, Text } from "@/ui";
@@ -47,7 +47,7 @@ export default function CodeScreen() {
       );
       await signIn({ accessToken: session.accessToken, refreshToken: session.refreshToken });
     } catch (e) {
-      setError(t(`signIn.errors.${signInErrorKey(e)}`));
+      setError(withDetail(t(`signIn.errors.${signInErrorKey(e)}`), e));
     } finally {
       setBusy(false);
     }
@@ -60,7 +60,7 @@ export default function CodeScreen() {
       await api.unwrap(api.POST("/v1/auth/otp/request", { body: { phone: pendingPhone } }));
       setWait(resendSeconds);
     } catch (e) {
-      setError(t(`signIn.errors.${signInErrorKey(e)}`));
+      setError(withDetail(t(`signIn.errors.${signInErrorKey(e)}`), e));
     }
   }
 

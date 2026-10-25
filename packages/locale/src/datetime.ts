@@ -47,12 +47,17 @@ export function formatMonth(date: Date | number, locale: string): string {
 /** First day of the week for a locale, 0 = Sunday to 6 = Saturday. Falls back to Monday when the platform cannot say. */
 export function firstWeekday(locale: string): number {
   // Platforms expose this as a getter (V8) or a method (Safari, Hermes).
-  const l = new Intl.Locale(locale) as unknown as {
-    weekInfo?: { firstDay: number };
-    getWeekInfo?: () => { firstDay: number };
-  };
-  const info = l.getWeekInfo?.() ?? l.weekInfo;
-  return info ? info.firstDay % 7 : 1;
+  try {
+    const l = new Intl.Locale(locale) as unknown as {
+      weekInfo?: { firstDay: number };
+      getWeekInfo?: () => { firstDay: number };
+    };
+    const info = l.getWeekInfo?.() ?? l.weekInfo;
+    return info ? info.firstDay % 7 : 1;
+  } catch {
+    // Some phone engines have no Intl.Locale; Monday is a safe default.
+    return 1;
+  }
 }
 
 /** Short weekday names in calendar order for a locale, starting on its first weekday. */
