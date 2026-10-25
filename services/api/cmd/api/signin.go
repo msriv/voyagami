@@ -76,6 +76,9 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 		},
 		close: func() { _ = client.Close() },
 	}
+	if cfg.Env == "dev" {
+		deps.options = append(deps.options, server.WithDevLogs(firestorerepo.NewDevLogs(client)))
+	}
 	if cfg.VertexLocation != "" && cfg.GCPProject != "" {
 		deps.options = append(deps.options, server.WithImporter(&importer.Vertex{
 			Project: cfg.GCPProject, Location: cfg.VertexLocation, Model: cfg.VertexModel,
