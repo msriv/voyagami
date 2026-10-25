@@ -578,6 +578,7 @@ export const en = {
       notificationsWhy: "Trip changes, new votes and who owes what.",
       allow: "Allow",
       allowed: "Allowed",
+      unavailable: "Not in Expo Go",
       finish: "Finish setup",
     },
     style: {
