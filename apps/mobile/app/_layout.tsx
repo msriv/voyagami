@@ -66,6 +66,8 @@ function Screens() {
         <Stack.Screen name="trips/[id]/money" />
         <Stack.Screen name="trips/[id]/bookings" />
         <Stack.Screen name="trips/[id]/journal" />
+        <Stack.Screen name="trips/[id]/crew" />
+        <Stack.Screen name="join" />
         <Stack.Screen name="trips/[id]/add-booking" />
         <Stack.Screen name="trips/[id]/add-expense" />
       </Stack.Protected>

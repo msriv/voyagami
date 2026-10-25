@@ -15,6 +15,8 @@ import AddPlace from "../app/trips/[id]/add-place";
 import AddExpense from "../app/trips/[id]/add-expense";
 import AddBooking from "../app/trips/[id]/add-booking";
 import Bookings from "../app/trips/[id]/bookings";
+import Crew from "../app/trips/[id]/crew";
+import Join from "../app/join";
 import Journal from "../app/trips/[id]/journal";
 import Money from "../app/trips/[id]/money";
 import Itinerary from "../app/trips/[id]/itinerary";
@@ -38,6 +40,8 @@ export const routes: Record<string, ComponentType> = {
   "trips/[id]/money": Money,
   "trips/[id]/bookings": Bookings,
   "trips/[id]/journal": Journal,
+  "trips/[id]/crew": Crew,
+  join: Join,
   "trips/[id]/add-booking": AddBooking,
   "trips/[id]/add-expense": AddExpense,
   "(tabs)/_layout": TabsLayout,
