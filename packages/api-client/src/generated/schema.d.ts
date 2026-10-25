@@ -301,6 +301,8 @@ export interface components {
             used: number;
             /** @description True when the answer is no and Plus or a Trip Pass would change it. */
             needsPlus: boolean;
+            /** @description True when existing content is over the cap (after a downgrade). It is kept and can be read, but not changed. */
+            readOnly: boolean;
         };
         Entitlements: {
             /**

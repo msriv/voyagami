@@ -148,6 +148,10 @@ type Decision struct {
 	Used int
 	// NeedsPlus is true when the answer is no and Plus (or a Trip Pass) would change it.
 	NeedsPlus bool
+	// ReadOnly is true when the person or trip is already over the cap, which
+	// happens after a downgrade. The existing content stays and can be read, but
+	// not changed, until the count is back under the cap or Plus returns.
+	ReadOnly bool
 }
 
 // Service answers entitlement checks.
@@ -186,7 +190,7 @@ func (s *Service) Check(user User, trip *Trip, f Feature) Decision {
 		return Decision{Allowed: limit != 0, Limit: limit, Used: used, NeedsPlus: limit == 0}
 	default:
 		ok := used < limit
-		return Decision{Allowed: ok, Limit: limit, Used: used, NeedsPlus: !ok}
+		return Decision{Allowed: ok, Limit: limit, Used: used, NeedsPlus: !ok, ReadOnly: used > limit}
 	}
 }
 

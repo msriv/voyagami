@@ -447,7 +447,7 @@ components:
           description: "`device` when guessed from the phone, `confirmed` once the person chose."
     EntitlementDecision:
       type: object
-      required: [allowed, limit, used, needsPlus]
+      required: [allowed, limit, used, needsPlus, readOnly]
       properties:
         allowed:
           type: boolean
@@ -460,6 +460,9 @@ components:
         needsPlus:
           type: boolean
           description: True when the answer is no and Plus or a Trip Pass would change it.
+        readOnly:
+          type: boolean
+          description: True when existing content is over the cap (after a downgrade). It is kept and can be read, but not changed.
     Entitlements:
       type: object
       required: [plan, features]
