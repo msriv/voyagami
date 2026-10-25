@@ -92,6 +92,72 @@ func (e ExpenseSplitMethod) Valid() bool {
 	}
 }
 
+// Defines values for JournalEntryVisibility.
+const (
+	JournalEntryVisibilityCrew    JournalEntryVisibility = "crew"
+	JournalEntryVisibilityPrivate JournalEntryVisibility = "private"
+)
+
+// Valid indicates whether the value is a known member of the JournalEntryVisibility enum.
+func (e JournalEntryVisibility) Valid() bool {
+	switch e {
+	case JournalEntryVisibilityCrew:
+		return true
+	case JournalEntryVisibilityPrivate:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for JournalWriteMood.
+const (
+	Calm     JournalWriteMood = "calm"
+	Excited  JournalWriteMood = "excited"
+	Grateful JournalWriteMood = "grateful"
+	Happy    JournalWriteMood = "happy"
+	Meh      JournalWriteMood = "meh"
+	Tired    JournalWriteMood = "tired"
+)
+
+// Valid indicates whether the value is a known member of the JournalWriteMood enum.
+func (e JournalWriteMood) Valid() bool {
+	switch e {
+	case Calm:
+		return true
+	case Excited:
+		return true
+	case Grateful:
+		return true
+	case Happy:
+		return true
+	case Meh:
+		return true
+	case Tired:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for JournalWriteVisibility.
+const (
+	JournalWriteVisibilityCrew    JournalWriteVisibility = "crew"
+	JournalWriteVisibilityPrivate JournalWriteVisibility = "private"
+)
+
+// Valid indicates whether the value is a known member of the JournalWriteVisibility enum.
+func (e JournalWriteVisibility) Valid() bool {
+	switch e {
+	case JournalWriteVisibilityCrew:
+		return true
+	case JournalWriteVisibilityPrivate:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for MeRegionSource.
 const (
 	MeRegionSourceConfirmed MeRegionSource = "confirmed"
@@ -666,6 +732,42 @@ type Health struct {
 	Status string `json:"status"`
 }
 
+// JournalEntry defines model for JournalEntry.
+type JournalEntry struct {
+	AuthorUid  string                 `json:"authorUid"`
+	Date       string                 `json:"date"`
+	Mood       *string                `json:"mood,omitempty"`
+	StopIds    []string               `json:"stopIds"`
+	Text       string                 `json:"text"`
+	Visibility JournalEntryVisibility `json:"visibility"`
+}
+
+// JournalEntryVisibility defines model for JournalEntry.Visibility.
+type JournalEntryVisibility string
+
+// JournalList defines model for JournalList.
+type JournalList struct {
+	Entries []JournalEntry `json:"entries"`
+}
+
+// JournalWrite defines model for JournalWrite.
+type JournalWrite struct {
+	Mood *JournalWriteMood `json:"mood,omitempty"`
+
+	// StopIds Stops this day's note is about.
+	StopIds *[]string `json:"stopIds,omitempty"`
+	Text    string    `json:"text"`
+
+	// Visibility Defaults to crew. Private means only the author can read it.
+	Visibility *JournalWriteVisibility `json:"visibility,omitempty"`
+}
+
+// JournalWriteMood defines model for JournalWrite.Mood.
+type JournalWriteMood string
+
+// JournalWriteVisibility Defaults to crew. Private means only the author can read it.
+type JournalWriteVisibility string
+
 // Me defines model for Me.
 type Me struct {
 	// DisplayName Name the person chose, if any.
@@ -1109,6 +1211,9 @@ type CreateExpenseJSONRequestBody = ExpenseCreate
 // UpdateExpenseJSONRequestBody defines body for UpdateExpense for application/json ContentType.
 type UpdateExpenseJSONRequestBody = ExpenseUpdate
 
+// PutJournalEntryJSONRequestBody defines body for PutJournalEntry for application/json ContentType.
+type PutJournalEntryJSONRequestBody = JournalWrite
+
 // RecordSettlementJSONRequestBody defines body for RecordSettlement for application/json ContentType.
 type RecordSettlementJSONRequestBody = SettlementCreate
 
@@ -1204,6 +1309,15 @@ type ServerInterface interface {
 	// UpdateExpense Change an expense
 	// (PATCH /v1/trips/{tripId}/expenses/{expenseId})
 	UpdateExpense(w http.ResponseWriter, r *http.Request, tripId string, expenseId string)
+	// ListJournal List journal entries
+	// (GET /v1/trips/{tripId}/journal)
+	ListJournal(w http.ResponseWriter, r *http.Request, tripId string)
+	// DeleteJournalEntry Delete your entry for a day
+	// (DELETE /v1/trips/{tripId}/journal/{date})
+	DeleteJournalEntry(w http.ResponseWriter, r *http.Request, tripId string, date string)
+	// PutJournalEntry Write your entry for a day
+	// (PUT /v1/trips/{tripId}/journal/{date})
+	PutJournalEntry(w http.ResponseWriter, r *http.Request, tripId string, date string)
 	// ListSettlements List recorded payments
 	// (GET /v1/trips/{tripId}/settlements)
 	ListSettlements(w http.ResponseWriter, r *http.Request, tripId string)
@@ -1855,6 +1969,102 @@ func (siw *ServerInterfaceWrapper) UpdateExpense(w http.ResponseWriter, r *http.
 	handler.ServeHTTP(w, r)
 }
 
+// ListJournal operation middleware
+func (siw *ServerInterfaceWrapper) ListJournal(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListJournal(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteJournalEntry operation middleware
+func (siw *ServerInterfaceWrapper) DeleteJournalEntry(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "date" -------------
+	var date string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "date", r.PathValue("date"), &date, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "date", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteJournalEntry(w, r, tripId, date)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PutJournalEntry operation middleware
+func (siw *ServerInterfaceWrapper) PutJournalEntry(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "date" -------------
+	var date string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "date", r.PathValue("date"), &date, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "date", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutJournalEntry(w, r, tripId, date)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListSettlements operation middleware
 func (siw *ServerInterfaceWrapper) ListSettlements(w http.ResponseWriter, r *http.Request) {
 
@@ -2297,6 +2507,9 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/bookings/{bookingId}", wrapper.DeleteBooking)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/trips/{tripId}/bookings/{bookingId}", wrapper.UpdateBooking)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/budget", wrapper.GetBudget)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/journal", wrapper.ListJournal)
+	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/journal/{date}", wrapper.DeleteJournalEntry)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/v1/trips/{tripId}/journal/{date}", wrapper.PutJournalEntry)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/stops", wrapper.ListStops)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/stops", wrapper.CreateStop)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/stops/{stopId}", wrapper.DeleteStop)
@@ -4054,6 +4267,237 @@ func (response UpdateExpense503JSONResponse) VisitUpdateExpenseResponse(w http.R
 	return err
 }
 
+type ListJournalRequestObject struct {
+	TripId string `json:"tripId"`
+}
+
+type ListJournalResponseObject interface {
+	VisitListJournalResponse(w http.ResponseWriter) error
+}
+
+type ListJournal200JSONResponse JournalList
+
+func (response ListJournal200JSONResponse) VisitListJournalResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListJournal401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ListJournal401JSONResponse) VisitListJournalResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListJournal404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ListJournal404JSONResponse) VisitListJournalResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListJournal503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ListJournal503JSONResponse) VisitListJournalResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteJournalEntryRequestObject struct {
+	TripId string `json:"tripId"`
+	Date   string `json:"date"`
+}
+
+type DeleteJournalEntryResponseObject interface {
+	VisitDeleteJournalEntryResponse(w http.ResponseWriter) error
+}
+
+type DeleteJournalEntry204Response struct {
+}
+
+func (response DeleteJournalEntry204Response) VisitDeleteJournalEntryResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteJournalEntry401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response DeleteJournalEntry401JSONResponse) VisitDeleteJournalEntryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteJournalEntry403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response DeleteJournalEntry403JSONResponse) VisitDeleteJournalEntryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteJournalEntry404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response DeleteJournalEntry404JSONResponse) VisitDeleteJournalEntryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteJournalEntry503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response DeleteJournalEntry503JSONResponse) VisitDeleteJournalEntryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutJournalEntryRequestObject struct {
+	TripId string `json:"tripId"`
+	Date   string `json:"date"`
+	Body   *PutJournalEntryJSONRequestBody
+}
+
+type PutJournalEntryResponseObject interface {
+	VisitPutJournalEntryResponse(w http.ResponseWriter) error
+}
+
+type PutJournalEntry200JSONResponse JournalEntry
+
+func (response PutJournalEntry200JSONResponse) VisitPutJournalEntryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutJournalEntry400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response PutJournalEntry400JSONResponse) VisitPutJournalEntryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutJournalEntry401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response PutJournalEntry401JSONResponse) VisitPutJournalEntryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutJournalEntry403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response PutJournalEntry403JSONResponse) VisitPutJournalEntryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutJournalEntry404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response PutJournalEntry404JSONResponse) VisitPutJournalEntryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutJournalEntry503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response PutJournalEntry503JSONResponse) VisitPutJournalEntryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListSettlementsRequestObject struct {
 	TripId string `json:"tripId"`
 }
@@ -4939,6 +5383,15 @@ type StrictServerInterface interface {
 	// UpdateExpense Change an expense
 	// (PATCH /v1/trips/{tripId}/expenses/{expenseId})
 	UpdateExpense(ctx context.Context, request UpdateExpenseRequestObject) (UpdateExpenseResponseObject, error)
+	// ListJournal List journal entries
+	// (GET /v1/trips/{tripId}/journal)
+	ListJournal(ctx context.Context, request ListJournalRequestObject) (ListJournalResponseObject, error)
+	// DeleteJournalEntry Delete your entry for a day
+	// (DELETE /v1/trips/{tripId}/journal/{date})
+	DeleteJournalEntry(ctx context.Context, request DeleteJournalEntryRequestObject) (DeleteJournalEntryResponseObject, error)
+	// PutJournalEntry Write your entry for a day
+	// (PUT /v1/trips/{tripId}/journal/{date})
+	PutJournalEntry(ctx context.Context, request PutJournalEntryRequestObject) (PutJournalEntryResponseObject, error)
 	// ListSettlements List recorded payments
 	// (GET /v1/trips/{tripId}/settlements)
 	ListSettlements(ctx context.Context, request ListSettlementsRequestObject) (ListSettlementsResponseObject, error)
@@ -5742,6 +6195,93 @@ func (sh *strictHandler) UpdateExpense(w http.ResponseWriter, r *http.Request, t
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(UpdateExpenseResponseObject); ok {
 		if err := validResponse.VisitUpdateExpenseResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListJournal operation middleware
+func (sh *strictHandler) ListJournal(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request ListJournalRequestObject
+
+	request.TripId = tripId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListJournal(ctx, request.(ListJournalRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListJournal")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListJournalResponseObject); ok {
+		if err := validResponse.VisitListJournalResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteJournalEntry operation middleware
+func (sh *strictHandler) DeleteJournalEntry(w http.ResponseWriter, r *http.Request, tripId string, date string) {
+	var request DeleteJournalEntryRequestObject
+
+	request.TripId = tripId
+	request.Date = date
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteJournalEntry(ctx, request.(DeleteJournalEntryRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteJournalEntry")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteJournalEntryResponseObject); ok {
+		if err := validResponse.VisitDeleteJournalEntryResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PutJournalEntry operation middleware
+func (sh *strictHandler) PutJournalEntry(w http.ResponseWriter, r *http.Request, tripId string, date string) {
+	var request PutJournalEntryRequestObject
+
+	request.TripId = tripId
+	request.Date = date
+
+	var body PutJournalEntryJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PutJournalEntry(ctx, request.(PutJournalEntryRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutJournalEntry")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PutJournalEntryResponseObject); ok {
+		if err := validResponse.VisitPutJournalEntryResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

@@ -713,6 +713,96 @@ paths:
           $ref: "#/components/responses/NotFound"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/journal:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: listJournal
+      tags: [journal]
+      summary: List journal entries
+      description: |
+        Entries shared with the crew, plus the caller's own private ones,
+        newest day first and then by author. Other people's private entries
+        are never returned, not even to the owner. Any active member can read;
+        everyone else gets 404.
+      responses:
+        "200":
+          description: The entries.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JournalList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/journal/{date}:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: date
+        in: path
+        required: true
+        description: The day, YYYY-MM-DD.
+        schema:
+          type: string
+    put:
+      operationId: putJournalEntry
+      tags: [journal]
+      summary: Write your entry for a day
+      description: |
+        Creates or replaces the caller's own entry for that day. There is one
+        entry per person per day, so repeating the request is safe, which
+        suits saving drafts from a phone. Owners and editors only; nobody can
+        write for someone else.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JournalWrite"
+      responses:
+        "200":
+          description: The saved entry.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JournalEntry"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    delete:
+      operationId: deleteJournalEntry
+      tags: [journal]
+      summary: Delete your entry for a day
+      description: Deletes only the caller's own entry. Deleting one that is already gone succeeds.
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/trips/{tripId}/stops:
     parameters:
       - name: tripId
@@ -1751,6 +1841,53 @@ components:
           enum: [perPerson, group]
         amount:
           $ref: "#/components/schemas/Money"
+    JournalWrite:
+      type: object
+      required: [text]
+      properties:
+        text:
+          type: string
+          maxLength: 10000
+        mood:
+          type: string
+          enum: [happy, excited, calm, grateful, tired, meh]
+        visibility:
+          type: string
+          enum: [crew, private]
+          description: Defaults to crew. Private means only the author can read it.
+        stopIds:
+          type: array
+          maxItems: 20
+          description: Stops this day's note is about.
+          items:
+            type: string
+    JournalEntry:
+      type: object
+      required: [date, authorUid, visibility, text, stopIds]
+      properties:
+        date:
+          type: string
+        authorUid:
+          type: string
+        visibility:
+          type: string
+          enum: [crew, private]
+        text:
+          type: string
+        mood:
+          type: string
+        stopIds:
+          type: array
+          items:
+            type: string
+    JournalList:
+      type: object
+      required: [entries]
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/JournalEntry"
     Task:
       type: object
       required: [id, title, done]

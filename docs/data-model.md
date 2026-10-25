@@ -419,6 +419,8 @@ One entry per person per day. The ID is `{date}_{uid}`.
 | `mediaIds`   | string[]                   | Bounded.                                                                                                      |
 | `voice`      | `{ mediaId, transcript }?` | Voice notes are Plus.                                                                                         |
 
+API (VOY-159): `GET /v1/trips/{id}/journal` lists crew entries plus the caller's own private ones (never anyone else's private entry, owner included). `PUT /v1/trips/{id}/journal/{date}` creates or replaces the caller's entry for the day, so saving a draft twice is safe; `DELETE` removes it. Owners and editors write; viewers read. Extra fields: `stopIds` (up to 20 stops the note is about). `mood` is one of `happy`, `excited`, `calm`, `grateful`, `tired`, `meh` until the journal screen settles the list. Photos (`mediaIds`) and voice notes are not built yet: they need the private bucket.
+
 Write: the author only.
 
 ### `trips/{tripId}/media/{mediaId}`
