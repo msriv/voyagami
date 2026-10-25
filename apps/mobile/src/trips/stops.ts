@@ -83,3 +83,16 @@ export function parsePin(lat: string, lng: string): { lat: number; lng: number }
   if (Math.abs(x) > 90 || Math.abs(y) > 180) return undefined;
   return { lat: x, lng: y };
 }
+
+/**
+ * A day's stops reordered to the given IDs, shown before the server answers. The day keeps
+ * its existing order keys; they are handed out again in the new sequence.
+ */
+export function applyOrder(stops: Stop[], date: string, ids: string[]): Stop[] {
+  const keys = stopsOn(stops, date).map((s) => s.order);
+  const byId = new Map(ids.map((id, i) => [id, keys[i]]));
+  return stops.map((s) => {
+    const order = s.date === date ? byId.get(s.id) : undefined;
+    return order === undefined ? s : { ...s, order };
+  });
+}

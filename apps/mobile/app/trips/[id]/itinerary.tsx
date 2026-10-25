@@ -11,6 +11,7 @@ import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { daysInRange, isoToDate } from "@/trips/dates";
+import { BestOrder } from "@/trips/BestOrder";
 import { displayTime, isValidTime, planMove, stopsOn, type Move, type Stop } from "@/trips/stops";
 import type { Trip } from "@/trips/summary";
 import { Button, Card, Chip, IconButton, Input, Sheet, Text } from "@/ui";
@@ -250,6 +251,14 @@ export default function ItineraryScreen() {
                 </Card>
               );
             })}
+            {canEdit && current ? (
+              <BestOrder
+                tripId={id}
+                date={current}
+                stops={stops}
+                onStops={(next) => setState({ kind: "ready", trip, stops: next })}
+              />
+            ) : null}
             {canEdit ? (
               <Button
                 label={t("itinerary.add")}

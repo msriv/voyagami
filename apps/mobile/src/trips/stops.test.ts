@@ -1,4 +1,12 @@
-import { displayTime, isValidTime, parsePin, planMove, stopsOn, type Stop } from "./stops";
+import {
+  applyOrder,
+  displayTime,
+  isValidTime,
+  parsePin,
+  planMove,
+  stopsOn,
+  type Stop,
+} from "./stops";
 
 const stop = (id: string, date: string, order: string): Stop => ({
   id,
@@ -75,5 +83,17 @@ describe("stops", () => {
     expect(parsePin("91", "10")).toBeUndefined();
     expect(parsePin("10", "181")).toBeUndefined();
     expect(parsePin("abc", "10")).toBeUndefined();
+  });
+
+  it("applies a new order to one day and leaves other days alone", () => {
+    const all = [
+      stop("a", "2026-11-01", "a"),
+      stop("b", "2026-11-01", "b"),
+      stop("c", "2026-11-01", "c"),
+      stop("x", "2026-11-02", "a"),
+    ];
+    const next = applyOrder(all, "2026-11-01", ["c", "a", "b"]);
+    expect(stopsOn(next, "2026-11-01").map((s) => s.id)).toEqual(["c", "a", "b"]);
+    expect(stopsOn(next, "2026-11-02").map((s) => s.id)).toEqual(["x"]);
   });
 });
