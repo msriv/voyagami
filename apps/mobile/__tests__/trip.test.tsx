@@ -44,7 +44,7 @@ describe("Trip overview", () => {
     expect(await screen.findByText("Hanoi food week")).toBeTruthy();
     expect(screen.getByText("Your role: Owner")).toBeTruthy();
     expect(screen.getAllByLabelText(/^Day \d/)).toHaveLength(3);
-    expect(screen.getByRole("button", { name: "Bookings, coming soon" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Journal, coming soon" })).toBeTruthy();
   });
 
   it("says when the trip cannot be found", async () => {
