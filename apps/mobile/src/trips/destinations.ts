@@ -1,5 +1,7 @@
 import type { components } from "@voyagami/api-client";
 
+import { i18n } from "@/i18n";
+
 export type Destination = components["schemas"]["Destination"];
 
 // shortcut: a fixed list until place search arrives (VOY-125); then the picker uses search results
@@ -16,3 +18,8 @@ export const suggestedDestinations: Destination[] = [
   { name: "Paris", countryCode: "FR", timeZone: "Europe/Paris", localCurrency: "EUR" },
   { name: "New York", countryCode: "US", timeZone: "America/New_York", localCurrency: "USD" },
 ];
+
+/** Country name for an ISO region. Hermes has no Intl.DisplayNames, so names come from i18n, else the code. */
+export function countryName(code: string): string {
+  return i18n.t(`countries.${code}`, { defaultValue: code });
+}

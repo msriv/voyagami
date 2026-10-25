@@ -11,6 +11,7 @@ import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useProfile } from "@/profile";
 import { useTheme } from "@/theme";
+import { countryName } from "@/trips/destinations";
 import { daysBetween, daysInRange, isoToDate } from "@/trips/dates";
 import type { Trip } from "@/trips/summary";
 import { TripTasks } from "@/trips/TripTasks";
@@ -113,9 +114,7 @@ export default function TripScreen() {
         ", " +
         t("trip.days", { count: daysBetween(start, end) })
       : t("trip.flexibleDays", { count: flexible?.days ?? 0 });
-  const countries = [...new Set(trip.destinations.map((d) => d.countryCode))].map(
-    (c) => new Intl.DisplayNames([locale], { type: "region" }).of(c) ?? c,
-  );
+  const countries = [...new Set(trip.destinations.map((d) => d.countryCode))].map(countryName);
   const abroad = trip.destinations.some((d) => region && d.countryCode !== region);
   const kicker = [...countries, ...(abroad ? [t("trip.international")] : [])]
     .join(" · ")
