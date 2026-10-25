@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"strings"
 	"testing"
 
@@ -79,6 +80,56 @@ func (f *fakeTrips) Member(_ context.Context, tripID, uid string) (model.Member,
 		return model.Member{}, repo.ErrNotFound
 	}
 	return m, nil
+}
+
+func (f *fakeTrips) Members(_ context.Context, tripID string) ([]model.Member, error) {
+	var out []model.Member
+	for _, m := range f.members[tripID] {
+		out = append(out, m)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].UID < out[j].UID })
+	return out, nil
+}
+
+func (f *fakeTrips) AddMember(_ context.Context, tripID string, m model.Member) error {
+	if _, ok := f.trips[tripID]; !ok {
+		return repo.ErrNotFound
+	}
+	m.Status = model.MemberActive
+	if err := m.Validate(); err != nil {
+		return err
+	}
+	if old, ok := f.members[tripID][m.UID]; ok && old.Status == model.MemberActive {
+		return repo.ErrAlreadyExists
+	}
+	f.members[tripID][m.UID] = m
+	return nil
+}
+
+func (f *fakeTrips) SetMemberRole(_ context.Context, tripID, uid string, role model.Role) error {
+	m, ok := f.members[tripID][uid]
+	if !ok || m.Status != model.MemberActive {
+		return repo.ErrNotFound
+	}
+	if m.Role == model.RoleOwner {
+		return repo.ErrForbidden
+	}
+	m.Role = role
+	f.members[tripID][uid] = m
+	return nil
+}
+
+func (f *fakeTrips) EndMembership(_ context.Context, tripID, uid string, st model.MemberStatus) error {
+	m, ok := f.members[tripID][uid]
+	if !ok {
+		return repo.ErrNotFound
+	}
+	if m.Role == model.RoleOwner {
+		return repo.ErrForbidden
+	}
+	m.Status = st
+	f.members[tripID][uid] = m
+	return nil
 }
 
 type tokenVerifier map[string]string

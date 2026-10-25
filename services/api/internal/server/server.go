@@ -53,6 +53,7 @@ type handlers struct {
 	settlements SettlementStore
 	bookings    BookingStore
 	journal     JournalStore
+	invites     repo.Invites
 
 	plans      *entitlements.Service
 	planSource PlanSource

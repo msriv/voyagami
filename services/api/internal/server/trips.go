@@ -18,6 +18,10 @@ type TripStore interface {
 	ListForMember(ctx context.Context, uid string) ([]model.Trip, error)
 	Update(ctx context.Context, id string, patch model.TripPatch) (model.Trip, error)
 	Member(ctx context.Context, tripID, uid string) (model.Member, error)
+	Members(ctx context.Context, tripID string) ([]model.Member, error)
+	AddMember(ctx context.Context, tripID string, m model.Member) error
+	SetMemberRole(ctx context.Context, tripID, uid string, role model.Role) error
+	EndMembership(ctx context.Context, tripID, uid string, status model.MemberStatus) error
 }
 
 // WithTrips turns on the trip routes. Without it they answer 503.
