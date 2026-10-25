@@ -33,7 +33,19 @@ beforeEach(() => {
 
 const soon = () => new Date(Date.now() + 3_600_000).toISOString();
 
-const base = (locations: object[] = []) => ({
+const meet = (over: object = {}) => ({
+  id: "m1",
+  name: "Hoan Kiem lake",
+  place: { name: "Hoan Kiem lake" },
+  createdBy: "u1",
+  confirmedBy: ["u2"],
+  iAmComing: false,
+  endsAt: soon(),
+  status: "active",
+  ...over,
+});
+
+const base = (locations: object[] = [], meets: object[] = []) => ({
   "GET /v1/me": () => json(200, { id: "u1" }),
   "GET /v1/trips/t1": () =>
     json(200, {
@@ -55,6 +67,7 @@ const base = (locations: object[] = []) => ({
       ],
     }),
   "GET /v1/trips/t1/locations": () => json(200, { locations }),
+  "GET /v1/trips/t1/meet-points": () => json(200, { meetPoints: meets }),
 });
 
 describe("Live", () => {
@@ -97,6 +110,41 @@ describe("Live", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Stop sharing" }));
     await waitFor(() =>
       expect(calls.some((c) => c.key === "DELETE /v1/trips/t1/locations/me")).toBe(true),
+    );
+  });
+
+  it("says you are coming to a meet point", async () => {
+    const calls = mockApi({
+      ...base([], [meet()]),
+      "PUT /v1/trips/t1/meet-points/m1/confirmation": () => json(204, undefined),
+    });
+    await renderRouter(routes, { initialUrl: "/trips/t1/live" });
+    expect(await screen.findByText("1 coming")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "I'm coming" }));
+    await waitFor(() =>
+      expect(calls.some((c) => c.key === "PUT /v1/trips/t1/meet-points/m1/confirmation")).toBe(
+        true,
+      ),
+    );
+  });
+
+  it("proposes a meet point", async () => {
+    const calls = mockApi({
+      ...base(),
+      "POST /v1/trips/t1/meet-points": () => json(201, meet()),
+    });
+    await renderRouter(routes, { initialUrl: "/trips/t1/live" });
+    await fireEvent.press(await screen.findByRole("button", { name: "Propose a meet point" }));
+    await fireEvent.changeText(
+      screen.getByLabelText("Where do you want to meet?"),
+      "Hoan Kiem lake",
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Add meet point" }));
+    await waitFor(() =>
+      expect(calls.find((c) => c.key === "POST /v1/trips/t1/meet-points")?.body).toEqual({
+        name: "Hoan Kiem lake",
+        place: { name: "Hoan Kiem lake" },
+      }),
     );
   });
 });

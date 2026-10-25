@@ -12,9 +12,10 @@ import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import type { Trip } from "@/trips/summary";
-import { Button, Card, IconButton, Text } from "@/ui";
+import { Button, Card, Chip, IconButton, Input, Sheet, Text } from "@/ui";
 
 type Shared = components["schemas"]["SharedLocation"];
+type Meet = components["schemas"]["MeetPoint"];
 
 type State =
   | { kind: "loading" }
@@ -22,6 +23,7 @@ type State =
       kind: "ready";
       trip: Trip;
       locations: Shared[];
+      meets: Meet[];
       names: Record<string, string>;
       me: string;
     }
@@ -39,18 +41,21 @@ export default function LiveScreen() {
   const [state, setState] = useState<State>({ kind: "loading" });
   const [error, setError] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
+  const [proposing, setProposing] = useState(false);
+  const [where, setWhere] = useState("");
 
   const load = useCallback(async () => {
     try {
       const path = { params: { path: { tripId: id } } };
-      const [trip, { locations }, { members }, me] = await Promise.all([
+      const [trip, { locations }, { meetPoints }, { members }, me] = await Promise.all([
         api.unwrap(api.GET("/v1/trips/{tripId}", path)),
         api.unwrap(api.GET("/v1/trips/{tripId}/locations", path)),
+        api.unwrap(api.GET("/v1/trips/{tripId}/meet-points", path)),
         api.unwrap(api.GET("/v1/trips/{tripId}/members", path)),
         api.unwrap(api.GET("/v1/me")),
       ]);
       const names = Object.fromEntries(members.map((m) => [m.uid, m.displayName ?? ""]));
-      setState({ kind: "ready", trip, locations, names, me: me.id });
+      setState({ kind: "ready", trip, locations, meets: meetPoints, names, me: me.id });
     } catch (e) {
       setState(
         e instanceof ApiError && e.code === "not_found" ? { kind: "notFound" } : { kind: "error" },
@@ -121,7 +126,8 @@ export default function LiveScreen() {
     );
   }
 
-  const { trip, locations, names, me } = ready;
+  const { trip, locations, meets, names, me } = ready;
+  const canEdit = trip.role !== "viewer";
   const others = locations.filter((l) => l.uid !== me);
 
   async function start() {
@@ -142,6 +148,43 @@ export default function LiveScreen() {
           },
         }),
       );
+      await load();
+    } catch (e) {
+      setError(t(e instanceof NetworkError ? "live.errors.offline" : "live.errors.generic"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function toggleComing(m: Meet) {
+    setError(undefined);
+    try {
+      const path = { params: { path: { tripId: id, meetPointId: m.id } } };
+      await api.unwrap(
+        m.iAmComing
+          ? api.DELETE("/v1/trips/{tripId}/meet-points/{meetPointId}/confirmation", path)
+          : api.PUT("/v1/trips/{tripId}/meet-points/{meetPointId}/confirmation", path),
+      );
+      await load();
+    } catch (e) {
+      setError(t(e instanceof NetworkError ? "live.errors.offline" : "live.errors.generic"));
+    }
+  }
+
+  async function propose() {
+    const name = where.trim();
+    if (!name) return setError(t("live.errors.where"));
+    setBusy(true);
+    setError(undefined);
+    try {
+      await api.unwrap(
+        api.POST("/v1/trips/{tripId}/meet-points", {
+          params: { path: { tripId: id } },
+          body: { name, place: { name } },
+        }),
+      );
+      setProposing(false);
+      setWhere("");
       await load();
     } catch (e) {
       setError(t(e instanceof NetworkError ? "live.errors.offline" : "live.errors.generic"));
@@ -196,6 +239,36 @@ export default function LiveScreen() {
           ) : null}
         </Card>
 
+        <Text variant="bodyStrong">{t("live.meetPoints")}</Text>
+        {meets.length === 0 ? <Text color="muted">{t("live.noMeets")}</Text> : null}
+        {meets.map((m) => (
+          <Card key={m.id}>
+            <Text variant="bodyStrong">{m.name}</Text>
+            <Text color="muted">
+              {m.status === "ended"
+                ? t("live.ended")
+                : t("live.coming", { count: m.confirmedBy.length })}
+            </Text>
+            {m.status === "active" ? (
+              <Chip
+                label={t(m.iAmComing ? "live.imComing" : "live.comingQuestion")}
+                selected={m.iAmComing}
+                onPress={() => void toggleComing(m)}
+              />
+            ) : null}
+          </Card>
+        ))}
+        {canEdit ? (
+          <Button
+            label={t("live.propose")}
+            variant="secondary"
+            onPress={() => {
+              setError(undefined);
+              setProposing(true);
+            }}
+          />
+        ) : null}
+
         <Text variant="bodyStrong">{t("live.crew")}</Text>
         {others.length === 0 ? <Text color="muted">{t("live.nobody")}</Text> : null}
         {others.map((l) => (
@@ -207,6 +280,24 @@ export default function LiveScreen() {
           </Card>
         ))}
       </ScrollView>
+
+      <Sheet
+        visible={proposing}
+        onClose={() => setProposing(false)}
+        title={t("live.propose")}
+        closeLabel={t("live.cancel")}
+        closeIcon={<Text>{"×"}</Text>}
+      >
+        <View style={{ gap: 12, paddingBottom: 12 }}>
+          <Input label={t("live.whereLabel")} value={where} onChangeText={setWhere} />
+          {error ? (
+            <Text color="vermilion" accessibilityLiveRegion="polite">
+              {error}
+            </Text>
+          ) : null}
+          <Button label={t("live.proposeSave")} loading={busy} onPress={() => void propose()} />
+        </View>
+      </Sheet>
     </SafeAreaView>
   );
 }
