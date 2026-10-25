@@ -647,6 +647,36 @@ paths:
           $ref: "#/components/responses/NotFound"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/budget:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getBudget
+      tags: [budget]
+      summary: Spend against the trip budget
+      description: |
+        Total spent and spend by category, in the trip's settlement currency,
+        worked out from the expenses. When the trip has a budget in that same
+        currency, also the target (per-person budgets are multiplied by the
+        number of active members), what is left and whether it is over. Any
+        active member can read.
+      responses:
+        "200":
+          description: The budget summary.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BudgetSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/trips/{tripId}/stops:
     parameters:
       - name: tripId
@@ -1337,6 +1367,8 @@ components:
             $ref: "#/components/schemas/Destination"
         dates:
           $ref: "#/components/schemas/TripDates"
+        budget:
+          $ref: "#/components/schemas/TripBudget"
         timeZone:
           type: string
           description: IANA zone the trip's days are counted in.
@@ -1641,6 +1673,48 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Booking"
+    BudgetSummary:
+      type: object
+      required: [currency, spentMinor, overBudget, byCategory]
+      properties:
+        currency:
+          type: string
+          description: The trip's settlement currency.
+        spentMinor:
+          type: integer
+          format: int64
+        targetMinor:
+          type: integer
+          format: int64
+          description: Absent when the trip has no budget, or the budget is in another currency.
+        remainingMinor:
+          type: integer
+          format: int64
+          description: Target minus spent. Negative when over.
+        overBudget:
+          type: boolean
+        byCategory:
+          type: array
+          description: Biggest spend first. An empty category means the expenses had none.
+          items:
+            type: object
+            required: [category, spentMinor]
+            properties:
+              category:
+                type: string
+              spentMinor:
+                type: integer
+                format: int64
+    TripBudget:
+      type: object
+      description: The optional trip budget. Only the owner can set it. Used by the budget summary when it is in the trip's settlement currency.
+      required: [scope, amount]
+      properties:
+        scope:
+          type: string
+          enum: [perPerson, group]
+        amount:
+          $ref: "#/components/schemas/Money"
     Task:
       type: object
       required: [id, title, done]
@@ -1694,6 +1768,8 @@ components:
             $ref: "#/components/schemas/Destination"
         dates:
           $ref: "#/components/schemas/TripDates"
+        budget:
+          $ref: "#/components/schemas/TripBudget"
         timeZone:
           type: string
         settlementCurrency:
@@ -1709,6 +1785,8 @@ components:
             $ref: "#/components/schemas/Destination"
         dates:
           $ref: "#/components/schemas/TripDates"
+        budget:
+          $ref: "#/components/schemas/TripBudget"
         timeZone:
           type: string
         status:

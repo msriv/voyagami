@@ -371,6 +371,32 @@ export interface paths {
         patch: operations["updateBooking"];
         trace?: never;
     };
+    "/v1/trips/{tripId}/budget": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Spend against the trip budget
+         * @description Total spent and spend by category, in the trip's settlement currency,
+         *     worked out from the expenses. When the trip has a budget in that same
+         *     currency, also the target (per-person budgets are multiplied by the
+         *     number of active members), what is left and whether it is over. Any
+         *     active member can read.
+         */
+        get: operations["getBudget"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/trips/{tripId}/stops": {
         parameters: {
             query?: never;
@@ -770,6 +796,7 @@ export interface components {
             ownerId: string;
             destinations: components["schemas"]["Destination"][];
             dates: components["schemas"]["TripDates"];
+            budget?: components["schemas"]["TripBudget"];
             /** @description IANA zone the trip's days are counted in. */
             timeZone: string;
             /** @description ISO 4217. One per trip. Fixed at creation. */
@@ -936,6 +963,35 @@ export interface components {
         BookingList: {
             bookings: components["schemas"]["Booking"][];
         };
+        BudgetSummary: {
+            /** @description The trip's settlement currency. */
+            currency: string;
+            /** Format: int64 */
+            spentMinor: number;
+            /**
+             * Format: int64
+             * @description Absent when the trip has no budget, or the budget is in another currency.
+             */
+            targetMinor?: number;
+            /**
+             * Format: int64
+             * @description Target minus spent. Negative when over.
+             */
+            remainingMinor?: number;
+            overBudget: boolean;
+            /** @description Biggest spend first. An empty category means the expenses had none. */
+            byCategory: {
+                category: string;
+                /** Format: int64 */
+                spentMinor: number;
+            }[];
+        };
+        /** @description The optional trip budget. Only the owner can set it. Used by the budget summary when it is in the trip's settlement currency. */
+        TripBudget: {
+            /** @enum {string} */
+            scope: "perPerson" | "group";
+            amount: components["schemas"]["Money"];
+        };
         Task: {
             id: string;
             title: string;
@@ -958,6 +1014,7 @@ export interface components {
             title: string;
             destinations: components["schemas"]["Destination"][];
             dates: components["schemas"]["TripDates"];
+            budget?: components["schemas"]["TripBudget"];
             timeZone: string;
             settlementCurrency: string;
         };
@@ -965,6 +1022,7 @@ export interface components {
             title?: string;
             destinations?: components["schemas"]["Destination"][];
             dates?: components["schemas"]["TripDates"];
+            budget?: components["schemas"]["TripBudget"];
             timeZone?: string;
             status?: components["schemas"]["TripStatus"];
         };
@@ -1686,6 +1744,31 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    getBudget: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The budget summary. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetSummary"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
             503: components["responses"]["Unavailable"];
         };

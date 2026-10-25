@@ -170,6 +170,8 @@ Server-owned. The person can read their own. Never trust this document for enfor
 | `usage`                | `{ bestOrderRuns, forwardedBookings, files, photos }`          | **Server.** Counters kept in the same transaction as the create that they count.                                                                                |
 | `endedAt`              | instant?                                                       | Set by the server when the trip ends. Triggers stamps.                                                                                                          |
 
+API (VOY-153): `budget` can be set at create and changed by the owner through `/v1/trips`. `GET /v1/trips/{id}/budget` sums the trip's expenses in the settlement currency, by category, against the budget (per-person budgets times active members). A budget in another currency gives spend only. Per-category targets are not stored yet.
+
 Write: owner edits `title`, `dates`, `destinations`, `budget`; editors edit `title`, `dates`, `destinations`; `plan`, `usage`, `memberUids`, `ownerUid`, `settlementCurrency` (after the first expense), `status` transitions and `endedAt` are **server**. Creating a trip goes through the API because the upcoming-trips limit applies.
 
 ### `trips/{tripId}/members/{uid}`

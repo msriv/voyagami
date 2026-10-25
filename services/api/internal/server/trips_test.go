@@ -66,6 +66,9 @@ func (f *fakeTrips) Update(_ context.Context, id string, p model.TripPatch) (mod
 	if p.Status != nil {
 		t.Status = *p.Status
 	}
+	if p.Budget != nil {
+		t.Budget = p.Budget
+	}
 	f.trips[id] = t
 	return t, nil
 }
