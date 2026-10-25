@@ -1,5 +1,6 @@
 import { formatDate } from "@voyagami/locale";
-import { View } from "react-native";
+import { useRouter } from "expo-router";
+import { Pressable } from "react-native";
 
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
@@ -16,9 +17,9 @@ export interface TripCardProps {
   featured?: boolean;
 }
 
-/** Trip cards are not links yet: the trip overview screen arrives with VOY-119. */
 export function TripCard({ trip, locale, today, featured = false }: TripCardProps) {
   const { t } = useTranslation();
+  const router = useRouter();
   const { colors, radius } = useTheme();
   const { start, end, flexible } = trip.dates;
   const dates =
@@ -40,23 +41,30 @@ export function TripCard({ trip, locale, today, featured = false }: TripCardProp
         : undefined;
   const label = [trip.title, places, dates, when].filter(Boolean).join(". ");
 
+  const open = () => router.push(`/trips/${trip.id}`);
   if (!featured) {
     return (
       <Card>
-        <View accessible accessibilityLabel={label} style={{ gap: 2 }}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={label}
+          onPress={open}
+          style={{ gap: 2 }}
+        >
           <Text variant="title">{trip.title}</Text>
           <Text color="muted">{places}</Text>
           <Text variant="caption">
             {[dates, when].filter(Boolean).join(t("home.listSeparator"))}
           </Text>
-        </View>
+        </Pressable>
       </Card>
     );
   }
   return (
-    <View
-      accessible
+    <Pressable
+      accessibilityRole="button"
       accessibilityLabel={label}
+      onPress={open}
       style={{
         backgroundColor: colors.indigo,
         borderRadius: radius.card + 4,
@@ -78,6 +86,6 @@ export function TripCard({ trip, locale, today, featured = false }: TripCardProp
       <Text variant="caption" color="white">
         {dates}
       </Text>
-    </View>
+    </Pressable>
   );
 }

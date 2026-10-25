@@ -1,0 +1,251 @@
+import { formatDate } from "@voyagami/locale";
+import { getLocales } from "expo-localization";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import { ScrollView, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { ApiError, NetworkError } from "@voyagami/api-client";
+
+import { useAuth } from "@/auth";
+import { useTranslation } from "@/i18n";
+import { useTheme } from "@/theme";
+import { daysBetween, daysInRange, isoToDate } from "@/trips/dates";
+import type { Trip } from "@/trips/summary";
+import { Button, Card, IconButton, Input, Sheet, Text, WavePattern } from "@/ui";
+
+type State =
+  { kind: "loading" } | { kind: "ready"; trip: Trip } | { kind: "notFound" } | { kind: "error" };
+
+export default function TripScreen() {
+  const { t } = useTranslation();
+  const { colors, radius } = useTheme();
+  const { api } = useAuth();
+  const router = useRouter();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const locale = getLocales()[0]?.languageTag ?? "en";
+  const [state, setState] = useState<State>({ kind: "loading" });
+  const [menu, setMenu] = useState(false);
+  const [name, setName] = useState("");
+  const [formError, setFormError] = useState<string | undefined>();
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      const trip = await api.unwrap(
+        api.GET("/v1/trips/{tripId}", { params: { path: { tripId: id } } }),
+      );
+      setState({ kind: "ready", trip });
+      setName(trip.title);
+    } catch (e) {
+      setState(
+        e instanceof ApiError && e.code === "not_found" ? { kind: "notFound" } : { kind: "error" },
+      );
+    }
+  }, [api, id]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function change(body: { title?: string; status?: "past" | "planned" }) {
+    setBusy(true);
+    setFormError(undefined);
+    try {
+      const trip = await api.unwrap(
+        api.PATCH("/v1/trips/{tripId}", { params: { path: { tripId: id } }, body }),
+      );
+      setState({ kind: "ready", trip });
+      setMenu(false);
+    } catch (e) {
+      setFormError(t(e instanceof NetworkError ? "trip.errors.offline" : "trip.errors.generic"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const back = (
+    <IconButton
+      accessibilityLabel={t("trip.back")}
+      variant="secondary"
+      onPress={() => router.back()}
+    >
+      <Text variant="bodyStrong">{"‹"}</Text>
+    </IconButton>
+  );
+
+  if (state.kind !== "ready") {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.washi, padding: 20, gap: 16 }}>
+        <View style={{ flexDirection: "row" }}>{back}</View>
+        {state.kind === "loading" ? null : (
+          <Card>
+            <Text accessibilityLiveRegion="polite">
+              {state.kind === "notFound" ? t("trip.notFound") : t("trip.loadError")}
+            </Text>
+            {state.kind === "error" ? (
+              <Button label={t("trip.retry")} variant="secondary" onPress={() => void load()} />
+            ) : null}
+          </Card>
+        )}
+      </SafeAreaView>
+    );
+  }
+
+  const { trip } = state;
+  const { start, end, flexible } = trip.dates;
+  const dates =
+    start && end
+      ? t("trip.dateRange", {
+          start: formatDate(isoToDate(start), locale, { timeZone: "UTC" }),
+          end: formatDate(isoToDate(end), locale, { timeZone: "UTC", withYear: true }),
+        }) +
+        ", " +
+        t("trip.days", { count: daysBetween(start, end) })
+      : t("trip.flexibleDays", { count: flexible?.days ?? 0 });
+  const archived = trip.status === "past";
+  const canEdit = trip.role !== "viewer";
+  const sections = ["itinerary", "bookings", "money", "journal"] as const;
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.indigo }}>
+      <ScrollView style={{ backgroundColor: colors.washi }} contentContainerStyle={{ flexGrow: 1 }}>
+        <View
+          style={{
+            backgroundColor: colors.indigo,
+            padding: 20,
+            gap: 12,
+            borderBottomLeftRadius: 32,
+            borderBottomRightRadius: 32,
+            overflow: "hidden",
+          }}
+        >
+          <WavePattern opacity={0.09} />
+          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+            {back}
+            <IconButton
+              accessibilityLabel={t("trip.menu")}
+              variant="secondary"
+              onPress={() => setMenu(true)}
+            >
+              <Text variant="bodyStrong">{"⋯"}</Text>
+            </IconButton>
+          </View>
+          <View style={{ gap: 6 }}>
+            {archived ? (
+              <Text variant="caption" color="white" style={{ fontWeight: "800" }}>
+                {t("trip.archived").toUpperCase()}
+              </Text>
+            ) : null}
+            <Text variant="display" color="white" heading style={{ fontSize: 34, lineHeight: 36 }}>
+              {trip.title}
+            </Text>
+            <Text color="white">
+              {trip.destinations.map((d) => d.name).join(t("home.listSeparator"))}
+            </Text>
+            <Text variant="caption" color="white">
+              {dates}
+            </Text>
+            <Text variant="caption" color="white">
+              {t("trip.roleLine", { role: t(`trip.roles.${trip.role}`) })}
+            </Text>
+          </View>
+        </View>
+
+        <View style={{ padding: 20, gap: 18 }}>
+          {start && end ? (
+            <View style={{ gap: 8 }}>
+              <Text variant="title" heading>
+                {t("trip.dayStrip")}
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: 8 }}
+              >
+                {daysInRange(start, end).map((iso, i) => (
+                  <View
+                    key={iso}
+                    accessible
+                    accessibilityLabel={`${t("trip.dayNumber", { n: i + 1 })}, ${formatDate(isoToDate(iso), locale, { timeZone: "UTC" })}`}
+                    style={{
+                      backgroundColor: colors.white,
+                      borderRadius: radius.button,
+                      padding: 12,
+                      minWidth: 72,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text variant="caption">{t("trip.dayNumber", { n: i + 1 })}</Text>
+                    <Text variant="bodyStrong">
+                      {formatDate(isoToDate(iso), locale, { timeZone: "UTC" })}
+                    </Text>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          ) : null}
+
+          <View style={{ gap: 8 }}>
+            <Text variant="title" heading>
+              {t("trip.sections")}
+            </Text>
+            {sections.map((key) => (
+              // Placeholders until each section is built; disabled so nothing looks tappable that is not.
+              <Button
+                key={key}
+                label={t(`trip.${key}`)}
+                variant="secondary"
+                fullWidth
+                disabled
+                accessibilityLabel={t("trip.sectionSoon", { name: t(`trip.${key}`) })}
+              />
+            ))}
+            <Text variant="caption">{t("trip.comingSoon")}</Text>
+          </View>
+        </View>
+      </ScrollView>
+
+      <Sheet
+        visible={menu}
+        onClose={() => setMenu(false)}
+        title={t("trip.menu")}
+        closeLabel={t("trip.menuClose")}
+        closeIcon={<Text>{"×"}</Text>}
+      >
+        {canEdit ? (
+          <View style={{ gap: 12, paddingBottom: 12 }}>
+            <Input label={t("trip.nameLabel")} value={name} onChangeText={setName} maxLength={80} />
+            <Button
+              label={t("trip.save")}
+              loading={busy}
+              onPress={() =>
+                name.trim()
+                  ? void change({ title: name.trim() })
+                  : setFormError(t("trip.errors.blankName"))
+              }
+            />
+            {trip.role === "owner" ? (
+              <>
+                <Button
+                  label={archived ? t("trip.unarchive") : t("trip.archive")}
+                  variant="secondary"
+                  loading={busy}
+                  onPress={() => void change({ status: archived ? "planned" : "past" })}
+                />
+                {archived ? null : <Text variant="caption">{t("trip.archiveHint")}</Text>}
+              </>
+            ) : null}
+            {formError ? (
+              <Text color="vermilion" accessibilityLiveRegion="polite">
+                {formError}
+              </Text>
+            ) : null}
+          </View>
+        ) : (
+          <Text>{t("trip.viewerNote")}</Text>
+        )}
+      </Sheet>
+    </SafeAreaView>
+  );
+}
