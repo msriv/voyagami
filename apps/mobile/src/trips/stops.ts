@@ -23,3 +23,47 @@ export function displayTime(startLocal: string, locale: string): string {
   const at = new Date(Date.UTC(2000, 0, 1, Number(m[1]), Number(m[2])));
   return formatTime(at, locale, { timeZone: "UTC" });
 }
+
+export type Move = { kind: "up" } | { kind: "down" } | { kind: "day"; date: string };
+
+/** Sorts after any real order key, so a stop moved to the end of a day shows there at once. */
+const END = "￿";
+
+/**
+ * What a move sends to the server, and what the list looks like right away.
+ * Returns undefined when the move does nothing (already first, last or on that day).
+ */
+export function planMove(
+  stops: Stop[],
+  stop: Stop,
+  move: Move,
+): { body: { beforeStopId?: string; date?: string }; local: Stop[] } | undefined {
+  const day = stopsOn(stops, stop.date);
+  const i = day.findIndex((s) => s.id === stop.id);
+  const swapWith = (other: Stop) =>
+    stops.map((s) =>
+      s.id === stop.id
+        ? { ...s, order: other.order }
+        : s.id === other.id
+          ? { ...s, order: stop.order }
+          : s,
+    );
+  if (move.kind === "up") {
+    const prev = day[i - 1];
+    return prev ? { body: { beforeStopId: prev.id }, local: swapWith(prev) } : undefined;
+  }
+  if (move.kind === "down") {
+    const next = day[i + 1];
+    if (!next) return undefined;
+    const after = day[i + 2];
+    return {
+      body: after ? { beforeStopId: after.id } : { date: stop.date },
+      local: swapWith(next),
+    };
+  }
+  if (move.date === stop.date) return undefined;
+  return {
+    body: { date: move.date },
+    local: stops.map((s) => (s.id === stop.id ? { ...s, date: move.date, order: END } : s)),
+  };
+}
