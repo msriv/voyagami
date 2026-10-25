@@ -1,0 +1,40 @@
+name: Publish app (EAS Update)
+
+# Publishes apps/mobile to EAS Update on every merge to main, so the prototype
+# opens in Expo Go (VOY-218). Needs the EXPO_TOKEN repo secret.
+
+on:
+  push:
+    branches: [main]
+    paths: ["apps/mobile/**", "packages/**", "pnpm-lock.yaml"]
+  workflow_dispatch:
+
+concurrency:
+  group: publish-app
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: eas update
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: pnpm install --frozen-lockfile
+      - name: Publish
+        working-directory: apps/mobile
+        env:
+          EXPO_PUBLIC_API_URL: ${{ vars.DEV_API_URL || 'https://voyagami-api-405147124521.asia-south1.run.app' }}
+        run: eas update --branch main --message "${GITHUB_SHA::7}" --non-interactive
