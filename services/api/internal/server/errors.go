@@ -15,6 +15,7 @@ const (
 	codeRateLimited      = "rate_limited"
 	codeForbidden        = "forbidden"
 	codeNotFound         = "not_found"
+	codeConflict         = "conflict"
 	codeMethodNotAllowed = "method_not_allowed"
 	codeInternal         = "internal"
 	codeUnavailable      = "unavailable"

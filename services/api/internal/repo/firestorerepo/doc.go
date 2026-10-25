@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/msriv/voyagami/services/api/internal/model"
 	"github.com/msriv/voyagami/services/api/internal/repo"
 )
 
@@ -28,7 +29,7 @@ func mapErr(op string, err error) error {
 	if err == nil {
 		return nil
 	}
-	if errors.Is(err, repo.ErrNotFound) || errors.Is(err, repo.ErrAlreadyExists) || errors.Is(err, repo.ErrForbidden) {
+	if errors.Is(err, repo.ErrNotFound) || errors.Is(err, repo.ErrAlreadyExists) || errors.Is(err, repo.ErrForbidden) || errors.Is(err, repo.ErrConflict) || errors.Is(err, model.ErrPollNoWinner) {
 		return err
 	}
 	switch status.Code(err) {

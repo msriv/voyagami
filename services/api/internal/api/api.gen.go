@@ -324,6 +324,42 @@ func (e PlaceRefCategory) Valid() bool {
 	}
 }
 
+// Defines values for PollStatus.
+const (
+	Closed PollStatus = "closed"
+	Open   PollStatus = "open"
+)
+
+// Valid indicates whether the value is a known member of the PollStatus enum.
+func (e PollStatus) Valid() bool {
+	switch e {
+	case Closed:
+		return true
+	case Open:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PollResultDecidedBy.
+const (
+	PollResultDecidedByOwner PollResultDecidedBy = "owner"
+	PollResultDecidedByVote  PollResultDecidedBy = "vote"
+)
+
+// Valid indicates whether the value is a known member of the PollResultDecidedBy enum.
+func (e PollResultDecidedBy) Valid() bool {
+	switch e {
+	case PollResultDecidedByOwner:
+		return true
+	case PollResultDecidedByVote:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for SplitInputMethod.
 const (
 	SplitInputMethodEqual   SplitInputMethod = "equal"
@@ -1042,6 +1078,93 @@ type PlaceRef struct {
 // PlaceRefCategory Optional, for a pin the person dropped.
 type PlaceRefCategory string
 
+// Poll defines model for Poll.
+type Poll struct {
+	ClosedAt  *time.Time `json:"closedAt,omitempty"`
+	ClosesAt  *time.Time `json:"closesAt,omitempty"`
+	CreatedBy string     `json:"createdBy"`
+	Id        string     `json:"id"`
+	Multi     bool       `json:"multi"`
+
+	// MyVote Option IDs the caller picked, empty if they have not voted.
+	MyVote   []string     `json:"myVote"`
+	Options  []PollOption `json:"options"`
+	Question string       `json:"question"`
+	Result   *PollResult  `json:"result,omitempty"`
+	Status   PollStatus   `json:"status"`
+
+	// Voters How many people have voted.
+	Voters int `json:"voters"`
+}
+
+// PollStatus defines model for Poll.Status.
+type PollStatus string
+
+// PollClose defines model for PollClose.
+type PollClose struct {
+	// AddToDate YYYY-MM-DD. Add the winning place to the itinerary on this day.
+	AddToDate *string `json:"addToDate,omitempty"`
+
+	// OptionId Pick the winner by hand. Needed on a tie or with no votes.
+	OptionId *string `json:"optionId,omitempty"`
+}
+
+// PollClosed defines model for PollClosed.
+type PollClosed struct {
+	Poll Poll  `json:"poll"`
+	Stop *Stop `json:"stop,omitempty"`
+}
+
+// PollCreate defines model for PollCreate.
+type PollCreate struct {
+	// ClosesAt Votes stop at this time. Absent means open until closed by hand.
+	ClosesAt *time.Time `json:"closesAt,omitempty"`
+
+	// Multi Allow several options per vote. Defaults to one.
+	Multi    *bool             `json:"multi,omitempty"`
+	Options  []PollOptionInput `json:"options"`
+	Question string            `json:"question"`
+}
+
+// PollList defines model for PollList.
+type PollList struct {
+	Polls []Poll `json:"polls"`
+}
+
+// PollOption defines model for PollOption.
+type PollOption struct {
+	Id    string `json:"id"`
+	Label string `json:"label"`
+
+	// Place A catalogue place by `placeId`, or a pin the person dropped (`name`, `lat`, `lng`).
+	Place *PlaceRef `json:"place,omitempty"`
+	Votes int       `json:"votes"`
+}
+
+// PollOptionInput defines model for PollOptionInput.
+type PollOptionInput struct {
+	Label string `json:"label"`
+
+	// Place A catalogue place by `placeId`, or a pin the person dropped (`name`, `lat`, `lng`).
+	Place *PlaceRef `json:"place,omitempty"`
+}
+
+// PollResult defines model for PollResult.
+type PollResult struct {
+	DecidedBy PollResultDecidedBy `json:"decidedBy"`
+
+	// OptionId Absent when the poll ran out of time with no clear winner.
+	OptionId *string `json:"optionId,omitempty"`
+}
+
+// PollResultDecidedBy defines model for PollResult.DecidedBy.
+type PollResultDecidedBy string
+
+// PollVote defines model for PollVote.
+type PollVote struct {
+	OptionIds []string `json:"optionIds"`
+}
+
 // Rate Original to settlement currency, as a ratio of minor units:
 // settlement = original x numerator / denominator, rounded half away
 // from zero. Saved with the expense; never changed by a later rate refresh.
@@ -1342,6 +1465,11 @@ type UnitsTemperature string
 // `method_not_allowed`, `internal`, `unavailable`, `timeout`.
 type BadRequest = Error
 
+// Conflict The one error shape every non-2xx response uses. Codes: `bad_request`,
+// `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,
+// `method_not_allowed`, `internal`, `unavailable`, `timeout`.
+type Conflict = Error
+
 // Forbidden The one error shape every non-2xx response uses. Codes: `bad_request`,
 // `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,
 // `method_not_allowed`, `internal`, `unavailable`, `timeout`.
@@ -1420,6 +1548,15 @@ type PutJournalEntryJSONRequestBody = JournalWrite
 
 // SetMemberRoleJSONRequestBody defines body for SetMemberRole for application/json ContentType.
 type SetMemberRoleJSONRequestBody = MemberRoleChange
+
+// CreatePollJSONRequestBody defines body for CreatePoll for application/json ContentType.
+type CreatePollJSONRequestBody = PollCreate
+
+// ClosePollJSONRequestBody defines body for ClosePoll for application/json ContentType.
+type ClosePollJSONRequestBody = PollClose
+
+// VotePollJSONRequestBody defines body for VotePoll for application/json ContentType.
+type VotePollJSONRequestBody = PollVote
 
 // RecordSettlementJSONRequestBody defines body for RecordSettlement for application/json ContentType.
 type RecordSettlementJSONRequestBody = SettlementCreate
@@ -1549,6 +1686,18 @@ type ServerInterface interface {
 	// SetMemberRole Change a member's role
 	// (PATCH /v1/trips/{tripId}/members/{uid})
 	SetMemberRole(w http.ResponseWriter, r *http.Request, tripId string, uid string)
+	// ListPolls List polls
+	// (GET /v1/trips/{tripId}/polls)
+	ListPolls(w http.ResponseWriter, r *http.Request, tripId string)
+	// CreatePoll Start a poll
+	// (POST /v1/trips/{tripId}/polls)
+	CreatePoll(w http.ResponseWriter, r *http.Request, tripId string)
+	// ClosePoll Close a poll
+	// (POST /v1/trips/{tripId}/polls/{pollId}/close)
+	ClosePoll(w http.ResponseWriter, r *http.Request, tripId string, pollId string)
+	// VotePoll Vote, or change your vote
+	// (POST /v1/trips/{tripId}/polls/{pollId}/vote)
+	VotePoll(w http.ResponseWriter, r *http.Request, tripId string, pollId string)
 	// ListSettlements List recorded payments
 	// (GET /v1/trips/{tripId}/settlements)
 	ListSettlements(w http.ResponseWriter, r *http.Request, tripId string)
@@ -2539,6 +2688,128 @@ func (siw *ServerInterfaceWrapper) SetMemberRole(w http.ResponseWriter, r *http.
 	handler.ServeHTTP(w, r)
 }
 
+// ListPolls operation middleware
+func (siw *ServerInterfaceWrapper) ListPolls(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListPolls(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreatePoll operation middleware
+func (siw *ServerInterfaceWrapper) CreatePoll(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreatePoll(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ClosePoll operation middleware
+func (siw *ServerInterfaceWrapper) ClosePoll(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "pollId" -------------
+	var pollId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "pollId", r.PathValue("pollId"), &pollId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pollId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ClosePoll(w, r, tripId, pollId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// VotePoll operation middleware
+func (siw *ServerInterfaceWrapper) VotePoll(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "pollId" -------------
+	var pollId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "pollId", r.PathValue("pollId"), &pollId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pollId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.VotePoll(w, r, tripId, pollId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListSettlements operation middleware
 func (siw *ServerInterfaceWrapper) ListSettlements(w http.ResponseWriter, r *http.Request) {
 
@@ -2985,6 +3256,10 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/journal/{date}", wrapper.DeleteJournalEntry)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/v1/trips/{tripId}/journal/{date}", wrapper.PutJournalEntry)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/rates", wrapper.GetRate)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/polls", wrapper.ListPolls)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/polls", wrapper.CreatePoll)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/polls/{pollId}/vote", wrapper.VotePoll)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/polls/{pollId}/close", wrapper.ClosePoll)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/members", wrapper.ListMembers)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/members/{uid}", wrapper.RemoveMember)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/trips/{tripId}/members/{uid}", wrapper.SetMemberRole)
@@ -3007,6 +3282,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 }
 
 type BadRequestJSONResponse Error
+
+type ConflictJSONResponse Error
 
 type ForbiddenJSONResponse Error
 
@@ -5611,6 +5888,365 @@ func (response SetMemberRole503JSONResponse) VisitSetMemberRoleResponse(w http.R
 	return err
 }
 
+type ListPollsRequestObject struct {
+	TripId string `json:"tripId"`
+}
+
+type ListPollsResponseObject interface {
+	VisitListPollsResponse(w http.ResponseWriter) error
+}
+
+type ListPolls200JSONResponse PollList
+
+func (response ListPolls200JSONResponse) VisitListPollsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListPolls401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ListPolls401JSONResponse) VisitListPollsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListPolls404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ListPolls404JSONResponse) VisitListPollsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListPolls503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ListPolls503JSONResponse) VisitListPollsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreatePollRequestObject struct {
+	TripId string `json:"tripId"`
+	Body   *CreatePollJSONRequestBody
+}
+
+type CreatePollResponseObject interface {
+	VisitCreatePollResponse(w http.ResponseWriter) error
+}
+
+type CreatePoll201JSONResponse Poll
+
+func (response CreatePoll201JSONResponse) VisitCreatePollResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreatePoll400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CreatePoll400JSONResponse) VisitCreatePollResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreatePoll401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CreatePoll401JSONResponse) VisitCreatePollResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreatePoll403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response CreatePoll403JSONResponse) VisitCreatePollResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreatePoll404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CreatePoll404JSONResponse) VisitCreatePollResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreatePoll503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response CreatePoll503JSONResponse) VisitCreatePollResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ClosePollRequestObject struct {
+	TripId string `json:"tripId"`
+	PollId string `json:"pollId"`
+	Body   *ClosePollJSONRequestBody
+}
+
+type ClosePollResponseObject interface {
+	VisitClosePollResponse(w http.ResponseWriter) error
+}
+
+type ClosePoll200JSONResponse PollClosed
+
+func (response ClosePoll200JSONResponse) VisitClosePollResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ClosePoll400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response ClosePoll400JSONResponse) VisitClosePollResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ClosePoll401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ClosePoll401JSONResponse) VisitClosePollResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ClosePoll403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response ClosePoll403JSONResponse) VisitClosePollResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ClosePoll404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ClosePoll404JSONResponse) VisitClosePollResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ClosePoll409JSONResponse struct{ ConflictJSONResponse }
+
+func (response ClosePoll409JSONResponse) VisitClosePollResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ClosePoll503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ClosePoll503JSONResponse) VisitClosePollResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type VotePollRequestObject struct {
+	TripId string `json:"tripId"`
+	PollId string `json:"pollId"`
+	Body   *VotePollJSONRequestBody
+}
+
+type VotePollResponseObject interface {
+	VisitVotePollResponse(w http.ResponseWriter) error
+}
+
+type VotePoll200JSONResponse Poll
+
+func (response VotePoll200JSONResponse) VisitVotePollResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type VotePoll400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response VotePoll400JSONResponse) VisitVotePollResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type VotePoll401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response VotePoll401JSONResponse) VisitVotePollResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type VotePoll404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response VotePoll404JSONResponse) VisitVotePollResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type VotePoll409JSONResponse struct{ ConflictJSONResponse }
+
+func (response VotePoll409JSONResponse) VisitVotePollResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type VotePoll503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response VotePoll503JSONResponse) VisitVotePollResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListSettlementsRequestObject struct {
 	TripId string `json:"tripId"`
 }
@@ -6529,6 +7165,18 @@ type StrictServerInterface interface {
 	// SetMemberRole Change a member's role
 	// (PATCH /v1/trips/{tripId}/members/{uid})
 	SetMemberRole(ctx context.Context, request SetMemberRoleRequestObject) (SetMemberRoleResponseObject, error)
+	// ListPolls List polls
+	// (GET /v1/trips/{tripId}/polls)
+	ListPolls(ctx context.Context, request ListPollsRequestObject) (ListPollsResponseObject, error)
+	// CreatePoll Start a poll
+	// (POST /v1/trips/{tripId}/polls)
+	CreatePoll(ctx context.Context, request CreatePollRequestObject) (CreatePollResponseObject, error)
+	// ClosePoll Close a poll
+	// (POST /v1/trips/{tripId}/polls/{pollId}/close)
+	ClosePoll(ctx context.Context, request ClosePollRequestObject) (ClosePollResponseObject, error)
+	// VotePoll Vote, or change your vote
+	// (POST /v1/trips/{tripId}/polls/{pollId}/vote)
+	VotePoll(ctx context.Context, request VotePollRequestObject) (VotePollResponseObject, error)
 	// ListSettlements List recorded payments
 	// (GET /v1/trips/{tripId}/settlements)
 	ListSettlements(ctx context.Context, request ListSettlementsRequestObject) (ListSettlementsResponseObject, error)
@@ -7649,6 +8297,133 @@ func (sh *strictHandler) SetMemberRole(w http.ResponseWriter, r *http.Request, t
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(SetMemberRoleResponseObject); ok {
 		if err := validResponse.VisitSetMemberRoleResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListPolls operation middleware
+func (sh *strictHandler) ListPolls(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request ListPollsRequestObject
+
+	request.TripId = tripId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListPolls(ctx, request.(ListPollsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListPolls")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListPollsResponseObject); ok {
+		if err := validResponse.VisitListPollsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreatePoll operation middleware
+func (sh *strictHandler) CreatePoll(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request CreatePollRequestObject
+
+	request.TripId = tripId
+
+	var body CreatePollJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreatePoll(ctx, request.(CreatePollRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreatePoll")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreatePollResponseObject); ok {
+		if err := validResponse.VisitCreatePollResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ClosePoll operation middleware
+func (sh *strictHandler) ClosePoll(w http.ResponseWriter, r *http.Request, tripId string, pollId string) {
+	var request ClosePollRequestObject
+
+	request.TripId = tripId
+	request.PollId = pollId
+
+	var body ClosePollJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ClosePoll(ctx, request.(ClosePollRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ClosePoll")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ClosePollResponseObject); ok {
+		if err := validResponse.VisitClosePollResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// VotePoll operation middleware
+func (sh *strictHandler) VotePoll(w http.ResponseWriter, r *http.Request, tripId string, pollId string) {
+	var request VotePollRequestObject
+
+	request.TripId = tripId
+	request.PollId = pollId
+
+	var body VotePollJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.VotePoll(ctx, request.(VotePollRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "VotePoll")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(VotePollResponseObject); ok {
+		if err := validResponse.VisitVotePollResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

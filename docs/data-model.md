@@ -310,7 +310,9 @@ Write: **server** (it issues the upload URL, which is where the 3-file free limi
 | `closedAt` | instant?                                                                      |                                       |
 | `result`   | `{ optionId, counts: { [optionId]: integer }, decidedBy: "vote" / "owner" }?` | **Server.** Set when the poll closes. |
 
-Vote document (`votes/{uid}`, ID is the voter, so voting twice updates): `{ optionIds: string[], votedAt, arrivedAfterClose?: boolean }`. Members write only their own vote while the poll is open. The server alone closes a poll, using the votes it has; later votes are kept and flagged `arrivedAfterClose`.
+Vote document (`votes/{uid}`, ID is the voter, so voting twice updates): `{ optionIds: string[], votedAt }`. Members write only their own vote while the poll is open.
+
+API (VOY-142): `GET/POST /v1/trips/{id}/polls`, `POST .../polls/{pollId}/vote` and `.../close`. Any active member can vote (viewers too); owners and editors create and close. A vote after the poll is closed (by hand, or past `closesAt`) is refused with 409 rather than stored. Counts are live and who voted for what is not shown. The server alone closes a poll, counting the votes in one transaction: the most votes wins, and with no votes or a tie the closer must pick an option (recorded as `decidedBy: owner`). A poll past `closesAt` reads as closed with no stored result until someone closes it. `addToDate` on close puts a winning place on the itinerary as a stop, once.
 
 Write poll: editors and owners. Close and `result`: **server**.
 

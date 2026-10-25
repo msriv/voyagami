@@ -845,6 +845,151 @@ paths:
           $ref: "#/components/responses/NotFound"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/polls:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: listPolls
+      tags: [polls]
+      summary: List polls
+      description: |
+        Newest first, with live vote counts and the caller's own vote. Who
+        voted for what is not shown. A poll past its `closesAt` reads as
+        closed. Any active member can read.
+      responses:
+        "200":
+          description: The polls.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PollList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    post:
+      operationId: createPoll
+      tags: [polls]
+      summary: Start a poll
+      description: Owners and editors. Two to ten options; an option can be a place, so the winner can go on the itinerary.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PollCreate"
+      responses:
+        "201":
+          description: The new poll.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Poll"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/polls/{pollId}/vote:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: pollId
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      operationId: votePoll
+      tags: [polls]
+      summary: Vote, or change your vote
+      description: |
+        One vote per member, replaced each time, until the poll closes. Every
+        active member can vote, viewers included. Send one option, or several
+        when the poll allows many.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PollVote"
+      responses:
+        "200":
+          description: The poll with updated counts.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Poll"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/polls/{pollId}/close:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: pollId
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      operationId: closePoll
+      tags: [polls]
+      summary: Close a poll
+      description: |
+        Owners and editors. The option with most votes wins. With no votes or
+        a tie the answer is 409 and the closer picks one with `optionId`
+        (decided by the owner). `addToDate` puts the winner on that day of the
+        itinerary when it is a place. Closing a closed poll returns it.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PollClose"
+      responses:
+        "200":
+          description: The closed poll, and the stop if one was added.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PollClosed"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/trips/{tripId}/members:
     parameters:
       - name: tripId
@@ -1369,6 +1514,12 @@ components:
             $ref: "#/components/schemas/Error"
     Forbidden:
       description: The person is on the trip but their role does not allow this.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: The request is fine but cannot be done in the current state.
       content:
         application/json:
           schema:
@@ -2099,6 +2250,127 @@ components:
         asOf:
           type: string
           description: The UTC day the rate is for, YYYY-MM-DD.
+    PollOptionInput:
+      type: object
+      required: [label]
+      properties:
+        label:
+          type: string
+          maxLength: 100
+        place:
+          $ref: "#/components/schemas/PlaceRef"
+    PollCreate:
+      type: object
+      required: [question, options]
+      properties:
+        question:
+          type: string
+          maxLength: 200
+        options:
+          type: array
+          minItems: 2
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/PollOptionInput"
+        multi:
+          type: boolean
+          description: Allow several options per vote. Defaults to one.
+        closesAt:
+          type: string
+          format: date-time
+          description: Votes stop at this time. Absent means open until closed by hand.
+    PollOption:
+      type: object
+      required: [id, label, votes]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        place:
+          $ref: "#/components/schemas/PlaceRef"
+        votes:
+          type: integer
+    PollResult:
+      type: object
+      required: [decidedBy]
+      properties:
+        optionId:
+          type: string
+          description: Absent when the poll ran out of time with no clear winner.
+        decidedBy:
+          type: string
+          enum: [vote, owner]
+    Poll:
+      type: object
+      required: [id, question, options, multi, status, createdBy, myVote, voters]
+      properties:
+        id:
+          type: string
+        question:
+          type: string
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/PollOption"
+        multi:
+          type: boolean
+        status:
+          type: string
+          enum: [open, closed]
+        closesAt:
+          type: string
+          format: date-time
+        closedAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+        myVote:
+          type: array
+          items:
+            type: string
+          description: Option IDs the caller picked, empty if they have not voted.
+        voters:
+          type: integer
+          description: How many people have voted.
+        result:
+          $ref: "#/components/schemas/PollResult"
+    PollList:
+      type: object
+      required: [polls]
+      properties:
+        polls:
+          type: array
+          items:
+            $ref: "#/components/schemas/Poll"
+    PollVote:
+      type: object
+      required: [optionIds]
+      properties:
+        optionIds:
+          type: array
+          minItems: 1
+          maxItems: 10
+          items:
+            type: string
+    PollClose:
+      type: object
+      properties:
+        optionId:
+          type: string
+          description: Pick the winner by hand. Needed on a tie or with no votes.
+        addToDate:
+          type: string
+          description: YYYY-MM-DD. Add the winning place to the itinerary on this day.
+    PollClosed:
+      type: object
+      required: [poll]
+      properties:
+        poll:
+          $ref: "#/components/schemas/Poll"
+        stop:
+          $ref: "#/components/schemas/Stop"
     Member:
       type: object
       required: [uid, role, status, displayName, joinedAt]
