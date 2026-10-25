@@ -1,7 +1,7 @@
 import { formatDate } from "@voyagami/locale";
 import { getLocales } from "expo-localization";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -21,9 +21,6 @@ type State =
   | { kind: "notFound" }
   | { kind: "error" };
 
-/** What the stop sheet is doing: adding to a day, or editing one stop. */
-type Editing = { kind: "add" } | { kind: "edit"; stop: Stop } | undefined;
-
 export default function ItineraryScreen() {
   const { t } = useTranslation();
   const { colors, radius, hitArea } = useTheme();
@@ -33,8 +30,7 @@ export default function ItineraryScreen() {
   const locale = getLocales()[0]?.languageTag ?? "en";
   const [state, setState] = useState<State>({ kind: "loading" });
   const [day, setDay] = useState<string | undefined>();
-  const [editing, setEditing] = useState<Editing>();
-  const [name, setName] = useState("");
+  const [editing, setEditing] = useState<Stop | undefined>();
   const [time, setTime] = useState("");
   const [duration, setDuration] = useState("");
   const [note, setNote] = useState("");
@@ -55,9 +51,12 @@ export default function ItineraryScreen() {
     }
   }, [api, id]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  // Also reloads on coming back from adding a place.
+  useFocusEffect(
+    useCallback(() => {
+      void load();
+    }, [load]),
+  );
 
   const { start, end } = state.kind === "ready" ? state.trip.dates : {};
   const days = useMemo(() => (start && end ? daysInRange(start, end) : []), [start, end]);
@@ -99,19 +98,14 @@ export default function ItineraryScreen() {
   const canEdit = trip.role !== "viewer";
   const todays = current ? stopsOn(stops, current) : [];
   // The stop being edited, as it is now: a move changes its day and place in the list.
-  const live =
-    editing?.kind === "edit"
-      ? (stops.find((s) => s.id === editing.stop.id) ?? editing.stop)
-      : undefined;
+  const live = editing ? (stops.find((s) => s.id === editing.id) ?? editing) : undefined;
 
-  function open(next: Editing) {
+  function open(next: Stop) {
     setError(undefined);
     setEditing(next);
-    const s = next?.kind === "edit" ? next.stop : undefined;
-    setName(s?.place.name ?? "");
-    setTime(s?.startLocal ?? "");
-    setDuration(s?.durationMin ? String(s.durationMin) : "");
-    setNote(s?.note ?? "");
+    setTime(next?.startLocal ?? "");
+    setDuration(next?.durationMin ? String(next.durationMin) : "");
+    setNote(next?.note ?? "");
   }
 
   function fail(e: unknown) {
@@ -122,7 +116,7 @@ export default function ItineraryScreen() {
 
   async function save() {
     const minutes = duration.trim() === "" ? 0 : Number(duration);
-    if (editing?.kind === "add" && !name.trim()) return setError(t("itinerary.errors.name"));
+    if (!editing) return;
     if (!isValidTime(time.trim())) return setError(t("itinerary.errors.time"));
     if (!Number.isInteger(minutes) || minutes < 0 || minutes > 1440) {
       return setError(t("itinerary.errors.duration"));
@@ -130,29 +124,12 @@ export default function ItineraryScreen() {
     setBusy(true);
     setError(undefined);
     try {
-      let saved: Stop;
-      if (editing?.kind === "edit") {
-        saved = await api.unwrap(
-          api.PATCH("/v1/trips/{tripId}/stops/{stopId}", {
-            params: { path: { tripId: id, stopId: editing.stop.id } },
-            body: { startLocal: time.trim(), durationMin: minutes, note: note.trim() },
-          }),
-        );
-      } else if (current) {
-        // shortcut: a stop added by name alone has no map position (0, 0), until place search and the manual tab (VOY-124) supply real coordinates.
-        saved = await api.unwrap(
-          api.POST("/v1/trips/{tripId}/stops", {
-            params: { path: { tripId: id } },
-            body: {
-              date: current,
-              place: { name: name.trim(), lat: 0, lng: 0 },
-              ...(time.trim() ? { startLocal: time.trim() } : null),
-              ...(minutes ? { durationMin: minutes } : null),
-              ...(note.trim() ? { note: note.trim() } : null),
-            },
-          }),
-        );
-      } else return;
+      const saved = await api.unwrap(
+        api.PATCH("/v1/trips/{tripId}/stops/{stopId}", {
+          params: { path: { tripId: id, stopId: editing.id } },
+          body: { startLocal: time.trim(), durationMin: minutes, note: note.trim() },
+        }),
+      );
       setState({ kind: "ready", trip, stops: [...stops.filter((s) => s.id !== saved.id), saved] });
       setEditing(undefined);
     } catch (e) {
@@ -258,7 +235,7 @@ export default function ItineraryScreen() {
                           : t("itinerary.stopLabelNoTime", { name: placeName })
                     }
                     disabled={!canEdit}
-                    onPress={() => open({ kind: "edit", stop: s })}
+                    onPress={() => open(s)}
                     style={{ minHeight: hitArea.min, gap: 2, borderRadius: radius.button }}
                   >
                     {when ? <Text variant="caption">{when}</Text> : null}
@@ -274,7 +251,10 @@ export default function ItineraryScreen() {
               );
             })}
             {canEdit ? (
-              <Button label={t("itinerary.add")} onPress={() => open({ kind: "add" })} />
+              <Button
+                label={t("itinerary.add")}
+                onPress={() => router.push(`/trips/${id}/add-place?date=${current}`)}
+              />
             ) : null}
           </>
         )}
@@ -283,19 +263,11 @@ export default function ItineraryScreen() {
       <Sheet
         visible={editing !== undefined}
         onClose={() => setEditing(undefined)}
-        title={t(editing?.kind === "edit" ? "itinerary.editTitle" : "itinerary.addTitle")}
+        title={t("itinerary.editTitle")}
         closeLabel={t("itinerary.close")}
         closeIcon={<Text>{"×"}</Text>}
       >
         <View style={{ gap: 12, paddingBottom: 12 }}>
-          {editing?.kind === "add" ? (
-            <Input
-              label={t("itinerary.nameLabel")}
-              value={name}
-              onChangeText={setName}
-              maxLength={200}
-            />
-          ) : null}
           <Input
             label={t("itinerary.timeLabel")}
             value={time}
@@ -317,11 +289,7 @@ export default function ItineraryScreen() {
             maxLength={2000}
             multiline
           />
-          <Button
-            label={t(editing?.kind === "edit" ? "itinerary.save" : "itinerary.addConfirm")}
-            loading={busy}
-            onPress={() => void save()}
-          />
+          <Button label={t("itinerary.save")} loading={busy} onPress={() => void save()} />
           {live ? (
             <View style={{ gap: 8 }}>
               <Text variant="bodyStrong">{t("itinerary.moveHeading")}</Text>

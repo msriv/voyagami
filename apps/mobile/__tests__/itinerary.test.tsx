@@ -71,36 +71,13 @@ describe("Itinerary", () => {
     expect(screen.getByText("Nothing planned for this day yet.")).toBeTruthy();
   });
 
-  it("adds a stop to the chosen day", async () => {
-    const calls = mockApi({
-      ...base(),
-      "POST /v1/trips/t1/stops": () =>
-        json(201, stop("n1", "Pho Thin", "2099-11-19", "a", { startLocal: "12:00" })),
-    });
-    await renderRouter(routes, { initialUrl: "/trips/t1/itinerary" });
-    await fireEvent.press(await screen.findByRole("button", { name: "Add a stop" }));
-    await fireEvent.changeText(screen.getByLabelText("Place name"), "Pho Thin");
-    await fireEvent.changeText(screen.getByLabelText(/^Start time/), "12:00");
-    await fireEvent.press(screen.getByRole("button", { name: "Add stop" }));
-    expect(await screen.findByText("Pho Thin")).toBeTruthy();
-    expect(calls.find((c) => c.key === "POST /v1/trips/t1/stops")?.body).toMatchObject({
-      date: "2099-11-19",
-      place: { name: "Pho Thin" },
-      startLocal: "12:00",
-    });
-  });
-
-  it("rejects a bad time before calling the server", async () => {
-    const calls = mockApi(base());
-    await renderRouter(routes, { initialUrl: "/trips/t1/itinerary" });
-    await fireEvent.press(await screen.findByRole("button", { name: "Add a stop" }));
-    await fireEvent.changeText(screen.getByLabelText("Place name"), "Pho Thin");
-    await fireEvent.changeText(screen.getByLabelText(/^Start time/), "25:99");
-    await fireEvent.press(screen.getByRole("button", { name: "Add stop" }));
-    expect(
-      await screen.findByText("Use a 24-hour time like 09:30, or leave it blank."),
-    ).toBeTruthy();
-    expect(calls.some((c) => c.key.startsWith("POST"))).toBe(false);
+  it("opens Add a place for the chosen day", async () => {
+    mockApi(base());
+    const view = await renderRouter(routes, { initialUrl: "/trips/t1/itinerary" });
+    await fireEvent.press(await screen.findByRole("button", { name: /^Day 2/ }));
+    await fireEvent.press(screen.getByRole("button", { name: "Add a stop" }));
+    expect(await screen.findByText("Add a place")).toBeTruthy();
+    expect(view.getPathnameWithParams()).toBe("/trips/t1/add-place?date=2099-11-20");
   });
 
   it("edits and removes a stop", async () => {

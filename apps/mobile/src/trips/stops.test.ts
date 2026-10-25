@@ -1,4 +1,4 @@
-import { displayTime, isValidTime, planMove, stopsOn, type Stop } from "./stops";
+import { displayTime, isValidTime, parsePin, planMove, stopsOn, type Stop } from "./stops";
 
 const stop = (id: string, date: string, order: string): Stop => ({
   id,
@@ -66,5 +66,14 @@ describe("stops", () => {
       expect(ids(plan?.local ?? [], "2026-11-02")).toEqual(["a"]);
       expect(planMove(day, at("a"), { kind: "day", date: "2026-11-01" })).toBeUndefined();
     });
+  });
+
+  it("reads a pin: both blank means none, half or out of range is rejected", () => {
+    expect(parsePin("", "")).toEqual({ lat: 0, lng: 0 });
+    expect(parsePin(" 21.03 ", "105.85")).toEqual({ lat: 21.03, lng: 105.85 });
+    expect(parsePin("21", "")).toBeUndefined();
+    expect(parsePin("91", "10")).toBeUndefined();
+    expect(parsePin("10", "181")).toBeUndefined();
+    expect(parsePin("abc", "10")).toBeUndefined();
   });
 });

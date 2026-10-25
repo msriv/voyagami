@@ -11,6 +11,7 @@ import SignIn from "../app/(auth)/sign-in";
 import TabsLayout from "../app/(tabs)/_layout";
 import Explore from "../app/(tabs)/explore";
 import Trip from "../app/trips/[id]";
+import AddPlace from "../app/trips/[id]/add-place";
 import Itinerary from "../app/trips/[id]/itinerary";
 import NewTrip from "../app/trips/new";
 import Home from "../app/(tabs)/index";
@@ -28,6 +29,7 @@ export const routes: Record<string, ComponentType> = {
   "trips/new": NewTrip,
   "trips/[id]": Trip,
   "trips/[id]/itinerary": Itinerary,
+  "trips/[id]/add-place": AddPlace,
   "(tabs)/_layout": TabsLayout,
   "(tabs)/index": Home,
   "(tabs)/explore": Explore,
