@@ -262,6 +262,57 @@ export interface paths {
         patch: operations["updateStop"];
         trace?: never;
     };
+    "/v1/trips/{tripId}/days/{date}/best-order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                /** @description The day, YYYY-MM-DD. */
+                date: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suggest a shorter order for a day
+         * @description Any member can ask. Nothing is changed. Stops with a start time stay
+         *     where they are, and stops without a map position are left where they
+         *     are too. Travel times are straight-line estimates (`approx`).
+         */
+        post: operations["suggestBestOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/days/{date}/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                date: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set the order of a day's stops
+         * @description Owners and editors only. `stopIds` must list every stop on the day
+         *     exactly once. Used to accept a suggestion, and to undo it by sending
+         *     the earlier order.
+         */
+        put: operations["setDayOrder"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/otp/request": {
         parameters: {
             query?: never;
@@ -522,6 +573,22 @@ export interface components {
             date?: string;
             /** @description Put the stop just before this one on the target day. */
             beforeStopId?: string;
+        };
+        BestOrder: {
+            date: string;
+            /** @description False when the current order is already the best found. */
+            changed: boolean;
+            /** @description True when travel times are straight-line estimates. */
+            approx: boolean;
+            /** @description Estimated travel minutes in the current order. */
+            beforeMin: number;
+            /** @description Estimated travel minutes in the suggested order. */
+            afterMin: number;
+            /** @description The stop IDs in the suggested order. */
+            stopIds: string[];
+        };
+        DayOrder: {
+            stopIds: string[];
         };
         Trip: {
             id: string;
@@ -1091,6 +1158,66 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Stop"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    suggestBestOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                /** @description The day, YYYY-MM-DD. */
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The suggestion. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BestOrder"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    setDayOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DayOrder"];
+            };
+        };
+        responses: {
+            /** @description The day's stops in the new order. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StopList"];
                 };
             };
             400: components["responses"]["BadRequest"];

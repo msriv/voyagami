@@ -340,3 +340,6 @@ func (t TaskPatch) Validate() error {
 	}
 	return p.err()
 }
+
+// ValidDate reports whether s is a calendar date written YYYY-MM-DD.
+func ValidDate(s string) bool { return isDate(s) }

@@ -74,6 +74,9 @@ type Stops interface {
 	List(ctx context.Context, tripID string) ([]model.Stop, error)
 	// Update changes only the fields set in the patch.
 	Update(ctx context.Context, tripID, stopID string, patch model.StopPatch) (model.Stop, error)
+	// SetOrders rewrites the order key of several stops in one atomic step.
+	// It returns ErrNotFound if any of the stops does not exist.
+	SetOrders(ctx context.Context, tripID string, orders map[string]string) error
 }
 
 // Tasks stores a trip's to-dos. The caller has already checked that the

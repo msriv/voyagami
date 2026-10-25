@@ -249,6 +249,30 @@ func (e UnitsTemperature) Valid() bool {
 	}
 }
 
+// BestOrder defines model for BestOrder.
+type BestOrder struct {
+	// AfterMin Estimated travel minutes in the suggested order.
+	AfterMin int `json:"afterMin"`
+
+	// Approx True when travel times are straight-line estimates.
+	Approx bool `json:"approx"`
+
+	// BeforeMin Estimated travel minutes in the current order.
+	BeforeMin int `json:"beforeMin"`
+
+	// Changed False when the current order is already the best found.
+	Changed bool   `json:"changed"`
+	Date    string `json:"date"`
+
+	// StopIds The stop IDs in the suggested order.
+	StopIds []string `json:"stopIds"`
+}
+
+// DayOrder defines model for DayOrder.
+type DayOrder struct {
+	StopIds []string `json:"stopIds"`
+}
+
 // Destination defines model for Destination.
 type Destination struct {
 	// CountryCode ISO 3166-1 alpha-2, upper case.
@@ -654,6 +678,9 @@ type CreateTripJSONRequestBody = TripCreate
 // UpdateTripJSONRequestBody defines body for UpdateTrip for application/json ContentType.
 type UpdateTripJSONRequestBody = TripUpdate
 
+// SetDayOrderJSONRequestBody defines body for SetDayOrder for application/json ContentType.
+type SetDayOrderJSONRequestBody = DayOrder
+
 // CreateStopJSONRequestBody defines body for CreateStop for application/json ContentType.
 type CreateStopJSONRequestBody = StopCreate
 
@@ -704,6 +731,12 @@ type ServerInterface interface {
 	// UpdateTrip Change or archive a trip
 	// (PATCH /v1/trips/{tripId})
 	UpdateTrip(w http.ResponseWriter, r *http.Request, tripId string)
+	// SuggestBestOrder Suggest a shorter order for a day
+	// (POST /v1/trips/{tripId}/days/{date}/best-order)
+	SuggestBestOrder(w http.ResponseWriter, r *http.Request, tripId string, date string)
+	// SetDayOrder Set the order of a day's stops
+	// (PUT /v1/trips/{tripId}/days/{date}/order)
+	SetDayOrder(w http.ResponseWriter, r *http.Request, tripId string, date string)
 	// GetTripEntitlements What a trip allows the signed-in person
 	// (GET /v1/trips/{tripId}/entitlements)
 	GetTripEntitlements(w http.ResponseWriter, r *http.Request, tripId string)
@@ -925,6 +958,76 @@ func (siw *ServerInterfaceWrapper) UpdateTrip(w http.ResponseWriter, r *http.Req
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.UpdateTrip(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SuggestBestOrder operation middleware
+func (siw *ServerInterfaceWrapper) SuggestBestOrder(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "date" -------------
+	var date string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "date", r.PathValue("date"), &date, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "date", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SuggestBestOrder(w, r, tripId, date)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetDayOrder operation middleware
+func (siw *ServerInterfaceWrapper) SetDayOrder(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "date" -------------
+	var date string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "date", r.PathValue("date"), &date, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "date", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetDayOrder(w, r, tripId, date)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1341,6 +1444,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/stops", wrapper.CreateStop)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/stops/{stopId}", wrapper.DeleteStop)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/trips/{tripId}/stops/{stopId}", wrapper.UpdateStop)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/days/{date}/best-order", wrapper.SuggestBestOrder)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/v1/trips/{tripId}/days/{date}/order", wrapper.SetDayOrder)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/auth/otp/request", wrapper.RequestOtp)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/auth/otp/verify", wrapper.VerifyOtp)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/auth/refresh", wrapper.RefreshSession)
@@ -1990,6 +2095,179 @@ func (response UpdateTrip404JSONResponse) VisitUpdateTripResponse(w http.Respons
 type UpdateTrip503JSONResponse struct{ UnavailableJSONResponse }
 
 func (response UpdateTrip503JSONResponse) VisitUpdateTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SuggestBestOrderRequestObject struct {
+	TripId string `json:"tripId"`
+	Date   string `json:"date"`
+}
+
+type SuggestBestOrderResponseObject interface {
+	VisitSuggestBestOrderResponse(w http.ResponseWriter) error
+}
+
+type SuggestBestOrder200JSONResponse BestOrder
+
+func (response SuggestBestOrder200JSONResponse) VisitSuggestBestOrderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SuggestBestOrder400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response SuggestBestOrder400JSONResponse) VisitSuggestBestOrderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SuggestBestOrder401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response SuggestBestOrder401JSONResponse) VisitSuggestBestOrderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SuggestBestOrder404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response SuggestBestOrder404JSONResponse) VisitSuggestBestOrderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SuggestBestOrder503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response SuggestBestOrder503JSONResponse) VisitSuggestBestOrderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetDayOrderRequestObject struct {
+	TripId string `json:"tripId"`
+	Date   string `json:"date"`
+	Body   *SetDayOrderJSONRequestBody
+}
+
+type SetDayOrderResponseObject interface {
+	VisitSetDayOrderResponse(w http.ResponseWriter) error
+}
+
+type SetDayOrder200JSONResponse StopList
+
+func (response SetDayOrder200JSONResponse) VisitSetDayOrderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetDayOrder400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response SetDayOrder400JSONResponse) VisitSetDayOrderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetDayOrder401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response SetDayOrder401JSONResponse) VisitSetDayOrderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetDayOrder403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response SetDayOrder403JSONResponse) VisitSetDayOrderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetDayOrder404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response SetDayOrder404JSONResponse) VisitSetDayOrderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetDayOrder503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response SetDayOrder503JSONResponse) VisitSetDayOrderResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -2751,6 +3029,12 @@ type StrictServerInterface interface {
 	// UpdateTrip Change or archive a trip
 	// (PATCH /v1/trips/{tripId})
 	UpdateTrip(ctx context.Context, request UpdateTripRequestObject) (UpdateTripResponseObject, error)
+	// SuggestBestOrder Suggest a shorter order for a day
+	// (POST /v1/trips/{tripId}/days/{date}/best-order)
+	SuggestBestOrder(ctx context.Context, request SuggestBestOrderRequestObject) (SuggestBestOrderResponseObject, error)
+	// SetDayOrder Set the order of a day's stops
+	// (PUT /v1/trips/{tripId}/days/{date}/order)
+	SetDayOrder(ctx context.Context, request SetDayOrderRequestObject) (SetDayOrderResponseObject, error)
 	// GetTripEntitlements What a trip allows the signed-in person
 	// (GET /v1/trips/{tripId}/entitlements)
 	GetTripEntitlements(ctx context.Context, request GetTripEntitlementsRequestObject) (GetTripEntitlementsResponseObject, error)
@@ -3146,6 +3430,67 @@ func (sh *strictHandler) UpdateTrip(w http.ResponseWriter, r *http.Request, trip
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(UpdateTripResponseObject); ok {
 		if err := validResponse.VisitUpdateTripResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SuggestBestOrder operation middleware
+func (sh *strictHandler) SuggestBestOrder(w http.ResponseWriter, r *http.Request, tripId string, date string) {
+	var request SuggestBestOrderRequestObject
+
+	request.TripId = tripId
+	request.Date = date
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SuggestBestOrder(ctx, request.(SuggestBestOrderRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SuggestBestOrder")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SuggestBestOrderResponseObject); ok {
+		if err := validResponse.VisitSuggestBestOrderResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SetDayOrder operation middleware
+func (sh *strictHandler) SetDayOrder(w http.ResponseWriter, r *http.Request, tripId string, date string) {
+	var request SetDayOrderRequestObject
+
+	request.TripId = tripId
+	request.Date = date
+
+	var body SetDayOrderJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SetDayOrder(ctx, request.(SetDayOrderRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SetDayOrder")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SetDayOrderResponseObject); ok {
+		if err := validResponse.VisitSetDayOrderResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
