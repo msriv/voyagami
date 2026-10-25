@@ -559,6 +559,19 @@ export const en = {
   profile: {
     homeRegion: "Home country",
     signOut: "Sign out",
+    traveller: "Traveller",
+    sectionHome: "Home and region",
+    sectionData: "Your data",
+    units: "Units",
+    unit_km: "Kilometres",
+    unit_mi: "Miles",
+    unit_c: "Celsius",
+    unit_f: "Fahrenheit",
+    unit_12h: "12-hour clock",
+    unit_24h: "24-hour clock",
+    dataRegion: "Your data is stored in Mumbai, India",
+    dataNote: "Trips, expenses and journal entries stay in this region.",
+    appVersion: "Voyagami",
   },
   // Dev-only component gallery (VOY-103). Not shown to people.
   gallery: {

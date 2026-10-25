@@ -81,4 +81,16 @@ describe("home region defaults", () => {
       homeCurrency: "VND",
     });
   });
+
+  it("shows who is signed in, their units and where their data lives", async () => {
+    mockApi({
+      "GET /v1/me": () => json(200, confirmed),
+      "GET /v1/trips": () => json(200, { trips: [] }),
+    });
+    await renderRouter(routes, { initialUrl: "/profile" });
+    expect(await screen.findByText("Asha")).toBeTruthy();
+    expect(screen.getByText("Kilometres · Celsius · 24-hour clock")).toBeTruthy();
+    expect(screen.getByText("Your data is stored in Mumbai, India")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Sign out" })).toBeTruthy();
+  });
 });
