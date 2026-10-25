@@ -538,6 +538,115 @@ paths:
           $ref: "#/components/responses/NotFound"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/bookings:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: listBookings
+      tags: [bookings]
+      summary: List a trip's bookings
+      description: Soonest start first; ones with no start time come last. Any active member can read; everyone else gets 404.
+      responses:
+        "200":
+          description: The bookings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Add a booking
+      description: Owners and editors only. Typed in by hand; imports and file attachments come later.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingCreate"
+      responses:
+        "201":
+          description: The new booking.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/bookings/{bookingId}:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+    patch:
+      operationId: updateBooking
+      tags: [bookings]
+      summary: Change a booking
+      description: Owners and editors only. Changes only the fields that are sent. An empty `provider` clears it; times cannot be cleared yet.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingUpdate"
+      responses:
+        "200":
+          description: The booking after the change.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    delete:
+      operationId: deleteBooking
+      tags: [bookings]
+      summary: Delete a booking
+      description: Owners and editors only. Deleting a booking that is already gone succeeds.
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/trips/{tripId}/stops:
     parameters:
       - name: tripId
@@ -1452,6 +1561,86 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Settlement"
+    BookingPlace:
+      type: object
+      required: [name]
+      properties:
+        code:
+          type: string
+          maxLength: 10
+          description: Airport or station code, if there is one.
+        name:
+          type: string
+          maxLength: 120
+    BookingFields:
+      type: object
+      properties:
+        provider:
+          type: string
+          maxLength: 120
+          description: Airline, hotel or operator.
+        startsAt:
+          type: string
+          format: date-time
+          description: UTC instant. An update can change it but not clear it yet.
+        endsAt:
+          type: string
+          format: date-time
+        startTimeZone:
+          type: string
+          description: IANA zone, so times show local at each end.
+        endTimeZone:
+          type: string
+        from:
+          $ref: "#/components/schemas/BookingPlace"
+        to:
+          $ref: "#/components/schemas/BookingPlace"
+        price:
+          $ref: "#/components/schemas/Money"
+    Booking:
+      allOf:
+        - $ref: "#/components/schemas/BookingFields"
+        - type: object
+          required: [id, kind, title]
+          properties:
+            id:
+              type: string
+            kind:
+              $ref: "#/components/schemas/BookingKind"
+            title:
+              type: string
+    BookingKind:
+      type: string
+      enum: [flight, stay, train, bus, activity, other]
+    BookingCreate:
+      allOf:
+        - $ref: "#/components/schemas/BookingFields"
+        - type: object
+          required: [kind, title]
+          properties:
+            kind:
+              $ref: "#/components/schemas/BookingKind"
+            title:
+              type: string
+              maxLength: 120
+    BookingUpdate:
+      allOf:
+        - $ref: "#/components/schemas/BookingFields"
+        - type: object
+          properties:
+            kind:
+              $ref: "#/components/schemas/BookingKind"
+            title:
+              type: string
+              maxLength: 120
+    BookingList:
+      type: object
+      required: [bookings]
+      properties:
+        bookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"
     Task:
       type: object
       required: [id, title, done]

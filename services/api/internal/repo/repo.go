@@ -105,6 +105,22 @@ type Settlements interface {
 	List(ctx context.Context, tripID string) ([]model.Settlement, error)
 }
 
+// Bookings stores a trip's bookings. The caller has already checked that the
+// person may use the trip.
+type Bookings interface {
+	// Create stores a booking. It returns ErrAlreadyExists if the ID is taken.
+	Create(ctx context.Context, tripID string, b model.Booking) (model.Booking, error)
+	// Get returns the booking, or ErrNotFound.
+	Get(ctx context.Context, tripID, id string) (model.Booking, error)
+	// List returns the trip's bookings, soonest start first, undated last.
+	List(ctx context.Context, tripID string) ([]model.Booking, error)
+	// Replace overwrites the booking's content and keeps who made it and when.
+	// It returns ErrNotFound if it does not exist.
+	Replace(ctx context.Context, tripID string, b model.Booking) (model.Booking, error)
+	// Delete removes a booking. Deleting a missing one is not an error.
+	Delete(ctx context.Context, tripID, id string) error
+}
+
 // Tasks stores a trip's to-dos. The caller has already checked that the
 // person may use the trip.
 type Tasks interface {

@@ -51,6 +51,7 @@ type handlers struct {
 	tasks       TaskStore
 	expenses    ExpenseStore
 	settlements SettlementStore
+	bookings    BookingStore
 
 	plans      *entitlements.Service
 	planSource PlanSource

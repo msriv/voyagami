@@ -278,6 +278,8 @@ Write: any member for their own saves.
 | `fileIds`                      | string[]                                                               | Tickets and confirmations in `files`.                                                                 |
 | `extraction`                   | `{ confidence: { [field]: number }, needsReview: boolean }?`           | From the import pipeline; low-confidence fields are flagged for the review screen.                    |
 
+API (VOY-131, first part): `GET/POST /v1/trips/{id}/bookings`, `PATCH/DELETE .../{bookingId}` for hand-typed bookings (`source: "manual"`). Owners and editors write; every member reads. The encrypted `reference`, `fileIds` and signed uploads are not built yet: they need Cloud KMS and the private bucket. Times cannot be cleared by an update yet.
+
 Write: **server** for imported bookings and for any create past the free limit (5 forwarded bookings); editors may edit fields of an existing booking. Offline plan and tickets are never gated.
 
 ### `trips/{tripId}/files/{fileId}`
