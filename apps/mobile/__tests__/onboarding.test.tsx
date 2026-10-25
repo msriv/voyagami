@@ -1,5 +1,4 @@
 import * as Contacts from "expo-contacts";
-import Constants, { ExecutionEnvironment } from "expo-constants";
 import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
 import { json, mockApi, routes } from "../test-utils/api";
@@ -15,6 +14,16 @@ jest.mock("expo-splash-screen", () => ({
   preventAutoHideAsync: jest.fn(() => Promise.resolve()),
   hideAsync: jest.fn(() => Promise.resolve()),
 }));
+
+// The push module is missing in Expo Go: the native side answers "not there".
+jest.mock("expo", () => {
+  const actual = jest.requireActual<typeof import("expo")>("expo");
+  return {
+    ...actual,
+    requireOptionalNativeModule: (name: string) =>
+      name === "ExpoTopicSubscriptionModule" ? null : actual.requireOptionalNativeModule(name),
+  };
+});
 
 beforeEach(() => mockStore.clear());
 
@@ -62,13 +71,9 @@ describe("travel style", () => {
     await signedInAtStyle();
     await fireEvent.press(screen.getByRole("button", { name: "Skip for now" }));
     await screen.findByText("Let Voyagami help.");
-    const env = Constants as { executionEnvironment: ExecutionEnvironment };
-    const before = env.executionEnvironment;
-    env.executionEnvironment = ExecutionEnvironment.StoreClient;
     await fireEvent.press(screen.getByRole("button", { name: "Allow Notifications" }));
     expect(await screen.findByText("Not in Expo Go")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Allow Notifications" })).toBeDisabled();
-    env.executionEnvironment = before;
   });
 
   it("skips without calling the server", async () => {
