@@ -390,6 +390,14 @@ type OtpVerifyRequest struct {
 	Region *string `json:"region,omitempty"`
 }
 
+// PlaceRef A catalogue place by `placeId`, or a pin the person dropped (`name`, `lat`, `lng`).
+type PlaceRef struct {
+	Lat     *float64 `json:"lat,omitempty"`
+	Lng     *float64 `json:"lng,omitempty"`
+	Name    *string  `json:"name,omitempty"`
+	PlaceId *string  `json:"placeId,omitempty"`
+}
+
 // RefreshRequest defines model for RefreshRequest.
 type RefreshRequest struct {
 	RefreshToken string `json:"refreshToken"`
@@ -409,6 +417,69 @@ type SessionTokens struct {
 	// RefreshToken Keep in secure storage. Works once.
 	RefreshToken string `json:"refreshToken"`
 	UserId       string `json:"userId"`
+}
+
+// Stop defines model for Stop.
+type Stop struct {
+	// Date The day, YYYY-MM-DD.
+	Date        string  `json:"date"`
+	DurationMin *int    `json:"durationMin,omitempty"`
+	Id          string  `json:"id"`
+	Note        *string `json:"note,omitempty"`
+
+	// Order Sort key within the day. Opaque; sort by date, then this.
+	Order string `json:"order"`
+
+	// Place A catalogue place by `placeId`, or a pin the person dropped (`name`, `lat`, `lng`).
+	Place PlaceRef `json:"place"`
+
+	// StartLocal Start time as HH:mm, in the stop's time zone.
+	StartLocal *string `json:"startLocal,omitempty"`
+	TimeZone   string  `json:"timeZone"`
+	TripId     string  `json:"tripId"`
+}
+
+// StopCreate defines model for StopCreate.
+type StopCreate struct {
+	// BeforeStopId Put the stop just before this one on the same day.
+	BeforeStopId *string `json:"beforeStopId,omitempty"`
+	Date         string  `json:"date"`
+	DurationMin  *int    `json:"durationMin,omitempty"`
+	Note         *string `json:"note,omitempty"`
+
+	// Place A catalogue place by `placeId`, or a pin the person dropped (`name`, `lat`, `lng`).
+	Place PlaceRef `json:"place"`
+
+	// StartLocal Start time as HH:mm, in the stop's time zone.
+	StartLocal *string `json:"startLocal,omitempty"`
+}
+
+// StopFields defines model for StopFields.
+type StopFields struct {
+	DurationMin *int    `json:"durationMin,omitempty"`
+	Note        *string `json:"note,omitempty"`
+
+	// StartLocal Start time as HH:mm, in the stop's time zone.
+	StartLocal *string `json:"startLocal,omitempty"`
+}
+
+// StopList defines model for StopList.
+type StopList struct {
+	Stops []Stop `json:"stops"`
+}
+
+// StopUpdate defines model for StopUpdate.
+type StopUpdate struct {
+	// BeforeStopId Put the stop just before this one on the target day.
+	BeforeStopId *string `json:"beforeStopId,omitempty"`
+
+	// Date Move to this day.
+	Date        *string `json:"date,omitempty"`
+	DurationMin *int    `json:"durationMin,omitempty"`
+	Note        *string `json:"note,omitempty"`
+
+	// StartLocal Start time as HH:mm, in the stop's time zone.
+	StartLocal *string `json:"startLocal,omitempty"`
 }
 
 // TravelStyle The chips picked in onboarding. Any part may be left empty.
@@ -560,6 +631,12 @@ type CreateTripJSONRequestBody = TripCreate
 // UpdateTripJSONRequestBody defines body for UpdateTrip for application/json ContentType.
 type UpdateTripJSONRequestBody = TripUpdate
 
+// CreateStopJSONRequestBody defines body for CreateStop for application/json ContentType.
+type CreateStopJSONRequestBody = StopCreate
+
+// UpdateStopJSONRequestBody defines body for UpdateStop for application/json ContentType.
+type UpdateStopJSONRequestBody = StopUpdate
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// GetHealth Report that the process is up
@@ -601,6 +678,18 @@ type ServerInterface interface {
 	// GetTripEntitlements What a trip allows the signed-in person
 	// (GET /v1/trips/{tripId}/entitlements)
 	GetTripEntitlements(w http.ResponseWriter, r *http.Request, tripId string)
+	// ListStops List a trip's stops
+	// (GET /v1/trips/{tripId}/stops)
+	ListStops(w http.ResponseWriter, r *http.Request, tripId string)
+	// CreateStop Add a stop to a day
+	// (POST /v1/trips/{tripId}/stops)
+	CreateStop(w http.ResponseWriter, r *http.Request, tripId string)
+	// DeleteStop Remove a stop
+	// (DELETE /v1/trips/{tripId}/stops/{stopId})
+	DeleteStop(w http.ResponseWriter, r *http.Request, tripId string, stopId string)
+	// UpdateStop Change or move a stop
+	// (PATCH /v1/trips/{tripId}/stops/{stopId})
+	UpdateStop(w http.ResponseWriter, r *http.Request, tripId string, stopId string)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -830,6 +919,128 @@ func (siw *ServerInterfaceWrapper) GetTripEntitlements(w http.ResponseWriter, r 
 	handler.ServeHTTP(w, r)
 }
 
+// ListStops operation middleware
+func (siw *ServerInterfaceWrapper) ListStops(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListStops(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateStop operation middleware
+func (siw *ServerInterfaceWrapper) CreateStop(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateStop(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteStop operation middleware
+func (siw *ServerInterfaceWrapper) DeleteStop(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "stopId" -------------
+	var stopId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "stopId", r.PathValue("stopId"), &stopId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "stopId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteStop(w, r, tripId, stopId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateStop operation middleware
+func (siw *ServerInterfaceWrapper) UpdateStop(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "stopId" -------------
+	var stopId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "stopId", r.PathValue("stopId"), &stopId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "stopId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateStop(w, r, tripId, stopId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 type UnescapedCookieParamError struct {
 	ParamName string
 	Err       error
@@ -959,6 +1170,10 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips", wrapper.CreateTrip)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}", wrapper.GetTrip)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/trips/{tripId}", wrapper.UpdateTrip)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/stops", wrapper.ListStops)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/stops", wrapper.CreateStop)
+	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/stops/{stopId}", wrapper.DeleteStop)
+	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/trips/{tripId}/stops/{stopId}", wrapper.UpdateStop)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/auth/otp/request", wrapper.RequestOtp)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/auth/otp/verify", wrapper.VerifyOtp)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/auth/refresh", wrapper.RefreshSession)
@@ -1683,6 +1898,330 @@ func (response GetTripEntitlements503JSONResponse) VisitGetTripEntitlementsRespo
 	return err
 }
 
+type ListStopsRequestObject struct {
+	TripId string `json:"tripId"`
+}
+
+type ListStopsResponseObject interface {
+	VisitListStopsResponse(w http.ResponseWriter) error
+}
+
+type ListStops200JSONResponse StopList
+
+func (response ListStops200JSONResponse) VisitListStopsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListStops401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ListStops401JSONResponse) VisitListStopsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListStops404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ListStops404JSONResponse) VisitListStopsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListStops503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ListStops503JSONResponse) VisitListStopsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateStopRequestObject struct {
+	TripId string `json:"tripId"`
+	Body   *CreateStopJSONRequestBody
+}
+
+type CreateStopResponseObject interface {
+	VisitCreateStopResponse(w http.ResponseWriter) error
+}
+
+type CreateStop201JSONResponse Stop
+
+func (response CreateStop201JSONResponse) VisitCreateStopResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateStop400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CreateStop400JSONResponse) VisitCreateStopResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateStop401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CreateStop401JSONResponse) VisitCreateStopResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateStop403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response CreateStop403JSONResponse) VisitCreateStopResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateStop404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CreateStop404JSONResponse) VisitCreateStopResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateStop503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response CreateStop503JSONResponse) VisitCreateStopResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteStopRequestObject struct {
+	TripId string `json:"tripId"`
+	StopId string `json:"stopId"`
+}
+
+type DeleteStopResponseObject interface {
+	VisitDeleteStopResponse(w http.ResponseWriter) error
+}
+
+type DeleteStop204Response struct {
+}
+
+func (response DeleteStop204Response) VisitDeleteStopResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteStop401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response DeleteStop401JSONResponse) VisitDeleteStopResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteStop403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response DeleteStop403JSONResponse) VisitDeleteStopResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteStop404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response DeleteStop404JSONResponse) VisitDeleteStopResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteStop503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response DeleteStop503JSONResponse) VisitDeleteStopResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateStopRequestObject struct {
+	TripId string `json:"tripId"`
+	StopId string `json:"stopId"`
+	Body   *UpdateStopJSONRequestBody
+}
+
+type UpdateStopResponseObject interface {
+	VisitUpdateStopResponse(w http.ResponseWriter) error
+}
+
+type UpdateStop200JSONResponse Stop
+
+func (response UpdateStop200JSONResponse) VisitUpdateStopResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateStop400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response UpdateStop400JSONResponse) VisitUpdateStopResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateStop401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response UpdateStop401JSONResponse) VisitUpdateStopResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateStop403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response UpdateStop403JSONResponse) VisitUpdateStopResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateStop404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response UpdateStop404JSONResponse) VisitUpdateStopResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateStop503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response UpdateStop503JSONResponse) VisitUpdateStopResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// GetHealth Report that the process is up
@@ -1724,6 +2263,18 @@ type StrictServerInterface interface {
 	// GetTripEntitlements What a trip allows the signed-in person
 	// (GET /v1/trips/{tripId}/entitlements)
 	GetTripEntitlements(ctx context.Context, request GetTripEntitlementsRequestObject) (GetTripEntitlementsResponseObject, error)
+	// ListStops List a trip's stops
+	// (GET /v1/trips/{tripId}/stops)
+	ListStops(ctx context.Context, request ListStopsRequestObject) (ListStopsResponseObject, error)
+	// CreateStop Add a stop to a day
+	// (POST /v1/trips/{tripId}/stops)
+	CreateStop(ctx context.Context, request CreateStopRequestObject) (CreateStopResponseObject, error)
+	// DeleteStop Remove a stop
+	// (DELETE /v1/trips/{tripId}/stops/{stopId})
+	DeleteStop(ctx context.Context, request DeleteStopRequestObject) (DeleteStopResponseObject, error)
+	// UpdateStop Change or move a stop
+	// (PATCH /v1/trips/{tripId}/stops/{stopId})
+	UpdateStop(ctx context.Context, request UpdateStopRequestObject) (UpdateStopResponseObject, error)
 }
 
 type StrictHandlerFunc func(ctx context.Context, w http.ResponseWriter, r *http.Request, request any) (any, error)
@@ -2118,6 +2669,126 @@ func (sh *strictHandler) GetTripEntitlements(w http.ResponseWriter, r *http.Requ
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetTripEntitlementsResponseObject); ok {
 		if err := validResponse.VisitGetTripEntitlementsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListStops operation middleware
+func (sh *strictHandler) ListStops(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request ListStopsRequestObject
+
+	request.TripId = tripId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListStops(ctx, request.(ListStopsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListStops")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListStopsResponseObject); ok {
+		if err := validResponse.VisitListStopsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateStop operation middleware
+func (sh *strictHandler) CreateStop(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request CreateStopRequestObject
+
+	request.TripId = tripId
+
+	var body CreateStopJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateStop(ctx, request.(CreateStopRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateStop")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateStopResponseObject); ok {
+		if err := validResponse.VisitCreateStopResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteStop operation middleware
+func (sh *strictHandler) DeleteStop(w http.ResponseWriter, r *http.Request, tripId string, stopId string) {
+	var request DeleteStopRequestObject
+
+	request.TripId = tripId
+	request.StopId = stopId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteStop(ctx, request.(DeleteStopRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteStop")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteStopResponseObject); ok {
+		if err := validResponse.VisitDeleteStopResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateStop operation middleware
+func (sh *strictHandler) UpdateStop(w http.ResponseWriter, r *http.Request, tripId string, stopId string) {
+	var request UpdateStopRequestObject
+
+	request.TripId = tripId
+	request.StopId = stopId
+
+	var body UpdateStopJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateStop(ctx, request.(UpdateStopRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateStop")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdateStopResponseObject); ok {
+		if err := validResponse.VisitUpdateStopResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

@@ -247,6 +247,8 @@ Write: `title` by editors; `travel` and `lastOptimisedAt` **server**. "Best orde
 
 Write: editors and owners. Concurrent edits to different fields both survive.
 
+The API (`/v1/trips/{tripId}/stops`) assigns `order` with `internal/fracindex`: a stop goes to the end of its day, or just before another stop, and moving a stop between days or within a day writes only that one document. A deleted stop gets `deletedAt` and is hidden from the list, not erased. A `place` is stored as `{kind: "catalog", placeId}` or `{kind: "custom", name, lat, lng}`.
+
 ### `trips/{tripId}/saved/{savedId}`
 
 A place a member saved to the trip before it has a day. These feed crew-ranked recommendations.

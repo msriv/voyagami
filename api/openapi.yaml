@@ -225,6 +225,122 @@ paths:
           $ref: "#/components/responses/NotFound"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/stops:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: listStops
+      tags: [stops]
+      summary: List a trip's stops
+      description: Stops that are not deleted, sorted by day and then order. Only active members can read them; everyone else gets 404.
+      responses:
+        "200":
+          description: The stops.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StopList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    post:
+      operationId: createStop
+      tags: [stops]
+      summary: Add a stop to a day
+      description: |
+        Owners and editors only. The stop goes to the end of the day, or just
+        before `beforeStopId` when that is sent.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StopCreate"
+      responses:
+        "201":
+          description: The new stop.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Stop"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/stops/{stopId}:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: stopId
+        in: path
+        required: true
+        schema:
+          type: string
+    patch:
+      operationId: updateStop
+      tags: [stops]
+      summary: Change or move a stop
+      description: |
+        Owners and editors only. Changes only the fields that are sent. Sending
+        `date` moves the stop to that day (to the end of it unless
+        `beforeStopId` is sent). Sending `beforeStopId` alone reorders within
+        the day. An empty `startLocal` or `note`, or a `durationMin` of 0,
+        clears the field. Only the moved stop is written.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StopUpdate"
+      responses:
+        "200":
+          description: The stop after the change.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Stop"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    delete:
+      operationId: deleteStop
+      tags: [stops]
+      summary: Remove a stop
+      description: Owners and editors only. The stop is hidden, not erased, so it can be restored later.
+      responses:
+        "204":
+          description: Removed.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/auth/otp/request:
     post:
       operationId: requestOtp
@@ -584,6 +700,86 @@ components:
     TripStatus:
       type: string
       enum: [draft, planned, active, past]
+    PlaceRef:
+      type: object
+      description: A catalogue place by `placeId`, or a pin the person dropped (`name`, `lat`, `lng`).
+      properties:
+        placeId:
+          type: string
+        name:
+          type: string
+          maxLength: 200
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+    StopFields:
+      type: object
+      properties:
+        startLocal:
+          type: string
+          description: Start time as HH:mm, in the stop's time zone.
+        durationMin:
+          type: integer
+          minimum: 0
+          maximum: 1440
+        note:
+          type: string
+          maxLength: 2000
+    Stop:
+      allOf:
+        - $ref: "#/components/schemas/StopFields"
+        - type: object
+          required: [id, tripId, date, order, place, timeZone]
+          properties:
+            id:
+              type: string
+            tripId:
+              type: string
+            date:
+              type: string
+              description: The day, YYYY-MM-DD.
+            order:
+              type: string
+              description: Sort key within the day. Opaque; sort by date, then this.
+            place:
+              $ref: "#/components/schemas/PlaceRef"
+            timeZone:
+              type: string
+    StopList:
+      type: object
+      required: [stops]
+      properties:
+        stops:
+          type: array
+          items:
+            $ref: "#/components/schemas/Stop"
+    StopCreate:
+      allOf:
+        - $ref: "#/components/schemas/StopFields"
+        - type: object
+          required: [date, place]
+          properties:
+            date:
+              type: string
+            place:
+              $ref: "#/components/schemas/PlaceRef"
+            beforeStopId:
+              type: string
+              description: Put the stop just before this one on the same day.
+    StopUpdate:
+      allOf:
+        - $ref: "#/components/schemas/StopFields"
+        - type: object
+          properties:
+            date:
+              type: string
+              description: Move to this day.
+            beforeStopId:
+              type: string
+              description: Put the stop just before this one on the target day.
     Trip:
       type: object
       required:
