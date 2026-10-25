@@ -450,6 +450,85 @@ paths:
           $ref: "#/components/responses/NotFound"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/days/{date}/best-order:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: date
+        in: path
+        required: true
+        description: The day, YYYY-MM-DD.
+        schema:
+          type: string
+    post:
+      operationId: suggestBestOrder
+      tags: [stops]
+      summary: Suggest a shorter order for a day
+      description: |
+        Any member can ask. Nothing is changed. Stops with a start time stay
+        where they are, and stops without a map position are left where they
+        are too. Travel times are straight-line estimates (`approx`).
+      responses:
+        "200":
+          description: The suggestion.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BestOrder"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/days/{date}/order:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: date
+        in: path
+        required: true
+        schema:
+          type: string
+    put:
+      operationId: setDayOrder
+      tags: [stops]
+      summary: Set the order of a day's stops
+      description: |
+        Owners and editors only. `stopIds` must list every stop on the day
+        exactly once. Used to accept a suggestion, and to undo it by sending
+        the earlier order.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DayOrder"
+      responses:
+        "200":
+          description: The day's stops in the new order.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StopList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/auth/otp/request:
     post:
       operationId: requestOtp
@@ -897,6 +976,37 @@ components:
             beforeStopId:
               type: string
               description: Put the stop just before this one on the target day.
+    BestOrder:
+      type: object
+      required: [date, changed, approx, beforeMin, afterMin, stopIds]
+      properties:
+        date:
+          type: string
+        changed:
+          type: boolean
+          description: False when the current order is already the best found.
+        approx:
+          type: boolean
+          description: True when travel times are straight-line estimates.
+        beforeMin:
+          type: integer
+          description: Estimated travel minutes in the current order.
+        afterMin:
+          type: integer
+          description: Estimated travel minutes in the suggested order.
+        stopIds:
+          type: array
+          description: The stop IDs in the suggested order.
+          items:
+            type: string
+    DayOrder:
+      type: object
+      required: [stopIds]
+      properties:
+        stopIds:
+          type: array
+          items:
+            type: string
     Trip:
       type: object
       required:

@@ -247,7 +247,7 @@ Write: `title` by editors; `travel` and `lastOptimisedAt` **server**. "Best orde
 
 Write: editors and owners. Concurrent edits to different fields both survive.
 
-The API (`/v1/trips/{tripId}/stops`) assigns `order` with `internal/fracindex`: a stop goes to the end of its day, or just before another stop, and moving a stop between days or within a day writes only that one document. A deleted stop gets `deletedAt` and is hidden from the list, not erased. A `place` is stored as `{kind: "catalog", placeId}` or `{kind: "custom", name, lat, lng, address?, category?}`. A dropped pin can carry an address (up to 300 characters) and a category: food, sights, activity, shopping, stay, transport or other.
+The API (`/v1/trips/{tripId}/stops`) assigns `order` with `internal/fracindex`: a stop goes to the end of its day, or just before another stop, and moving a stop between days or within a day writes only that one document. "Best order" (`POST /v1/trips/{tripId}/days/{date}/best-order`) only suggests: it never writes. Stops with a start time, and stops with no map position, keep their place. Travel times are straight-line estimates at a fixed city speed (`approx`) until the directions service exists. Accepting a suggestion, and undoing it, both go through `PUT /v1/trips/{tripId}/days/{date}/order`, which gives the day fresh `order` keys in one transaction. A deleted stop gets `deletedAt` and is hidden from the list, not erased. A `place` is stored as `{kind: "catalog", placeId}` or `{kind: "custom", name, lat, lng, address?, category?}`. A dropped pin can carry an address (up to 300 characters) and a category: food, sights, activity, shopping, stay, transport or other.
 
 ### `trips/{tripId}/saved/{savedId}`
 

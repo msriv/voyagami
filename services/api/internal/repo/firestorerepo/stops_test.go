@@ -78,3 +78,29 @@ func TestStopsLifecycle(t *testing.T) {
 		t.Errorf("bad date should be a validation error: %v", err)
 	}
 }
+
+func TestStopsSetOrders(t *testing.T) {
+	client := testClient(t)
+	trips, stops := NewTrips(client), NewStops(client)
+	ctx := testCtx(t)
+	trip, _ := newOwnedTrip(t, trips, "2026-11-21", "2026-11-29")
+	a, _ := stops.Create(ctx, newStop(trip.ID, "2026-11-22", "a"))
+	b, _ := stops.Create(ctx, newStop(trip.ID, "2026-11-22", "b"))
+
+	if err := stops.SetOrders(ctx, trip.ID, map[string]string{a.ID: "k", b.ID: "c"}); err != nil {
+		t.Fatalf("SetOrders: %v", err)
+	}
+	list, _ := stops.List(ctx, trip.ID)
+	if len(list) != 2 || list[0].ID != b.ID || list[1].ID != a.ID {
+		t.Fatalf("list = %+v", list)
+	}
+
+	// All or nothing: one missing stop leaves the others as they were.
+	err := stops.SetOrders(ctx, trip.ID, map[string]string{a.ID: "z", "nope": "y"})
+	if !errors.Is(err, repo.ErrNotFound) {
+		t.Fatalf("missing stop: %v", err)
+	}
+	if got, _ := stops.Get(ctx, trip.ID, a.ID); got.Order != "k" {
+		t.Errorf("partial write: order = %q", got.Order)
+	}
+}

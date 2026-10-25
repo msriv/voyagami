@@ -249,3 +249,15 @@ func TestStopsOffAnswers503(t *testing.T) {
 		t.Fatalf("got %d, want 503", got)
 	}
 }
+
+func (f *fakeStops) SetOrders(_ context.Context, _ string, orders map[string]string) error {
+	for id, o := range orders {
+		s, ok := f.stops[id]
+		if !ok {
+			return repo.ErrNotFound
+		}
+		s.Order = o
+		f.stops[id] = s
+	}
+	return nil
+}

@@ -167,3 +167,25 @@ func orDelete(v any, empty bool) any {
 	}
 	return v
 }
+
+// maxOrderBatch keeps one SetOrders call inside Firestore's 500-write limit.
+const maxOrderBatch = 400
+
+// SetOrders rewrites the order key of several stops in one batch.
+func (s *Stops) SetOrders(ctx context.Context, tripID string, orders map[string]string) error {
+	if len(orders) > maxOrderBatch {
+		return errors.New("too many stops to reorder at once")
+	}
+	return mapErr("set orders", s.client.RunTransaction(ctx, func(_ context.Context, tx *firestore.Transaction) error {
+		for id, order := range orders {
+			err := tx.Update(s.ref(tripID, id), []firestore.Update{
+				{Path: "order", Value: order},
+				{Path: "updatedAt", Value: firestore.ServerTimestamp},
+			})
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}))
+}
