@@ -33,4 +33,6 @@ d := svc.Check(user, trip, entitlements.BestOrder)
 - Trip Passes and per-trip counters have no storage yet, so they read as none and zero. Dev has no limits anyway.
 - In the app, `useEntitlement(feature, tripId?)` reflects the answer. It allows nothing until the server answers or if the request fails.
 
+`DEV_PLAN=free` or `DEV_PLAN=plus` (dev only) forces every account onto that plan and, for `free`, turns the Free caps on, so plan gates can be tried.
+
 Next: the crew-unlock and downgrade tests (VOY-115).
