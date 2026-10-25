@@ -50,7 +50,21 @@ const expense = (
   createdBy: "u1",
 });
 
-const base = (role = "owner", expenses: object[] = []) => ({
+const spent = (expenses: object[]) =>
+  (expenses as { settlement: { amountMinor: number } }[]).reduce(
+    (n, x) => n + x.settlement.amountMinor,
+    0,
+  );
+
+const base = (role = "owner", expenses: object[] = [], budget: object = {}) => ({
+  "GET /v1/trips/t1/budget": () =>
+    json(200, {
+      currency: "VND",
+      spentMinor: spent(expenses),
+      overBudget: false,
+      byCategory: [],
+      ...budget,
+    }),
   "GET /v1/me": () => json(200, { id: "u1" }),
   "GET /v1/trips/t1": () => json(200, trip(role)),
   "GET /v1/trips/t1/expenses": () => json(200, { expenses }),
@@ -91,6 +105,46 @@ describe("Money", () => {
       expect(calls.some((c) => c.key === "DELETE /v1/trips/t1/expenses/e1")).toBe(true),
     );
     await waitFor(() => expect(screen.queryByText("Pho")).toBeNull());
+  });
+});
+
+describe("Budget", () => {
+  it("shows what is left, or what is over", async () => {
+    mockApi(
+      base("owner", [expense("e1", "Pho", "2099-11-20", 50000)], {
+        targetMinor: 200000,
+        remainingMinor: 150000,
+        byCategory: [{ category: "food", spentMinor: 50000 }],
+      }),
+    );
+    await renderRouter(routes, { initialUrl: "/trips/t1/money" });
+    expect(await screen.findByText(/150,000.*left of.*200,000/)).toBeTruthy();
+    expect(screen.getByText("Food")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Change the budget" })).toBeTruthy();
+  });
+
+  it("lets the owner set a budget, and nobody else", async () => {
+    const calls = mockApi({
+      ...base("owner"),
+      "PATCH /v1/trips/t1": () => json(200, trip("owner")),
+    });
+    await renderRouter(routes, { initialUrl: "/trips/t1/money" });
+    await fireEvent.press(await screen.findByRole("button", { name: "Set a budget" }));
+    await fireEvent.changeText(screen.getByLabelText(/^Budget in VND/), "2000000");
+    await fireEvent.press(screen.getByRole("button", { name: "For each person" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Save budget" }));
+    await waitFor(() =>
+      expect(calls.find((c) => c.key === "PATCH /v1/trips/t1")?.body).toEqual({
+        budget: { scope: "perPerson", amount: { amountMinor: 2000000, currency: "VND" } },
+      }),
+    );
+  });
+
+  it("hides the budget button from editors", async () => {
+    mockApi(base("editor"));
+    await renderRouter(routes, { initialUrl: "/trips/t1/money" });
+    expect(await screen.findByText("No spending yet.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Set a budget" })).toBeNull();
   });
 });
 
