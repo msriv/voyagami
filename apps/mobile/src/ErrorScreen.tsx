@@ -1,9 +1,11 @@
 import type { ErrorBoundaryProps } from "expo-router";
+import { useEffect } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { clearDevice } from "@/auth";
 import { i18n } from "@/i18n";
+import { reportError } from "@/logging/remoteLog";
 import { colors } from "@/theme";
 
 /**
@@ -11,6 +13,7 @@ import { colors } from "@/theme";
  * the raw tokens: the message is on screen, and Reset wipes this device back to Welcome.
  */
 export function ErrorScreen({ error, retry }: ErrorBoundaryProps) {
+  useEffect(() => reportError("error screen", error), [error]);
   const button = (label: string, onPress: () => void, dark: boolean) => (
     <Pressable
       accessibilityRole="button"
