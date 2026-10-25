@@ -10,6 +10,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -1194,6 +1195,9 @@ type ServerInterface interface {
 	// CreateExpense Add an expense
 	// (POST /v1/trips/{tripId}/expenses)
 	CreateExpense(w http.ResponseWriter, r *http.Request, tripId string)
+	// ExportExpenses Export expenses as CSV
+	// (GET /v1/trips/{tripId}/expenses/export)
+	ExportExpenses(w http.ResponseWriter, r *http.Request, tripId string)
 	// DeleteExpense Delete an expense
 	// (DELETE /v1/trips/{tripId}/expenses/{expenseId})
 	DeleteExpense(w http.ResponseWriter, r *http.Request, tripId string, expenseId string)
@@ -1755,6 +1759,32 @@ func (siw *ServerInterfaceWrapper) CreateExpense(w http.ResponseWriter, r *http.
 	handler.ServeHTTP(w, r)
 }
 
+// ExportExpenses operation middleware
+func (siw *ServerInterfaceWrapper) ExportExpenses(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ExportExpenses(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // DeleteExpense operation middleware
 func (siw *ServerInterfaceWrapper) DeleteExpense(w http.ResponseWriter, r *http.Request) {
 
@@ -2256,6 +2286,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/trips/{tripId}/tasks/{taskId}", wrapper.UpdateTask)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/expenses", wrapper.ListExpenses)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/expenses", wrapper.CreateExpense)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/expenses/export", wrapper.ExportExpenses)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/expenses/{expenseId}", wrapper.DeleteExpense)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/trips/{tripId}/expenses/{expenseId}", wrapper.UpdateExpense)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/balances", wrapper.GetBalances)
@@ -3778,6 +3809,84 @@ func (response CreateExpense503JSONResponse) VisitCreateExpenseResponse(w http.R
 	return err
 }
 
+type ExportExpensesRequestObject struct {
+	TripId string `json:"tripId"`
+}
+
+type ExportExpensesResponseObject interface {
+	VisitExportExpensesResponse(w http.ResponseWriter) error
+}
+
+type ExportExpenses200ResponseHeaders struct {
+	ContentDisposition *string
+}
+
+type ExportExpenses200TextcsvResponse struct {
+	Body          io.Reader
+	Headers       ExportExpenses200ResponseHeaders
+	ContentLength int64
+}
+
+func (response ExportExpenses200TextcsvResponse) VisitExportExpensesResponse(w http.ResponseWriter) error {
+
+	w.Header().Set("Content-Type", "text/csv")
+	if response.ContentLength != 0 {
+		w.Header().Set("Content-Length", fmt.Sprint(response.ContentLength))
+	}
+	if response.Headers.ContentDisposition != nil {
+		w.Header().Set("Content-Disposition", fmt.Sprint(*response.Headers.ContentDisposition))
+	}
+	w.WriteHeader(200)
+
+	if closer, ok := response.Body.(io.ReadCloser); ok {
+		defer closer.Close()
+	}
+	_, err := io.Copy(w, response.Body)
+	return err
+}
+
+type ExportExpenses401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ExportExpenses401JSONResponse) VisitExportExpensesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExportExpenses404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ExportExpenses404JSONResponse) VisitExportExpensesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExportExpenses503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ExportExpenses503JSONResponse) VisitExportExpensesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type DeleteExpenseRequestObject struct {
 	TripId    string `json:"tripId"`
 	ExpenseId string `json:"expenseId"`
@@ -4821,6 +4930,9 @@ type StrictServerInterface interface {
 	// CreateExpense Add an expense
 	// (POST /v1/trips/{tripId}/expenses)
 	CreateExpense(ctx context.Context, request CreateExpenseRequestObject) (CreateExpenseResponseObject, error)
+	// ExportExpenses Export expenses as CSV
+	// (GET /v1/trips/{tripId}/expenses/export)
+	ExportExpenses(ctx context.Context, request ExportExpensesRequestObject) (ExportExpensesResponseObject, error)
 	// DeleteExpense Delete an expense
 	// (DELETE /v1/trips/{tripId}/expenses/{expenseId})
 	DeleteExpense(ctx context.Context, request DeleteExpenseRequestObject) (DeleteExpenseResponseObject, error)
@@ -5543,6 +5655,32 @@ func (sh *strictHandler) CreateExpense(w http.ResponseWriter, r *http.Request, t
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(CreateExpenseResponseObject); ok {
 		if err := validResponse.VisitCreateExpenseResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ExportExpenses operation middleware
+func (sh *strictHandler) ExportExpenses(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request ExportExpensesRequestObject
+
+	request.TripId = tripId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ExportExpenses(ctx, request.(ExportExpensesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ExportExpenses")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ExportExpensesResponseObject); ok {
+		if err := validResponse.VisitExportExpensesResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
