@@ -465,8 +465,16 @@ export const en = {
   onboarding: {
     welcome: {
       title: "Trips are better planned together.",
-      intro:
-        "Plan the route, split the costs and keep the memories, all in one place with your crew.",
+      titleStart: "Trips are better planned ",
+      titleAccent: "together.",
+      stamp: "Day one",
+      invite: "I got an invite link",
+      cards: {
+        plan: { label: "Plan it", text: "9 days, 4 friends" },
+        live: { label: "Live it", text: "One plan, one wallet" },
+        keep: { label: "Keep it", text: "A journal that writes itself" },
+      },
+      intro: "Itinerary, bookings, money and memories, for weekend escapes and big trips abroad.",
       start: "Get started",
     },
     region: {
