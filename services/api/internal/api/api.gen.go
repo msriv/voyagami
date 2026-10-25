@@ -1341,6 +1341,53 @@ type RateQuote struct {
 	To   string `json:"to"`
 }
 
+// Recap defines model for Recap.
+type Recap struct {
+	// Crew Active members.
+	Crew int `json:"crew"`
+
+	// Currency The trip's settlement currency.
+	Currency string `json:"currency"`
+
+	// Days Days of a dated trip, or days that have stops when the trip has no fixed dates.
+	Days int `json:"days"`
+
+	// DistanceMeters Straight-line distance between consecutive pinned stops on each
+	// day. Show it in the person's units.
+	DistanceMeters int64 `json:"distanceMeters"`
+
+	// FavouriteDay The day with the most journal entries.
+	FavouriteDay *RecapDay `json:"favouriteDay,omitempty"`
+
+	// Highlights Up to five journal snippets, oldest first.
+	Highlights []RecapHighlight `json:"highlights"`
+
+	// RemainingMinor Target minus spent. Negative when over.
+	RemainingMinor *int64 `json:"remainingMinor,omitempty"`
+
+	// SettledUp Absent when settle-up is off.
+	SettledUp  *bool `json:"settledUp,omitempty"`
+	SpentMinor int64 `json:"spentMinor"`
+	Stops      int   `json:"stops"`
+
+	// TargetMinor Absent when there is no budget in the settlement currency.
+	TargetMinor *int64 `json:"targetMinor,omitempty"`
+	TripId      string `json:"tripId"`
+}
+
+// RecapDay The day with the most journal entries.
+type RecapDay struct {
+	Date    string `json:"date"`
+	Entries int    `json:"entries"`
+}
+
+// RecapHighlight defines model for RecapHighlight.
+type RecapHighlight struct {
+	AuthorUid string `json:"authorUid"`
+	Date      string `json:"date"`
+	Text      string `json:"text"`
+}
+
 // RefreshRequest defines model for RefreshRequest.
 type RefreshRequest struct {
 	RefreshToken string `json:"refreshToken"`
@@ -1953,6 +2000,9 @@ type ServerInterface interface {
 	// VotePoll Vote, or change your vote
 	// (POST /v1/trips/{tripId}/polls/{pollId}/vote)
 	VotePoll(w http.ResponseWriter, r *http.Request, tripId string, pollId string)
+	// GetRecap The facts for the trip recap
+	// (GET /v1/trips/{tripId}/recap)
+	GetRecap(w http.ResponseWriter, r *http.Request, tripId string)
 	// ListSettlements List recorded payments
 	// (GET /v1/trips/{tripId}/settlements)
 	ListSettlements(w http.ResponseWriter, r *http.Request, tripId string)
@@ -3536,6 +3586,32 @@ func (siw *ServerInterfaceWrapper) VotePoll(w http.ResponseWriter, r *http.Reque
 	handler.ServeHTTP(w, r)
 }
 
+// GetRecap operation middleware
+func (siw *ServerInterfaceWrapper) GetRecap(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetRecap(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListSettlements operation middleware
 func (siw *ServerInterfaceWrapper) ListSettlements(w http.ResponseWriter, r *http.Request) {
 
@@ -3978,6 +4054,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/bookings/{bookingId}", wrapper.DeleteBooking)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/trips/{tripId}/bookings/{bookingId}", wrapper.UpdateBooking)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/budget", wrapper.GetBudget)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/recap", wrapper.GetRecap)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/journal", wrapper.ListJournal)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/journal/{date}", wrapper.DeleteJournalEntry)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/v1/trips/{tripId}/journal/{date}", wrapper.PutJournalEntry)
@@ -8089,6 +8166,70 @@ func (response VotePoll503JSONResponse) VisitVotePollResponse(w http.ResponseWri
 	return err
 }
 
+type GetRecapRequestObject struct {
+	TripId string `json:"tripId"`
+}
+
+type GetRecapResponseObject interface {
+	VisitGetRecapResponse(w http.ResponseWriter) error
+}
+
+type GetRecap200JSONResponse Recap
+
+func (response GetRecap200JSONResponse) VisitGetRecapResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRecap401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response GetRecap401JSONResponse) VisitGetRecapResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRecap404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response GetRecap404JSONResponse) VisitGetRecapResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRecap503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response GetRecap503JSONResponse) VisitGetRecapResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListSettlementsRequestObject struct {
 	TripId string `json:"tripId"`
 }
@@ -9061,6 +9202,9 @@ type StrictServerInterface interface {
 	// VotePoll Vote, or change your vote
 	// (POST /v1/trips/{tripId}/polls/{pollId}/vote)
 	VotePoll(ctx context.Context, request VotePollRequestObject) (VotePollResponseObject, error)
+	// GetRecap The facts for the trip recap
+	// (GET /v1/trips/{tripId}/recap)
+	GetRecap(ctx context.Context, request GetRecapRequestObject) (GetRecapResponseObject, error)
 	// ListSettlements List recorded payments
 	// (GET /v1/trips/{tripId}/settlements)
 	ListSettlements(ctx context.Context, request ListSettlementsRequestObject) (ListSettlementsResponseObject, error)
@@ -10715,6 +10859,32 @@ func (sh *strictHandler) VotePoll(w http.ResponseWriter, r *http.Request, tripId
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(VotePollResponseObject); ok {
 		if err := validResponse.VisitVotePollResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetRecap operation middleware
+func (sh *strictHandler) GetRecap(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request GetRecapRequestObject
+
+	request.TripId = tripId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetRecap(ctx, request.(GetRecapRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetRecap")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetRecapResponseObject); ok {
+		if err := validResponse.VisitGetRecapResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

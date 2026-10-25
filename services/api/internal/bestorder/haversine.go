@@ -52,3 +52,6 @@ func haversineKm(a, b Point) float64 {
 		math.Cos(a.Lat*rad)*math.Cos(b.Lat*rad)*math.Sin(dLng/2)*math.Sin(dLng/2)
 	return 2 * earthRadiusKm * math.Asin(math.Sqrt(h))
 }
+
+// DistanceKm is the straight-line distance between two points in kilometres.
+func DistanceKm(a, b Point) float64 { return haversineKm(a, b) }

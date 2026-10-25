@@ -424,6 +424,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/trips/{tripId}/recap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * The facts for the trip recap
+         * @description Days, stops, crew, straight-line distance, spend, budget left, whether
+         *     everyone has settled up, the crew's favourite day and a few journal
+         *     highlights. Built fresh on each call from what the caller may see:
+         *     private journal entries of other people are left out. Parts that need
+         *     a feature that is off are left out too. Any active member can read.
+         */
+        get: operations["getRecap"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/trips/{tripId}/journal": {
         parameters: {
             query?: never;
@@ -1500,6 +1526,49 @@ export interface components {
         BookingList: {
             bookings: components["schemas"]["Booking"][];
         };
+        Recap: {
+            tripId: string;
+            /** @description Days of a dated trip, or days that have stops when the trip has no fixed dates. */
+            days: number;
+            stops: number;
+            /** @description Active members. */
+            crew: number;
+            /**
+             * Format: int64
+             * @description Straight-line distance between consecutive pinned stops on each
+             *     day. Show it in the person's units.
+             */
+            distanceMeters: number;
+            /** Format: int64 */
+            spentMinor: number;
+            /** @description The trip's settlement currency. */
+            currency: string;
+            /**
+             * Format: int64
+             * @description Absent when there is no budget in the settlement currency.
+             */
+            targetMinor?: number;
+            /**
+             * Format: int64
+             * @description Target minus spent. Negative when over.
+             */
+            remainingMinor?: number;
+            /** @description Absent when settle-up is off. */
+            settledUp?: boolean;
+            favouriteDay?: components["schemas"]["RecapDay"];
+            /** @description Up to five journal snippets, oldest first. */
+            highlights: components["schemas"]["RecapHighlight"][];
+        };
+        /** @description The day with the most journal entries. */
+        RecapDay: {
+            date: string;
+            entries: number;
+        };
+        RecapHighlight: {
+            date: string;
+            authorUid: string;
+            text: string;
+        };
         BudgetSummary: {
             /** @description The trip's settlement currency. */
             currency: string;
@@ -2572,6 +2641,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BudgetSummary"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    getRecap: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The recap. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Recap"];
                 };
             };
             401: components["responses"]["Unauthorized"];
