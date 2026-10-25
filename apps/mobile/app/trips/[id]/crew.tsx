@@ -188,6 +188,11 @@ export default function CrewScreen() {
         </View>
         <Text color="muted">{trip.title}</Text>
         <Button
+          label={t("crew.live")}
+          variant="secondary"
+          onPress={() => router.push(`/trips/${id}/live`)}
+        />
+        <Button
           label={t("crew.polls")}
           variant="secondary"
           onPress={() => router.push(`/trips/${id}/polls`)}
