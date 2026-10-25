@@ -36,6 +36,54 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Health"
+  /v1/me/entitlements:
+    get:
+      operationId: getMyEntitlements
+      tags: [plans]
+      summary: What the signed-in person's plan allows
+      description: |
+        One answer per feature, decided on the server. The app only reflects it.
+        Features that belong to a trip are answered as if no trip is open; ask
+        the trip's own endpoint for those. Needs a bearer token.
+      responses:
+        "200":
+          description: The plan and one decision per feature.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Entitlements"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/entitlements:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getTripEntitlements
+      tags: [plans]
+      summary: What a trip allows the signed-in person
+      description: |
+        Like the person's own answer, but with the trip in view. Whole-trip
+        features are open for everyone on the trip when any member has Plus or
+        the trip has a Trip Pass. Needs a bearer token and membership.
+      responses:
+        "200":
+          description: The plan and one decision per feature.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Entitlements"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/me:
     get:
       operationId: getMe
@@ -397,6 +445,34 @@ components:
           type: string
           enum: [device, confirmed]
           description: "`device` when guessed from the phone, `confirmed` once the person chose."
+    EntitlementDecision:
+      type: object
+      required: [allowed, limit, used, needsPlus]
+      properties:
+        allowed:
+          type: boolean
+          description: Whether one more may be added, or the feature used.
+        limit:
+          type: integer
+          description: The cap. -1 means no cap. For an on/off feature, 0 means Plus only.
+        used:
+          type: integer
+        needsPlus:
+          type: boolean
+          description: True when the answer is no and Plus or a Trip Pass would change it.
+    Entitlements:
+      type: object
+      required: [plan, features]
+      properties:
+        plan:
+          type: string
+          enum: [free, plus, pass]
+          description: "`pass` only when asked about a trip that has a Trip Pass."
+        features:
+          type: object
+          description: One decision per feature, keyed by feature name.
+          additionalProperties:
+            $ref: "#/components/schemas/EntitlementDecision"
     MeUpdate:
       type: object
       description: Fields to change. Leave a field out to keep it.

@@ -5,6 +5,8 @@
 // (see ForEnv); Free holds the real values.
 package entitlements
 
+import "sort"
+
 // Feature is something a plan can limit.
 type Feature string
 
@@ -225,4 +227,14 @@ func isFlag(f Feature) bool {
 		return true
 	}
 	return false
+}
+
+// All lists every feature the service knows, in a stable order.
+func All() []Feature {
+	all := make([]Feature, 0, len(scopes))
+	for f := range scopes {
+		all = append(all, f)
+	}
+	sort.Slice(all, func(i, j int) bool { return all[i] < all[j] })
+	return all
 }

@@ -24,4 +24,15 @@ d := svc.Check(user, trip, entitlements.BestOrder)
 - Dev has no limits (`ForEnv("dev")`). Staging and prod use the Free values.
 - Downgrading never deletes data. A check that says no on content already over the limit means the content is read-only (VOY-115).
 
-Next: the endpoint and app hook (VOY-114), then the crew-unlock and downgrade tests (VOY-115).
+## Endpoints and app hook
+
+- `GET /v1/me/entitlements` answers every feature for the caller with no trip in view.
+- `GET /v1/trips/{tripId}/entitlements` answers for one trip, so a Trip Pass or a crew member's Plus counts. Non-members get 404.
+- Both return `{plan, features}` where each feature is `{allowed, limit, used, needsPlus}`. They answer 503 if plans are not wired.
+- Plan facts come from the server-owned `entitlements/{uid}` Firestore document (`plus.active`, a future `trial.endsAt`, `usage.askDrafts`). No document means Free.
+- Trip Passes and per-trip counters have no storage yet, so they read as none and zero. Dev has no limits anyway.
+- In the app, `useEntitlement(feature, tripId?)` reflects the answer. It allows nothing until the server answers or if the request fails.
+
+`DEV_PLAN=free` or `DEV_PLAN=plus` (dev only) forces every account onto that plan and, for `free`, turns the Free caps on, so plan gates can be tried.
+
+Next: the crew-unlock and downgrade tests (VOY-115).

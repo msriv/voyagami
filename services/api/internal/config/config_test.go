@@ -28,6 +28,21 @@ func TestLoad(t *testing.T) {
 			want: Config{Env: "staging", Port: 9000, LogLevel: slog.LevelDebug, ShutdownTimeout: 5 * time.Second, RequestTimeout: time.Minute, AuthSecret: strings.Repeat("s", 32), GCPProject: "p"},
 		},
 		{
+			name: "dev plan override",
+			env:  map[string]string{"DEV_PLAN": "plus"},
+			want: Config{Env: "dev", Port: 8080, LogLevel: slog.LevelInfo, ShutdownTimeout: 10 * time.Second, RequestTimeout: 30 * time.Second, DevPlan: "plus"},
+		},
+		{
+			name:    "dev plan rejected outside dev",
+			env:     map[string]string{"APP_ENV": "staging", "AUTH_SECRET": strings.Repeat("s", 32), "DEV_PLAN": "plus"},
+			wantErr: []string{"DEV_PLAN"},
+		},
+		{
+			name:    "dev plan must be known",
+			env:     map[string]string{"DEV_PLAN": "gold"},
+			wantErr: []string{"DEV_PLAN"},
+		},
+		{
 			name:    "secret required outside dev",
 			env:     map[string]string{"APP_ENV": "prod"},
 			wantErr: []string{"AUTH_SECRET"},

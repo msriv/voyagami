@@ -23,6 +23,9 @@ type Config struct {
 	// GCPProject is the Firestore project. Empty means detect it from the
 	// environment (Cloud Run) or use the emulator's project.
 	GCPProject string
+	// DevPlan forces every account onto "free" or "plus" so plan gates can be
+	// tried in dev. Empty means no override. Rejected outside dev.
+	DevPlan string
 }
 
 // minAuthSecret is the shortest AUTH_SECRET accepted.
@@ -74,6 +77,13 @@ func Load(getenv func(string) string) (Config, error) {
 
 	cfg.GCPProject = getenv("GCP_PROJECT")
 	cfg.AuthSecret = getenv("AUTH_SECRET")
+	switch cfg.DevPlan = getenv("DEV_PLAN"); {
+	case cfg.DevPlan == "":
+	case cfg.Env != "dev":
+		errs = append(errs, errors.New("DEV_PLAN is only allowed when APP_ENV is dev"))
+	case cfg.DevPlan != "free" && cfg.DevPlan != "plus":
+		errs = append(errs, fmt.Errorf("DEV_PLAN %q must be free or plus", cfg.DevPlan))
+	}
 	switch {
 	case cfg.AuthSecret == "" && cfg.Env != "dev":
 		errs = append(errs, errors.New("AUTH_SECRET is required outside dev"))

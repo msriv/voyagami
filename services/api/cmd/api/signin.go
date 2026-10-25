@@ -11,6 +11,7 @@ import (
 
 	"github.com/msriv/voyagami/services/api/internal/auth"
 	"github.com/msriv/voyagami/services/api/internal/config"
+	"github.com/msriv/voyagami/services/api/internal/entitlements"
 	"github.com/msriv/voyagami/services/api/internal/otp"
 	"github.com/msriv/voyagami/services/api/internal/repo/firestorerepo"
 	"github.com/msriv/voyagami/services/api/internal/server"
@@ -51,11 +52,13 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 		return signInDeps{}, fmt.Errorf("firestore (set GCP_PROJECT): %w", err)
 	}
 
+	trips := firestorerepo.NewTrips(client)
 	deps := signInDeps{
 		verifier: signin.NewVerifier(keys),
 		options: []server.Option{
 			server.WithProfile(firestorerepo.NewUsers(client)),
-			server.WithTrips(firestorerepo.NewTrips(client)),
+			server.WithTrips(trips),
+			server.WithEntitlements(entitlements.New(limitsFor(cfg)), planSource{firestorerepo.NewEntitlements(client), trips, cfg.DevPlan}),
 		},
 		close: func() { _ = client.Close() },
 	}

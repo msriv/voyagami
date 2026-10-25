@@ -10,6 +10,7 @@ import (
 
 	"github.com/msriv/voyagami/services/api/internal/api"
 	"github.com/msriv/voyagami/services/api/internal/auth"
+	"github.com/msriv/voyagami/services/api/internal/entitlements"
 	"github.com/msriv/voyagami/services/api/internal/repo"
 )
 
@@ -46,6 +47,9 @@ type handlers struct {
 	signIn  SignIn
 	profile Profile
 	trips   TripStore
+
+	plans      *entitlements.Service
+	planSource PlanSource
 }
 
 // GetHealth reports that the process is up. It checks no dependencies.
