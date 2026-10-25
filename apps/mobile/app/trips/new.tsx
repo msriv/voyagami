@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -21,7 +21,10 @@ export default function NewTripScreen() {
   const { api } = useAuth();
   const { locale: tag, currency: homeCurrency } = useProfile();
 
-  const [stops, setStops] = useState<Destination[]>([]);
+  const { destination } = useLocalSearchParams<{ destination?: string }>();
+  const [stops, setStops] = useState<Destination[]>(() =>
+    suggestedDestinations.filter((d) => d.name === destination),
+  );
   const [mode, setMode] = useState<Mode>("dates");
   const [range, setRange] = useState<DateRange>({});
   const [days, setDays] = useState(7);

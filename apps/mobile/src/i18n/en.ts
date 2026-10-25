@@ -581,6 +581,15 @@ export const en = {
     emptyPlanTitle: "Plan a trip",
     emptyPlanBody: "Weekend getaway or a big trip abroad",
   },
+  explore: {
+    title: "Explore",
+    searchLabel: "Search places",
+    searchPlaceholder: "Cities, places, guides…",
+    sectionTitle: "Start from a place",
+    sectionBody: "Pick somewhere and we will start a trip there.",
+    empty: "Nothing matches that yet.",
+    plan: "Plan a trip to {{place}}",
+  },
   profile: {
     homeRegion: "Home country",
     signOut: "Sign out",
