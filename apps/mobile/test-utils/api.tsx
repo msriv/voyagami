@@ -21,6 +21,7 @@ import Live from "../app/trips/[id]/live";
 import Polls from "../app/trips/[id]/polls";
 import Settle from "../app/trips/[id]/settle";
 import Recap from "../app/trips/[id]/recap";
+import RecapPlayer from "../app/trips/[id]/recap-player";
 import Join from "../app/join";
 import Journal from "../app/trips/[id]/journal";
 import Money from "../app/trips/[id]/money";
@@ -51,6 +52,7 @@ export const routes: Record<string, ComponentType> = {
   "trips/[id]/comments": Comments,
   "trips/[id]/settle": Settle,
   "trips/[id]/recap": Recap,
+  "trips/[id]/recap-player": RecapPlayer,
   join: Join,
   "trips/[id]/add-booking": AddBooking,
   "trips/[id]/add-expense": AddExpense,

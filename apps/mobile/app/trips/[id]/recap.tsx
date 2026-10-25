@@ -206,6 +206,11 @@ export default function RecapScreen() {
           </>
         )}
 
+        <Button
+          label={t("recap.play")}
+          variant="secondary"
+          onPress={() => router.push(`/trips/${id}/recap-player`)}
+        />
         <Button label={t("recap.planNext")} onPress={() => router.push("/trips/new")} />
       </ScrollView>
     </SafeAreaView>

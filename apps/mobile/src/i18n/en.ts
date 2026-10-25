@@ -650,6 +650,21 @@ export const en = {
     highlights: "Highlights",
     empty: "Add stops and journal entries and your recap will fill in here.",
     planNext: "Plan the next one",
+    play: "Play the recap",
+  },
+  recapPlayer: {
+    title: "Recap player",
+    close: "Close the recap",
+    next: "Next card",
+    previous: "Previous card",
+    pause: "Pause",
+    resume: "Play",
+    position: "Card {{n}} of {{total}}",
+    tapHint:
+      "Tap the right side for the next card and the left side for the previous one. Hold to pause.",
+    thanks: "That was the trip.",
+    again: "Watch again",
+    done: "Back to recap",
   },
   profile: {
     homeRegion: "Home country",
