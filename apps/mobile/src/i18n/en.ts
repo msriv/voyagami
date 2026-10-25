@@ -40,6 +40,8 @@ export const en = {
     },
   },
   trip: {
+    invite: "+ Invite",
+    crewLabel: "Crew: {{names}}",
     back: "Back to trips",
     menu: "Trip menu",
     menuClose: "Close menu",

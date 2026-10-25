@@ -47,6 +47,24 @@ describe("Trip overview", () => {
     expect(screen.getByRole("button", { name: "Journal" })).toBeTruthy();
   });
 
+  it("shows the crew and an Invite button to the owner only", async () => {
+    mockApi({
+      "GET /v1/me": () => json(200, { id: "u1" }),
+      "GET /v1/trips/t1": () => json(200, trip("owner")),
+      "GET /v1/trips/t1/tasks": () => json(200, { tasks: [] }),
+      "GET /v1/trips/t1/members": () =>
+        json(200, {
+          members: [
+            { uid: "u1", role: "owner", status: "active", displayName: "Asha" },
+            { uid: "u2", role: "editor", status: "active", displayName: "Ben" },
+          ],
+        }),
+    });
+    await renderRouter(routes, { initialUrl: "/trips/t1" });
+    expect(await screen.findByRole("button", { name: "Crew: Asha, Ben" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "+ Invite" })).toBeTruthy();
+  });
+
   it("says when the trip cannot be found", async () => {
     mockApi({
       "GET /v1/me": () => json(200, { id: "u1" }),
