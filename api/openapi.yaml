@@ -627,6 +627,47 @@ paths:
           $ref: "#/components/responses/NotFound"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/bookings/import:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      operationId: importBookings
+      tags: [bookings]
+      summary: Read bookings from a pasted confirmation or a PDF
+      description: |
+        Send either `text` (a pasted confirmation email or page) or `pdfBase64`
+        (a PDF, up to 4 MB). Nothing is saved. The answer lists candidate
+        bookings, each with a confidence from 0 to 1, for the person to review
+        and then add with `createBooking`. The document is treated as data and
+        never as instructions. An empty list means nothing could be read.
+        Owners and editors only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingImportRequest"
+      responses:
+        "200":
+          description: What was found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingImportResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/trips/{tripId}/bookings/{bookingId}:
     parameters:
       - name: tripId
@@ -2628,6 +2669,35 @@ components:
             title:
               type: string
               maxLength: 120
+    BookingImportRequest:
+      type: object
+      description: Exactly one of text or pdfBase64.
+      properties:
+        text:
+          type: string
+          maxLength: 20000
+        pdfBase64:
+          type: string
+          description: A PDF, base64 encoded.
+    BookingImportResult:
+      type: object
+      required: [candidates]
+      properties:
+        candidates:
+          type: array
+          items:
+            $ref: "#/components/schemas/BookingCandidate"
+    BookingCandidate:
+      type: object
+      required: [booking, confidence]
+      properties:
+        booking:
+          $ref: "#/components/schemas/BookingCreate"
+        confidence:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
     BookingList:
       type: object
       required: [bookings]

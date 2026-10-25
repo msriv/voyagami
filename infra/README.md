@@ -69,6 +69,10 @@ terraform apply
 
 To rotate: `openssl rand -hex 32 | tr -d '\n' | gcloud secrets versions add auth-secret --data-file=-`, then deploy the API again (Cloud Run reads `latest` when a revision starts). Everyone signs in again, and the old version can be disabled.
 
+## Booking import (Vertex AI)
+
+The booking import endpoint calls Gemini on Vertex with the API's own service account, so there is no key. `terraform apply` grants `roles/aiplatform.user` and sets `VERTEX_LOCATION` (`us-central1`; Gemini may not be offered in `asia-south1`). Pasted booking text and PDFs are sent to that region. Without the apply, the endpoint answers 503. Redeploy the API after the apply.
+
 ## Deploying the API (dev)
 
 `make deploy-dev` builds `services/api/Dockerfile` for linux/amd64, pushes it to Artifact Registry (`voyagami`) tagged with the git commit, rolls `voyagami-api` to it and checks `/health`. It needs `docker` and a signed-in `gcloud` (`gcloud auth login`, project `voyagami-dev-512208`). The same script runs from GitHub: Actions, "Deploy API (dev)", Run workflow, on `main` only. It signs in through workload identity, so no key is stored.

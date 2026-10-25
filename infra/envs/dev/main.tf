@@ -77,7 +77,8 @@ module "api" {
   allow_unauthenticated = true
 
   env = {
-    GCP_PROJECT = var.project_id
+    GCP_PROJECT     = var.project_id
+    VERTEX_LOCATION = "us-central1" # booking import calls Gemini here; documents leave the home region
   }
 
   # Signs sign-in tokens, so they survive restarts and are shared by instances.
@@ -148,6 +149,13 @@ module "secrets" {
 resource "google_project_iam_member" "api_firestore" {
   project = var.project_id
   role    = "roles/datastore.user"
+  member  = "serviceAccount:${module.api_runtime.email}"
+}
+
+# Lets the API call Gemini on Vertex (booking import) with its own identity.
+resource "google_project_iam_member" "api_vertex" {
+  project = var.project_id
+  role    = "roles/aiplatform.user"
   member  = "serviceAccount:${module.api_runtime.email}"
 }
 
