@@ -27,49 +27,51 @@ export function FloatingTabBar({ state, descriptors, navigation }: Props) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   return (
-    <View
-      style={{
-        marginHorizontal: 16,
-        marginBottom: Math.max(insets.bottom, 12) + 8,
-        height: 68,
-        borderRadius: 24,
-        backgroundColor: colors.ink,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-around",
-        paddingHorizontal: 12,
-      }}
-    >
-      {state.routes.map((route, i) => {
-        const selected = state.index === i;
-        const { options } = descriptors[route.key] ?? { options: {} };
-        return (
-          <Pressable
-            key={route.key}
-            accessibilityRole="tab"
-            accessibilityLabel={options.tabBarAccessibilityLabel ?? options.title}
-            accessibilityState={{ selected }}
-            onPress={() => {
-              const event = navigation.emit({
-                type: "tabPress",
-                target: route.key,
-                canPreventDefault: true,
-              });
-              if (!selected && !event.defaultPrevented) navigation.navigate(route.name);
-            }}
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 16,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: selected ? colors.white : "transparent",
-            }}
-          >
-            <Icon name={icons[route.name] ?? "home"} color={selected ? colors.ink : "#C4C8D2"} />
-          </Pressable>
-        );
-      })}
+    <View style={{ backgroundColor: colors.washi }}>
+      <View
+        style={{
+          marginHorizontal: 16,
+          marginBottom: Math.max(insets.bottom, 12) + 8,
+          height: 68,
+          borderRadius: 24,
+          backgroundColor: colors.ink,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-around",
+          paddingHorizontal: 12,
+        }}
+      >
+        {state.routes.map((route, i) => {
+          const selected = state.index === i;
+          const { options } = descriptors[route.key] ?? { options: {} };
+          return (
+            <Pressable
+              key={route.key}
+              accessibilityRole="tab"
+              accessibilityLabel={options.tabBarAccessibilityLabel ?? options.title}
+              accessibilityState={{ selected }}
+              onPress={() => {
+                const event = navigation.emit({
+                  type: "tabPress",
+                  target: route.key,
+                  canPreventDefault: true,
+                });
+                if (!selected && !event.defaultPrevented) navigation.navigate(route.name);
+              }}
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: 16,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: selected ? colors.white : "transparent",
+              }}
+            >
+              <Icon name={icons[route.name] ?? "home"} color={selected ? colors.ink : "#C4C8D2"} />
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }

@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { signInErrorKey, useAuth, withDetail } from "@/auth";
@@ -38,6 +38,12 @@ export default function NewTripScreen() {
   const [busy, setBusy] = useState(false);
 
   const first = stops[0];
+  const { region } = useProfile();
+  const abroad = stops.find((d) => region && d.countryCode !== region);
+  const foreign = abroad
+    ? (new Intl.DisplayNames([tag], { type: "region" }).of(abroad.countryCode) ??
+      abroad.countryCode)
+    : undefined;
 
   async function save() {
     const code = currency.trim().toUpperCase();
@@ -95,9 +101,7 @@ export default function NewTripScreen() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, gap: 20 }}
         >
-          <View
-            style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}
-          >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
             <IconButton
               accessibilityLabel={t("newTrip.close")}
               variant="secondary"
@@ -105,28 +109,81 @@ export default function NewTripScreen() {
             >
               <Icon name="close" color={colors.ink} />
             </IconButton>
+            <Text variant="caption" color="muted" style={{ flex: 1, textAlign: "center" }}>
+              {t("newTrip.heading")}
+            </Text>
+            <View style={{ width: 44 }} />
           </View>
 
-          <View style={{ gap: 8 }}>
-            <Text variant="display" heading>
+          <View style={{ gap: 12 }}>
+            <Text variant="display" heading style={{ fontSize: 32 }}>
               {t("newTrip.title")}
             </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: 8,
+                minHeight: 56,
+                padding: 8,
+                borderRadius: 20,
+                borderWidth: 2,
+                borderColor: colors.ink,
+                backgroundColor: colors.white,
+              }}
+            >
+              {stops.map((d) => (
+                <Pressable
+                  key={d.name}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("newTrip.remove", { place: d.name })}
+                  hitSlop={6}
+                  onPress={() => setStops((s) => s.filter((x) => x.name !== d.name))}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 8,
+                    backgroundColor: colors.indigo,
+                    borderRadius: 14,
+                    paddingVertical: 8,
+                    paddingLeft: 14,
+                    paddingRight: 8,
+                  }}
+                >
+                  <Text variant="bodyStrong" color="white">
+                    {d.name}
+                  </Text>
+                  <Icon name="close" size={14} color={colors.white} />
+                </Pressable>
+              ))}
+              {stops.length === 0 ? <Text color="muted">{t("newTrip.addStop")}</Text> : null}
+            </View>
+            {foreign ? (
+              <View
+                style={{
+                  backgroundColor: `${colors.indigo}1A`,
+                  borderRadius: 16,
+                  padding: 14,
+                }}
+              >
+                <Text variant="body" style={{ color: colors.indigo }}>
+                  {t("newTrip.international", { country: foreign })}
+                </Text>
+              </View>
+            ) : null}
             <Text color="muted">{t("newTrip.destinationHint")}</Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-              {suggestedDestinations.map((d) => {
-                const picked = stops.some((s) => s.name === d.name);
-                return (
+              {suggestedDestinations
+                .filter((d) => !stops.some((s) => s.name === d.name))
+                .map((d) => (
                   <Chip
                     key={d.name}
                     label={d.name}
-                    selected={picked}
-                    accessibilityHint={picked ? t("newTrip.remove", { place: d.name }) : undefined}
-                    onPress={() =>
-                      setStops((s) => (picked ? s.filter((x) => x.name !== d.name) : [...s, d]))
-                    }
+                    selected={false}
+                    onPress={() => setStops((s) => [...s, d])}
                   />
-                );
-              })}
+                ))}
             </View>
           </View>
 
@@ -141,17 +198,34 @@ export default function NewTripScreen() {
               <Text variant="title" heading>
                 {t("newTrip.when")}
               </Text>
-              <View style={{ flexDirection: "row", gap: 8 }}>
-                <Chip
-                  label={t("newTrip.dates")}
-                  selected={mode === "dates"}
-                  onPress={() => setMode("dates")}
-                />
-                <Chip
-                  label={t("newTrip.flexible")}
-                  selected={mode === "flexible"}
-                  onPress={() => setMode("flexible")}
-                />
+              <View
+                style={{
+                  flexDirection: "row",
+                  backgroundColor: colors.white,
+                  borderRadius: 22,
+                  padding: 4,
+                }}
+              >
+                {(["dates", "flexible"] as const).map((m) => (
+                  <Pressable
+                    key={m}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: mode === m }}
+                    hitSlop={4}
+                    onPress={() => setMode(m)}
+                    style={{
+                      minHeight: 40,
+                      paddingHorizontal: 16,
+                      borderRadius: 18,
+                      justifyContent: "center",
+                      backgroundColor: mode === m ? colors.ink : "transparent",
+                    }}
+                  >
+                    <Text variant="bodyStrong" color={mode === m ? "white" : "ink"}>
+                      {t(`newTrip.${m}`)}
+                    </Text>
+                  </Pressable>
+                ))}
               </View>
             </View>
             {mode === "dates" ? (
@@ -213,7 +287,13 @@ export default function NewTripScreen() {
               {error}
             </Text>
           ) : null}
-          <Button label={t("newTrip.save")} fullWidth loading={busy} onPress={save} />
+          <Button
+            label={t("newTrip.save")}
+            variant="dark"
+            fullWidth
+            loading={busy}
+            onPress={save}
+          />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

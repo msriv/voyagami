@@ -2,7 +2,7 @@ import type { ViewStyle } from "react-native";
 
 import type { ColorName, Theme } from "@/theme";
 
-export type ButtonVariant = "primary" | "accent" | "secondary" | "ghost";
+export type ButtonVariant = "primary" | "accent" | "secondary" | "ghost" | "dark";
 
 export interface ButtonColors {
   background: string;
@@ -32,6 +32,8 @@ export function buttonColors(
   switch (variant) {
     case "primary":
       return { background: c.indigo, text: "white", border: c.indigo, pressedBackground: c.indigo };
+    case "dark":
+      return { background: c.ink, text: "white", border: c.ink, pressedBackground: c.ink };
     case "accent":
       return {
         background: c.vermilion,

@@ -39,7 +39,6 @@ describe("Explore tab", () => {
   it("starts a new trip with the place already picked", async () => {
     await renderRouter(routes, { initialUrl: "/explore" });
     await fireEvent.press(await screen.findByRole("button", { name: "Plan a trip to Hanoi" }));
-    const chip = await screen.findByRole("button", { name: "Hanoi" });
-    expect(chip.props.accessibilityState).toMatchObject({ selected: true });
+    expect(await screen.findByRole("button", { name: "Remove Hanoi" })).toBeTruthy();
   });
 });
