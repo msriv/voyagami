@@ -35,6 +35,32 @@ func settlementFrom(s model.Settlement) api.Settlement {
 	return out
 }
 
+// balances works out what each person is owed (positive) or owes (negative)
+// from the trip's expenses and the payments recorded so far.
+func (h *handlers) balances(ctx context.Context, tripID string) (map[string]int64, error) {
+	expenses, err := h.expenses.List(ctx, tripID)
+	if err != nil {
+		return nil, err
+	}
+	paid, err := h.settlements.List(ctx, tripID)
+	if err != nil {
+		return nil, err
+	}
+	spends := make([]settle.Spend, len(expenses))
+	for i, e := range expenses {
+		spends[i] = settle.Spend{PaidBy: e.PaidByUID, Total: e.Settlement.AmountMinor, Shares: map[string]int64{}}
+		for _, sh := range e.Shares {
+			spends[i].Shares[sh.UID] += sh.AmountMinor
+		}
+	}
+	pays := make([]settle.Payment, len(paid))
+	for i, p := range paid {
+		pays[i] = settle.Payment{From: p.FromUID, To: p.ToUID, Amount: p.Amount.AmountMinor}
+	}
+	bal := settle.Balances(spends, pays)
+	return bal, nil
+}
+
 // GetBalances returns each member's net balance and the payments that would clear them.
 func (h *handlers) GetBalances(ctx context.Context, req api.GetBalancesRequestObject) (api.GetBalancesResponseObject, error) {
 	if h.settleOff() {
@@ -53,26 +79,10 @@ func (h *handlers) GetBalances(ctx context.Context, req api.GetBalancesRequestOb
 	if err != nil {
 		return nil, err
 	}
-	expenses, err := h.expenses.List(ctx, req.TripId)
+	bal, err := h.balances(ctx, req.TripId)
 	if err != nil {
 		return nil, err
 	}
-	paid, err := h.settlements.List(ctx, req.TripId)
-	if err != nil {
-		return nil, err
-	}
-	spends := make([]settle.Spend, len(expenses))
-	for i, e := range expenses {
-		spends[i] = settle.Spend{PaidBy: e.PaidByUID, Total: e.Settlement.AmountMinor, Shares: map[string]int64{}}
-		for _, sh := range e.Shares {
-			spends[i].Shares[sh.UID] += sh.AmountMinor
-		}
-	}
-	pays := make([]settle.Payment, len(paid))
-	for i, p := range paid {
-		pays[i] = settle.Payment{From: p.FromUID, To: p.ToUID, Amount: p.Amount.AmountMinor}
-	}
-	bal := settle.Balances(spends, pays)
 
 	out := api.Balances{Currency: trip.SettlementCurrency, Balances: []api.ExpenseShare{}, Transfers: []api.Transfer{}}
 	for uid, a := range bal {

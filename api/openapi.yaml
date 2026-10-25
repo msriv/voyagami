@@ -713,6 +713,36 @@ paths:
           $ref: "#/components/responses/NotFound"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/recap:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getRecap
+      tags: [trips]
+      summary: The facts for the trip recap
+      description: |
+        Days, stops, crew, straight-line distance, spend, budget left, whether
+        everyone has settled up, the crew's favourite day and a few journal
+        highlights. Built fresh on each call from what the caller may see:
+        private journal entries of other people are left out. Parts that need
+        a feature that is off are left out too. Any active member can read.
+      responses:
+        "200":
+          description: The recap.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Recap"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/trips/{tripId}/journal:
     parameters:
       - name: tripId
@@ -2606,6 +2636,69 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Booking"
+    Recap:
+      type: object
+      required: [tripId, days, stops, crew, distanceMeters, spentMinor, currency, highlights]
+      properties:
+        tripId:
+          type: string
+        days:
+          type: integer
+          description: Days of a dated trip, or days that have stops when the trip has no fixed dates.
+        stops:
+          type: integer
+        crew:
+          type: integer
+          description: Active members.
+        distanceMeters:
+          type: integer
+          format: int64
+          description: |
+            Straight-line distance between consecutive pinned stops on each
+            day. Show it in the person's units.
+        spentMinor:
+          type: integer
+          format: int64
+        currency:
+          type: string
+          description: The trip's settlement currency.
+        targetMinor:
+          type: integer
+          format: int64
+          description: Absent when there is no budget in the settlement currency.
+        remainingMinor:
+          type: integer
+          format: int64
+          description: Target minus spent. Negative when over.
+        settledUp:
+          type: boolean
+          description: Absent when settle-up is off.
+        favouriteDay:
+          $ref: "#/components/schemas/RecapDay"
+        highlights:
+          type: array
+          description: Up to five journal snippets, oldest first.
+          items:
+            $ref: "#/components/schemas/RecapHighlight"
+    RecapDay:
+      type: object
+      description: The day with the most journal entries.
+      required: [date, entries]
+      properties:
+        date:
+          type: string
+        entries:
+          type: integer
+    RecapHighlight:
+      type: object
+      required: [date, authorUid, text]
+      properties:
+        date:
+          type: string
+        authorUid:
+          type: string
+        text:
+          type: string
     BudgetSummary:
       type: object
       required: [currency, spentMinor, overBudget, byCategory]
