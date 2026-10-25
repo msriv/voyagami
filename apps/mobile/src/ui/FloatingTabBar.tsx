@@ -66,10 +66,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: Props) {
               backgroundColor: selected ? colors.white : "transparent",
             }}
           >
-            <Icon
-              name={icons[route.name] ?? "home"}
-              color={selected ? colors.ink : "#C4C8D2"}
-            />
+            <Icon name={icons[route.name] ?? "home"} color={selected ? colors.ink : "#C4C8D2"} />
           </Pressable>
         );
       })}

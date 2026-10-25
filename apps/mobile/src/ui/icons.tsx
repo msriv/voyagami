@@ -16,7 +16,9 @@ export function Icon({ name, size = 24, color }: { name: IconName; size?: number
       strokeLinejoin="round"
       importantForAccessibility="no-hide-descendants"
     >
-      {name === "home" ? <Path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /> : null}
+      {name === "home" ? (
+        <Path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />
+      ) : null}
       {name === "compass" ? (
         <>
           <Circle cx={12} cy={12} r={9} />

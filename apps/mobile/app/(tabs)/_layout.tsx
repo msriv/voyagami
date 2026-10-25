@@ -16,7 +16,9 @@ export default function TabsLayout() {
 
   return (
     <Tabs
-      tabBar={(props) => <FloatingTabBar {...(props as unknown as ComponentProps<typeof FloatingTabBar>)} />}
+      tabBar={(props) => (
+        <FloatingTabBar {...(props as unknown as ComponentProps<typeof FloatingTabBar>)} />
+      )}
       screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.washi } }}
     >
       <Tabs.Screen
