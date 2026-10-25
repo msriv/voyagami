@@ -1,6 +1,8 @@
-import Svg, { Circle, Path } from "react-native-svg";
+import Svg, { Circle, Path, Rect } from "react-native-svg";
 
 export type IconName =
+  | "download"
+  | "todo"
   | "back"
   | "forward"
   | "close"
@@ -26,6 +28,13 @@ export function Icon({ name, size = 24, color }: { name: IconName; size?: number
       strokeLinejoin="round"
       importantForAccessibility="no-hide-descendants"
     >
+      {name === "download" ? <Path d="M12 4v11M7 11l5 5 5-5M5 20h14" /> : null}
+      {name === "todo" ? (
+        <>
+          <Rect x={4} y={4} width={16} height={16} rx={3} />
+          <Path d="M8.5 12l2.5 2.5 4.5-5" />
+        </>
+      ) : null}
       {name === "back" ? <Path d="M15 5l-7 7 7 7" /> : null}
       {name === "forward" ? <Path d="M9 5l7 7-7 7" /> : null}
       {name === "close" ? <Path d="M6 6l12 12M18 6L6 18" /> : null}

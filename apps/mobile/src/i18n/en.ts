@@ -44,6 +44,7 @@ export const en = {
   },
   trip: {
     invite: "+ Invite",
+    international: "International",
     crewLabel: "Crew: {{names}}",
     back: "Back to trips",
     menu: "Trip menu",
@@ -608,6 +609,7 @@ export const en = {
     },
   },
   home: {
+    quickAdd: "Quick add to {{trip}}",
     welcomeNamed: "Welcome, {{name}}",
     welcome: "Welcome",
     goodMorning: "Good morning",

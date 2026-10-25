@@ -131,15 +131,20 @@ export default function HomeScreen() {
 
         {next ? <TripCard trip={next} locale={locale} today={today} featured /> : null}
         {next ? (
+          <Text variant="caption" color="muted">
+            {t("home.quickAdd", { trip: next.title })}
+          </Text>
+        ) : null}
+        {next ? (
           <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 10 }}>
             {(
               [
-                ["place", `/trips/${next.id}/add-place`, colors.vermilion],
-                ["booking", `/trips/${next.id}/add-booking`, colors.white],
-                ["todo", `/trips/${next.id}`, colors.white],
-                ["expense", `/trips/${next.id}/add-expense`, colors.white],
+                ["place", `/trips/${next.id}/add-place`, "plus"],
+                ["booking", `/trips/${next.id}/add-booking`, "download"],
+                ["todo", `/trips/${next.id}`, "todo"],
+                ["expense", `/trips/${next.id}/add-expense`, "people"],
               ] as const
-            ).map(([key, href, fill]) => (
+            ).map(([key, href, icon]) => (
               <Pressable
                 key={key}
                 accessibilityRole="button"
@@ -152,12 +157,12 @@ export default function HomeScreen() {
                     width: 58,
                     height: 58,
                     borderRadius: 20,
-                    backgroundColor: fill,
+                    backgroundColor: colors.white,
                     alignItems: "center",
                     justifyContent: "center",
                   }}
                 >
-                  <Icon name="plus" color={colors.ink} />
+                  <Icon name={icon} color={colors.ink} />
                 </View>
                 <Text variant="caption" style={{ color: colors.ink, fontWeight: "700" }}>
                   {t(`home.quick.${key}Short`)}

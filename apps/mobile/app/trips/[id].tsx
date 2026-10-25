@@ -9,6 +9,7 @@ import { ApiError, NetworkError } from "@voyagami/api-client";
 
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
+import { useProfile } from "@/profile";
 import { useTheme } from "@/theme";
 import { daysBetween, daysInRange, isoToDate } from "@/trips/dates";
 import type { Trip } from "@/trips/summary";
@@ -26,6 +27,7 @@ export default function TripScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const locale = getLocales()[0]?.languageTag ?? "en";
+  const { region } = useProfile();
   const [state, setState] = useState<State>({ kind: "loading" });
   const [crew, setCrew] = useState<string[]>([]);
   const [menu, setMenu] = useState(false);
@@ -111,6 +113,13 @@ export default function TripScreen() {
         ", " +
         t("trip.days", { count: daysBetween(start, end) })
       : t("trip.flexibleDays", { count: flexible?.days ?? 0 });
+  const countries = [...new Set(trip.destinations.map((d) => d.countryCode))].map(
+    (c) => new Intl.DisplayNames([locale], { type: "region" }).of(c) ?? c,
+  );
+  const abroad = trip.destinations.some((d) => region && d.countryCode !== region);
+  const kicker = [...countries, ...(abroad ? [t("trip.international")] : [])]
+    .join(" · ")
+    .toUpperCase();
   const archived = trip.status === "past";
   const canEdit = trip.role !== "viewer";
   const sections = ["itinerary", "bookings", "money", "journal", "crew", "recap"] as const;
@@ -130,19 +139,22 @@ export default function TripScreen() {
         >
           <WavePattern opacity={0.09} />
           <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-            {back}
-            <IconButton
-              accessibilityLabel={t("trip.menu")}
-              variant="secondary"
-              onPress={() => setMenu(true)}
-            >
-              <Icon name="more" color={colors.ink} />
-            </IconButton>
+            <GlassButton label={t("trip.back")} icon="back" onPress={() => router.back()} />
+            <GlassButton label={t("trip.menu")} icon="more" onPress={() => setMenu(true)} />
           </View>
           <View style={{ gap: 6 }}>
             {archived ? (
               <Text variant="caption" color="white" style={{ fontWeight: "800" }}>
                 {t("trip.archived").toUpperCase()}
+              </Text>
+            ) : null}
+            {kicker ? (
+              <Text
+                variant="caption"
+                color="white"
+                style={{ fontWeight: "800", letterSpacing: 1.5 }}
+              >
+                {kicker}
               </Text>
             ) : null}
             <Text variant="display" color="white" heading style={{ fontSize: 34, lineHeight: 36 }}>
@@ -184,7 +196,7 @@ export default function TripScreen() {
                     ],
                   }}
                 >
-                  <Text variant="caption" style={{ fontWeight: "800" }}>
+                  <Text variant="caption" color="ink" style={{ fontWeight: "800" }}>
                     {n.slice(0, 1).toUpperCase()}
                   </Text>
                 </View>
@@ -316,5 +328,33 @@ export default function TripScreen() {
         )}
       </Sheet>
     </SafeAreaView>
+  );
+}
+
+function GlassButton({
+  label,
+  icon,
+  onPress,
+}: {
+  label: string;
+  icon: "back" | "more";
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={{
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "rgba(255,255,255,0.18)",
+      }}
+    >
+      <Icon name={icon} color="#FFFFFF" />
+    </Pressable>
   );
 }
