@@ -16,6 +16,7 @@ const (
 	usersCollection   = "users"
 	tripsCollection   = "trips"
 	membersCollection = "members"
+	stopsCollection   = "stops"
 	// phoneIndexCollection maps a keyed phone hash to a user ID. It is server-only.
 	phoneIndexCollection = "phoneIndex"
 	sessionsCollection   = "sessions"

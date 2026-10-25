@@ -64,6 +64,18 @@ type Trips interface {
 	EndMembership(ctx context.Context, tripID, uid string, status model.MemberStatus) error
 }
 
+// Stops stores the places on a trip's days.
+type Stops interface {
+	// Create stores a new stop. It returns ErrAlreadyExists if the ID is taken.
+	Create(ctx context.Context, s model.Stop) (model.Stop, error)
+	// Get returns the stop, or ErrNotFound. Deleted stops are returned too.
+	Get(ctx context.Context, tripID, stopID string) (model.Stop, error)
+	// List returns the trip's stops that are not deleted, sorted by (date, order).
+	List(ctx context.Context, tripID string) ([]model.Stop, error)
+	// Update changes only the fields set in the patch.
+	Update(ctx context.Context, tripID, stopID string, patch model.StopPatch) (model.Stop, error)
+}
+
 // Tasks stores a trip's to-dos. The caller has already checked that the
 // person may use the trip.
 type Tasks interface {

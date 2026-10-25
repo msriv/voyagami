@@ -204,6 +204,64 @@ export interface paths {
         patch: operations["updateTask"];
         trace?: never;
     };
+    "/v1/trips/{tripId}/stops": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * List a trip's stops
+         * @description Stops that are not deleted, sorted by day and then order. Only active members can read them; everyone else gets 404.
+         */
+        get: operations["listStops"];
+        put?: never;
+        /**
+         * Add a stop to a day
+         * @description Owners and editors only. The stop goes to the end of the day, or just
+         *     before `beforeStopId` when that is sent.
+         */
+        post: operations["createStop"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/stops/{stopId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                stopId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a stop
+         * @description Owners and editors only. The stop is hidden, not erased, so it can be restored later.
+         */
+        delete: operations["deleteStop"];
+        options?: never;
+        head?: never;
+        /**
+         * Change or move a stop
+         * @description Owners and editors only. Changes only the fields that are sent. Sending
+         *     `date` moves the stop to that day (to the end of it unless
+         *     `beforeStopId` is sent). Sending `beforeStopId` alone reorders within
+         *     the day. An empty `startLocal` or `note`, or a `durationMin` of 0,
+         *     clears the field. Only the moved stop is written.
+         */
+        patch: operations["updateStop"];
+        trace?: never;
+    };
     "/v1/auth/otp/request": {
         parameters: {
             query?: never;
@@ -425,6 +483,46 @@ export interface components {
         };
         /** @enum {string} */
         TripStatus: "draft" | "planned" | "active" | "past";
+        /** @description A catalogue place by `placeId`, or a pin the person dropped (`name`, `lat`, `lng`). */
+        PlaceRef: {
+            placeId?: string;
+            name?: string;
+            /** Format: double */
+            lat?: number;
+            /** Format: double */
+            lng?: number;
+        };
+        StopFields: {
+            /** @description Start time as HH:mm, in the stop's time zone. */
+            startLocal?: string;
+            durationMin?: number;
+            note?: string;
+        };
+        Stop: components["schemas"]["StopFields"] & {
+            id: string;
+            tripId: string;
+            /** @description The day, YYYY-MM-DD. */
+            date: string;
+            /** @description Sort key within the day. Opaque; sort by date, then this. */
+            order: string;
+            place: components["schemas"]["PlaceRef"];
+            timeZone: string;
+        };
+        StopList: {
+            stops: components["schemas"]["Stop"][];
+        };
+        StopCreate: components["schemas"]["StopFields"] & {
+            date: string;
+            place: components["schemas"]["PlaceRef"];
+            /** @description Put the stop just before this one on the same day. */
+            beforeStopId?: string;
+        };
+        StopUpdate: components["schemas"]["StopFields"] & {
+            /** @description Move to this day. */
+            date?: string;
+            /** @description Put the stop just before this one on the target day. */
+            beforeStopId?: string;
+        };
         Trip: {
             id: string;
             title: string;
@@ -880,6 +978,119 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Task"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    listStops: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The stops. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StopList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    createStop: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StopCreate"];
+            };
+        };
+        responses: {
+            /** @description The new stop. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Stop"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    deleteStop: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                stopId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    updateStop: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                stopId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StopUpdate"];
+            };
+        };
+        responses: {
+            /** @description The stop after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Stop"];
                 };
             };
             400: components["responses"]["BadRequest"];
