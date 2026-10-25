@@ -15,6 +15,27 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+// Defines values for EntitlementsPlan.
+const (
+	Free EntitlementsPlan = "free"
+	Pass EntitlementsPlan = "pass"
+	Plus EntitlementsPlan = "plus"
+)
+
+// Valid indicates whether the value is a known member of the EntitlementsPlan enum.
+func (e EntitlementsPlan) Valid() bool {
+	switch e {
+	case Free:
+		return true
+	case Pass:
+		return true
+	case Plus:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for MeRegionSource.
 const (
 	MeRegionSourceConfirmed MeRegionSource = "confirmed"
@@ -240,6 +261,31 @@ type Destination struct {
 	// TimeZone IANA zone, such as Asia/Tokyo.
 	TimeZone string `json:"timeZone"`
 }
+
+// EntitlementDecision defines model for EntitlementDecision.
+type EntitlementDecision struct {
+	// Allowed Whether one more may be added, or the feature used.
+	Allowed bool `json:"allowed"`
+
+	// Limit The cap. -1 means no cap. For an on/off feature, 0 means Plus only.
+	Limit int `json:"limit"`
+
+	// NeedsPlus True when the answer is no and Plus or a Trip Pass would change it.
+	NeedsPlus bool `json:"needsPlus"`
+	Used      int  `json:"used"`
+}
+
+// Entitlements defines model for Entitlements.
+type Entitlements struct {
+	// Features One decision per feature, keyed by feature name.
+	Features map[string]EntitlementDecision `json:"features"`
+
+	// Plan `pass` only when asked about a trip that has a Trip Pass.
+	Plan EntitlementsPlan `json:"plan"`
+}
+
+// EntitlementsPlan `pass` only when asked about a trip that has a Trip Pass.
+type EntitlementsPlan string
 
 // Error The one error shape every non-2xx response uses. Codes: `bad_request`,
 // `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,
@@ -534,6 +580,9 @@ type ServerInterface interface {
 	// UpdateMe Change the signed-in person's profile
 	// (PATCH /v1/me)
 	UpdateMe(w http.ResponseWriter, r *http.Request)
+	// GetMyEntitlements What the signed-in person's plan allows
+	// (GET /v1/me/entitlements)
+	GetMyEntitlements(w http.ResponseWriter, r *http.Request)
 	// ListTrips List my trips
 	// (GET /v1/trips)
 	ListTrips(w http.ResponseWriter, r *http.Request)
@@ -546,6 +595,9 @@ type ServerInterface interface {
 	// UpdateTrip Change or archive a trip
 	// (PATCH /v1/trips/{tripId})
 	UpdateTrip(w http.ResponseWriter, r *http.Request, tripId string)
+	// GetTripEntitlements What a trip allows the signed-in person
+	// (GET /v1/trips/{tripId}/entitlements)
+	GetTripEntitlements(w http.ResponseWriter, r *http.Request, tripId string)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -655,6 +707,20 @@ func (siw *ServerInterfaceWrapper) UpdateMe(w http.ResponseWriter, r *http.Reque
 	handler.ServeHTTP(w, r)
 }
 
+// GetMyEntitlements operation middleware
+func (siw *ServerInterfaceWrapper) GetMyEntitlements(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetMyEntitlements(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListTrips operation middleware
 func (siw *ServerInterfaceWrapper) ListTrips(w http.ResponseWriter, r *http.Request) {
 
@@ -726,6 +792,32 @@ func (siw *ServerInterfaceWrapper) UpdateTrip(w http.ResponseWriter, r *http.Req
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.UpdateTrip(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetTripEntitlements operation middleware
+func (siw *ServerInterfaceWrapper) GetTripEntitlements(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetTripEntitlements(w, r, tripId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -856,6 +948,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	}
 
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/health", wrapper.GetHealth)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/me/entitlements", wrapper.GetMyEntitlements)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/entitlements", wrapper.GetTripEntitlements)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/me", wrapper.GetMe)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/me", wrapper.UpdateMe)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips", wrapper.ListTrips)
@@ -1203,6 +1297,55 @@ func (response UpdateMe503JSONResponse) VisitUpdateMeResponse(w http.ResponseWri
 	return err
 }
 
+type GetMyEntitlementsRequestObject struct {
+}
+
+type GetMyEntitlementsResponseObject interface {
+	VisitGetMyEntitlementsResponse(w http.ResponseWriter) error
+}
+
+type GetMyEntitlements200JSONResponse Entitlements
+
+func (response GetMyEntitlements200JSONResponse) VisitGetMyEntitlementsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMyEntitlements401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response GetMyEntitlements401JSONResponse) VisitGetMyEntitlementsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMyEntitlements503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response GetMyEntitlements503JSONResponse) VisitGetMyEntitlementsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListTripsRequestObject struct {
 }
 
@@ -1473,6 +1616,70 @@ func (response UpdateTrip503JSONResponse) VisitUpdateTripResponse(w http.Respons
 	return err
 }
 
+type GetTripEntitlementsRequestObject struct {
+	TripId string `json:"tripId"`
+}
+
+type GetTripEntitlementsResponseObject interface {
+	VisitGetTripEntitlementsResponse(w http.ResponseWriter) error
+}
+
+type GetTripEntitlements200JSONResponse Entitlements
+
+func (response GetTripEntitlements200JSONResponse) VisitGetTripEntitlementsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetTripEntitlements401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response GetTripEntitlements401JSONResponse) VisitGetTripEntitlementsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetTripEntitlements404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response GetTripEntitlements404JSONResponse) VisitGetTripEntitlementsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetTripEntitlements503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response GetTripEntitlements503JSONResponse) VisitGetTripEntitlementsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// GetHealth Report that the process is up
@@ -1496,6 +1703,9 @@ type StrictServerInterface interface {
 	// UpdateMe Change the signed-in person's profile
 	// (PATCH /v1/me)
 	UpdateMe(ctx context.Context, request UpdateMeRequestObject) (UpdateMeResponseObject, error)
+	// GetMyEntitlements What the signed-in person's plan allows
+	// (GET /v1/me/entitlements)
+	GetMyEntitlements(ctx context.Context, request GetMyEntitlementsRequestObject) (GetMyEntitlementsResponseObject, error)
 	// ListTrips List my trips
 	// (GET /v1/trips)
 	ListTrips(ctx context.Context, request ListTripsRequestObject) (ListTripsResponseObject, error)
@@ -1508,6 +1718,9 @@ type StrictServerInterface interface {
 	// UpdateTrip Change or archive a trip
 	// (PATCH /v1/trips/{tripId})
 	UpdateTrip(ctx context.Context, request UpdateTripRequestObject) (UpdateTripResponseObject, error)
+	// GetTripEntitlements What a trip allows the signed-in person
+	// (GET /v1/trips/{tripId}/entitlements)
+	GetTripEntitlements(ctx context.Context, request GetTripEntitlementsRequestObject) (GetTripEntitlementsResponseObject, error)
 }
 
 type StrictHandlerFunc func(ctx context.Context, w http.ResponseWriter, r *http.Request, request any) (any, error)
@@ -1745,6 +1958,30 @@ func (sh *strictHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetMyEntitlements operation middleware
+func (sh *strictHandler) GetMyEntitlements(w http.ResponseWriter, r *http.Request) {
+	var request GetMyEntitlementsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetMyEntitlements(ctx, request.(GetMyEntitlementsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetMyEntitlements")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetMyEntitlementsResponseObject); ok {
+		if err := validResponse.VisitGetMyEntitlementsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListTrips operation middleware
 func (sh *strictHandler) ListTrips(w http.ResponseWriter, r *http.Request) {
 	var request ListTripsRequestObject
@@ -1852,6 +2089,32 @@ func (sh *strictHandler) UpdateTrip(w http.ResponseWriter, r *http.Request, trip
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(UpdateTripResponseObject); ok {
 		if err := validResponse.VisitUpdateTripResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetTripEntitlements operation middleware
+func (sh *strictHandler) GetTripEntitlements(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request GetTripEntitlementsRequestObject
+
+	request.TripId = tripId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetTripEntitlements(ctx, request.(GetTripEntitlementsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetTripEntitlements")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetTripEntitlementsResponseObject); ok {
+		if err := validResponse.VisitGetTripEntitlementsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

@@ -1,0 +1,69 @@
+package server
+
+import (
+	"context"
+	"encoding/json"
+	"log/slog"
+	"testing"
+
+	"github.com/msriv/voyagami/services/api/internal/api"
+	"github.com/msriv/voyagami/services/api/internal/entitlements"
+)
+
+type fakePlans struct {
+	user entitlements.User
+	trip entitlements.Trip
+}
+
+func (f fakePlans) User(context.Context, string) (entitlements.User, error) { return f.user, nil }
+func (f fakePlans) Trip(context.Context, string) (entitlements.Trip, error) { return f.trip, nil }
+
+func TestEntitlementsRoutes(t *testing.T) {
+	store := newFakeTrips()
+	v := tokenVerifier{"owner": "u-owner", "other": "u-other"}
+	plans := fakePlans{trip: entitlements.Trip{Pass: true}}
+	h := NewHandler(slog.New(slog.DiscardHandler), v, WithTrips(store),
+		WithEntitlements(entitlements.New(entitlements.Free()), plans))
+
+	var trip api.Trip
+	_ = json.Unmarshal(call(h, "POST", "/v1/trips", "owner", newTripBody).Body.Bytes(), &trip)
+
+	var me api.Entitlements
+	rec := call(h, "GET", "/v1/me/entitlements", "owner", "")
+	if rec.Code != 200 {
+		t.Fatalf("me: %d %s", rec.Code, rec.Body)
+	}
+	_ = json.Unmarshal(rec.Body.Bytes(), &me)
+	if me.Plan != api.Free || !me.Features[string(entitlements.SettleUp)].Allowed || me.Features[string(entitlements.DarkMode)].Allowed {
+		t.Fatalf("free account: %+v", me)
+	}
+
+	var tr api.Entitlements
+	rec = call(h, "GET", "/v1/trips/"+trip.Id+"/entitlements", "owner", "")
+	if rec.Code != 200 {
+		t.Fatalf("trip: %d %s", rec.Code, rec.Body)
+	}
+	_ = json.Unmarshal(rec.Body.Bytes(), &tr)
+	if tr.Plan != api.Pass || !tr.Features[string(entitlements.MultiCurrency)].Allowed {
+		t.Fatalf("pass trip: %+v", tr)
+	}
+
+	for _, c := range []struct {
+		name, path, token string
+		want              int
+	}{
+		{"signed out", "/v1/me/entitlements", "", 401},
+		{"non-member", "/v1/trips/" + trip.Id + "/entitlements", "other", 404},
+	} {
+		if got := call(h, "GET", c.path, c.token, "").Code; got != c.want {
+			t.Fatalf("%s: got %d, want %d", c.name, got, c.want)
+		}
+	}
+}
+
+func TestEntitlementsOffAnswers503(t *testing.T) {
+	h := NewHandler(slog.New(slog.DiscardHandler), tokenVerifier{"owner": "u-owner"}, WithTrips(newFakeTrips()))
+	if got := call(h, "GET", "/v1/me/entitlements", "owner", "").Code; got != 503 {
+		t.Fatalf("got %d, want 503", got)
+	}
+}

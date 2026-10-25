@@ -26,6 +26,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me/entitlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What the signed-in person's plan allows
+         * @description One answer per feature, decided on the server. The app only reflects it.
+         *     Features that belong to a trip are answered as if no trip is open; ask
+         *     the trip's own endpoint for those. Needs a bearer token.
+         */
+        get: operations["getMyEntitlements"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/entitlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * What a trip allows the signed-in person
+         * @description Like the person's own answer, but with the trip in view. Whole-trip
+         *     features are open for everyone on the trip when any member has Plus or
+         *     the trip has a Trip Pass. Needs a bearer token and membership.
+         */
+        get: operations["getTripEntitlements"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me": {
         parameters: {
             query?: never;
@@ -247,6 +293,26 @@ export interface components {
              */
             regionSource?: "device" | "confirmed";
         };
+        EntitlementDecision: {
+            /** @description Whether one more may be added, or the feature used. */
+            allowed: boolean;
+            /** @description The cap. -1 means no cap. For an on/off feature, 0 means Plus only. */
+            limit: number;
+            used: number;
+            /** @description True when the answer is no and Plus or a Trip Pass would change it. */
+            needsPlus: boolean;
+        };
+        Entitlements: {
+            /**
+             * @description `pass` only when asked about a trip that has a Trip Pass.
+             * @enum {string}
+             */
+            plan: "free" | "plus" | "pass";
+            /** @description One decision per feature, keyed by feature name. */
+            features: {
+                [key: string]: components["schemas"]["EntitlementDecision"];
+            };
+        };
         /** @description Fields to change. Leave a field out to keep it. */
         MeUpdate: {
             displayName?: string;
@@ -438,6 +504,53 @@ export interface operations {
                     "application/json": components["schemas"]["Health"];
                 };
             };
+        };
+    };
+    getMyEntitlements: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The plan and one decision per feature. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Entitlements"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    getTripEntitlements: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The plan and one decision per feature. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Entitlements"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
         };
     };
     getMe: {
