@@ -2,7 +2,7 @@ import { formatDate } from "@voyagami/locale";
 import { getLocales } from "expo-localization";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ApiError, NetworkError, type components } from "@voyagami/api-client";
@@ -47,6 +47,7 @@ function DayEntry({
   onChange: (entry: Entry | undefined) => void;
 }) {
   const { t } = useTranslation();
+  const { colors } = useTheme();
   const { api } = useAuth();
   const [text, setText] = useState(mine?.text ?? "");
   const [mood, setMood] = useState<Mood | undefined>(mine?.mood as Mood | undefined);
@@ -105,31 +106,48 @@ function DayEntry({
   if (!canEdit) return null;
   return (
     <View style={{ gap: 12 }}>
-      <Input
-        label={t("journal.textLabel")}
-        value={text}
-        onChangeText={(v) => {
-          setText(v);
-          setSaved(false);
-        }}
-        maxLength={10000}
-        multiline
-      />
-      <View style={{ gap: 6 }}>
+      <View style={{ gap: 8 }}>
         <Text variant="bodyStrong">{t("journal.moodLabel")}</Text>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+        <View style={{ flexDirection: "row", gap: 8 }}>
           {moods.map((m) => (
-            <Chip
+            <Pressable
               key={m}
-              label={t(`journal.moods.${m}`)}
-              selected={m === mood}
+              accessibilityRole="button"
+              accessibilityLabel={t(`journal.moods.${m}`)}
+              accessibilityState={{ selected: m === mood }}
               onPress={() => setMood(m === mood ? undefined : m)}
-            />
+              style={{
+                flex: 1,
+                minHeight: 48,
+                borderRadius: 16,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: m === mood ? colors.vermilion : colors.white,
+              }}
+            >
+              <Text variant={m === mood ? "bodyStrong" : "body"}>{t(`journal.moods.${m}`)}</Text>
+            </Pressable>
           ))}
         </View>
       </View>
-      <Chip label={t("journal.justMe")} selected={priv} onPress={() => setPriv(!priv)} />
-      <Text variant="caption">{t(priv ? "journal.privateHint" : "journal.crewHint")}</Text>
+      <View style={{ backgroundColor: colors.white, borderRadius: 22, padding: 16, gap: 10 }}>
+        <Input
+          label={t("journal.textLabel")}
+          value={text}
+          onChangeText={(v) => {
+            setText(v);
+            setSaved(false);
+          }}
+          maxLength={10000}
+          multiline
+        />
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <Chip label={t("journal.justMe")} selected={priv} onPress={() => setPriv(!priv)} />
+          <Text variant="caption" style={{ flex: 1 }}>
+            {t(priv ? "journal.privateHint" : "journal.crewHint")}
+          </Text>
+        </View>
+      </View>
       <Button label={t("journal.save")} loading={busy} onPress={() => void save()} />
       {mine ? (
         <Button
