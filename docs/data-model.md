@@ -352,7 +352,9 @@ Always free.
 | `place` | PlaceRef |               |
 | `at`    | instant? | When to meet. |
 
-Write: editors and owners.
+Write: editors and owners. Also `confirmedBy` (uid array): any member, for themselves only.
+
+API (VOY-144): `GET/POST /v1/trips/{id}/meet-points`, `PATCH/DELETE .../{meetPointId}`, `PUT/DELETE .../{meetPointId}/confirmation` (say you are coming). A meet point is over 3 hours after its `at`, or 24 hours after it was made when it has no time; it stays in the list marked `ended`. `at` can be changed but not cleared yet.
 
 ### `trips/{tripId}/presence/{uid}`
 
@@ -365,6 +367,8 @@ Opt-in, timed, this trip only. Throwaway: stale is fine, wrong-but-old dots grey
 | `endsAt`    | instant                   | Sharing ends automatically. A Firestore TTL policy deletes the document after this. |
 
 Write: only that person, only while `endsAt` is in the future. Free plan limits sharing to one hour, so `endsAt` is set by the API when sharing starts; the Plus all-day cap is checked there too. Exact locations never go to logs or analytics.
+
+API (VOY-144): `PUT /v1/trips/{id}/locations/me` starts or moves the caller's dot, `DELETE` stops it, `GET /v1/trips/{id}/locations` lists who is sharing. Any active member can share, viewers too. Updates keep the end time; only a new `durationMinutes` changes it, and more than 60 needs the live crew map (Plus or a Trip Pass). With `meetPointId` the share also ends when that meet ends. Ended entries are hidden at once and deleted the next time anyone lists, with the TTL policy as the backstop.
 
 ### `trips/{tripId}/expenses/{expenseId}`
 

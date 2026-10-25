@@ -231,6 +231,24 @@ func (e MeUpdateRegionSource) Valid() bool {
 	}
 }
 
+// Defines values for MeetPointStatus.
+const (
+	MeetPointStatusActive MeetPointStatus = "active"
+	MeetPointStatusEnded  MeetPointStatus = "ended"
+)
+
+// Valid indicates whether the value is a known member of the MeetPointStatus enum.
+func (e MeetPointStatus) Valid() bool {
+	switch e {
+	case MeetPointStatusActive:
+		return true
+	case MeetPointStatusEnded:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for MemberRole.
 const (
 	MemberRoleEditor MemberRole = "editor"
@@ -1001,6 +1019,50 @@ type MeUpdate struct {
 // MeUpdateRegionSource `device` when guessed from the phone, `confirmed` once the person chose.
 type MeUpdateRegionSource string
 
+// MeetPoint defines model for MeetPoint.
+type MeetPoint struct {
+	At *time.Time `json:"at,omitempty"`
+
+	// ConfirmedBy IDs of members who are coming.
+	ConfirmedBy []string  `json:"confirmedBy"`
+	CreatedBy   string    `json:"createdBy"`
+	EndsAt      time.Time `json:"endsAt"`
+	IAmComing   bool      `json:"iAmComing"`
+	Id          string    `json:"id"`
+	Name        string    `json:"name"`
+
+	// Place A catalogue place by `placeId`, or a pin the person dropped (`name`, `lat`, `lng`).
+	Place  PlaceRef        `json:"place"`
+	Status MeetPointStatus `json:"status"`
+}
+
+// MeetPointStatus defines model for MeetPoint.Status.
+type MeetPointStatus string
+
+// MeetPointCreate defines model for MeetPointCreate.
+type MeetPointCreate struct {
+	// At When to meet. Absent means no time yet.
+	At   *time.Time `json:"at,omitempty"`
+	Name string     `json:"name"`
+
+	// Place A catalogue place by `placeId`, or a pin the person dropped (`name`, `lat`, `lng`).
+	Place PlaceRef `json:"place"`
+}
+
+// MeetPointList defines model for MeetPointList.
+type MeetPointList struct {
+	MeetPoints []MeetPoint `json:"meetPoints"`
+}
+
+// MeetPointUpdate defines model for MeetPointUpdate.
+type MeetPointUpdate struct {
+	At   *time.Time `json:"at,omitempty"`
+	Name *string    `json:"name,omitempty"`
+
+	// Place A catalogue place by `placeId`, or a pin the person dropped (`name`, `lat`, `lng`).
+	Place *PlaceRef `json:"place,omitempty"`
+}
+
 // Member defines model for Member.
 type Member struct {
 	DisplayName string       `json:"displayName"`
@@ -1232,6 +1294,35 @@ type SettlementCreate struct {
 // SettlementList defines model for SettlementList.
 type SettlementList struct {
 	Settlements []Settlement `json:"settlements"`
+}
+
+// ShareLocation defines model for ShareLocation.
+type ShareLocation struct {
+	AccuracyM *int `json:"accuracyM,omitempty"`
+
+	// DurationMinutes How long to share, counted from when sharing starts. Defaults to 60. Ignored on updates while sharing.
+	DurationMinutes *int    `json:"durationMinutes,omitempty"`
+	Lat             float64 `json:"lat"`
+	Lng             float64 `json:"lng"`
+
+	// MeetPointId End sharing when this meet point ends.
+	MeetPointId *string `json:"meetPointId,omitempty"`
+}
+
+// SharedLocation defines model for SharedLocation.
+type SharedLocation struct {
+	AccuracyM   int       `json:"accuracyM"`
+	EndsAt      time.Time `json:"endsAt"`
+	Lat         float64   `json:"lat"`
+	Lng         float64   `json:"lng"`
+	MeetPointId *string   `json:"meetPointId,omitempty"`
+	Uid         string    `json:"uid"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
+// SharedLocationList defines model for SharedLocationList.
+type SharedLocationList struct {
+	Locations []SharedLocation `json:"locations"`
 }
 
 // SplitInput defines model for SplitInput.
@@ -1546,6 +1637,15 @@ type CreateInviteJSONRequestBody = InviteCreate
 // PutJournalEntryJSONRequestBody defines body for PutJournalEntry for application/json ContentType.
 type PutJournalEntryJSONRequestBody = JournalWrite
 
+// ShareMyLocationJSONRequestBody defines body for ShareMyLocation for application/json ContentType.
+type ShareMyLocationJSONRequestBody = ShareLocation
+
+// CreateMeetPointJSONRequestBody defines body for CreateMeetPoint for application/json ContentType.
+type CreateMeetPointJSONRequestBody = MeetPointCreate
+
+// UpdateMeetPointJSONRequestBody defines body for UpdateMeetPoint for application/json ContentType.
+type UpdateMeetPointJSONRequestBody = MeetPointUpdate
+
 // SetMemberRoleJSONRequestBody defines body for SetMemberRole for application/json ContentType.
 type SetMemberRoleJSONRequestBody = MemberRoleChange
 
@@ -1677,6 +1777,33 @@ type ServerInterface interface {
 	// PutJournalEntry Write your entry for a day
 	// (PUT /v1/trips/{tripId}/journal/{date})
 	PutJournalEntry(w http.ResponseWriter, r *http.Request, tripId string, date string)
+	// ListSharedLocations Who is sharing their location
+	// (GET /v1/trips/{tripId}/locations)
+	ListSharedLocations(w http.ResponseWriter, r *http.Request, tripId string)
+	// StopSharingMyLocation Stop sharing your location
+	// (DELETE /v1/trips/{tripId}/locations/me)
+	StopSharingMyLocation(w http.ResponseWriter, r *http.Request, tripId string)
+	// ShareMyLocation Share or update your location
+	// (PUT /v1/trips/{tripId}/locations/me)
+	ShareMyLocation(w http.ResponseWriter, r *http.Request, tripId string)
+	// ListMeetPoints List meet points
+	// (GET /v1/trips/{tripId}/meet-points)
+	ListMeetPoints(w http.ResponseWriter, r *http.Request, tripId string)
+	// CreateMeetPoint Propose a meet point
+	// (POST /v1/trips/{tripId}/meet-points)
+	CreateMeetPoint(w http.ResponseWriter, r *http.Request, tripId string)
+	// DeleteMeetPoint Delete a meet point
+	// (DELETE /v1/trips/{tripId}/meet-points/{meetPointId})
+	DeleteMeetPoint(w http.ResponseWriter, r *http.Request, tripId string, meetPointId string)
+	// UpdateMeetPoint Change a meet point
+	// (PATCH /v1/trips/{tripId}/meet-points/{meetPointId})
+	UpdateMeetPoint(w http.ResponseWriter, r *http.Request, tripId string, meetPointId string)
+	// UnconfirmMeetPoint Say you are not coming
+	// (DELETE /v1/trips/{tripId}/meet-points/{meetPointId}/confirmation)
+	UnconfirmMeetPoint(w http.ResponseWriter, r *http.Request, tripId string, meetPointId string)
+	// ConfirmMeetPoint Say you are coming
+	// (PUT /v1/trips/{tripId}/meet-points/{meetPointId}/confirmation)
+	ConfirmMeetPoint(w http.ResponseWriter, r *http.Request, tripId string, meetPointId string)
 	// ListMembers List the crew
 	// (GET /v1/trips/{tripId}/members)
 	ListMembers(w http.ResponseWriter, r *http.Request, tripId string)
@@ -2592,6 +2719,276 @@ func (siw *ServerInterfaceWrapper) PutJournalEntry(w http.ResponseWriter, r *htt
 	handler.ServeHTTP(w, r)
 }
 
+// ListSharedLocations operation middleware
+func (siw *ServerInterfaceWrapper) ListSharedLocations(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListSharedLocations(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// StopSharingMyLocation operation middleware
+func (siw *ServerInterfaceWrapper) StopSharingMyLocation(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.StopSharingMyLocation(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ShareMyLocation operation middleware
+func (siw *ServerInterfaceWrapper) ShareMyLocation(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ShareMyLocation(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListMeetPoints operation middleware
+func (siw *ServerInterfaceWrapper) ListMeetPoints(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListMeetPoints(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateMeetPoint operation middleware
+func (siw *ServerInterfaceWrapper) CreateMeetPoint(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateMeetPoint(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteMeetPoint operation middleware
+func (siw *ServerInterfaceWrapper) DeleteMeetPoint(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "meetPointId" -------------
+	var meetPointId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "meetPointId", r.PathValue("meetPointId"), &meetPointId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "meetPointId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteMeetPoint(w, r, tripId, meetPointId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateMeetPoint operation middleware
+func (siw *ServerInterfaceWrapper) UpdateMeetPoint(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "meetPointId" -------------
+	var meetPointId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "meetPointId", r.PathValue("meetPointId"), &meetPointId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "meetPointId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateMeetPoint(w, r, tripId, meetPointId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UnconfirmMeetPoint operation middleware
+func (siw *ServerInterfaceWrapper) UnconfirmMeetPoint(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "meetPointId" -------------
+	var meetPointId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "meetPointId", r.PathValue("meetPointId"), &meetPointId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "meetPointId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UnconfirmMeetPoint(w, r, tripId, meetPointId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ConfirmMeetPoint operation middleware
+func (siw *ServerInterfaceWrapper) ConfirmMeetPoint(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "meetPointId" -------------
+	var meetPointId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "meetPointId", r.PathValue("meetPointId"), &meetPointId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "meetPointId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ConfirmMeetPoint(w, r, tripId, meetPointId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListMembers operation middleware
 func (siw *ServerInterfaceWrapper) ListMembers(w http.ResponseWriter, r *http.Request) {
 
@@ -3260,6 +3657,15 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/polls", wrapper.CreatePoll)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/polls/{pollId}/vote", wrapper.VotePoll)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/polls/{pollId}/close", wrapper.ClosePoll)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/meet-points", wrapper.ListMeetPoints)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/meet-points", wrapper.CreateMeetPoint)
+	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/meet-points/{meetPointId}", wrapper.DeleteMeetPoint)
+	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/trips/{tripId}/meet-points/{meetPointId}", wrapper.UpdateMeetPoint)
+	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/meet-points/{meetPointId}/confirmation", wrapper.UnconfirmMeetPoint)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/v1/trips/{tripId}/meet-points/{meetPointId}/confirmation", wrapper.ConfirmMeetPoint)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/locations", wrapper.ListSharedLocations)
+	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/locations/me", wrapper.StopSharingMyLocation)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/v1/trips/{tripId}/locations/me", wrapper.ShareMyLocation)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/members", wrapper.ListMembers)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/members/{uid}", wrapper.RemoveMember)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/trips/{tripId}/members/{uid}", wrapper.SetMemberRole)
@@ -5657,6 +6063,689 @@ func (response PutJournalEntry503JSONResponse) VisitPutJournalEntryResponse(w ht
 	return err
 }
 
+type ListSharedLocationsRequestObject struct {
+	TripId string `json:"tripId"`
+}
+
+type ListSharedLocationsResponseObject interface {
+	VisitListSharedLocationsResponse(w http.ResponseWriter) error
+}
+
+type ListSharedLocations200JSONResponse SharedLocationList
+
+func (response ListSharedLocations200JSONResponse) VisitListSharedLocationsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListSharedLocations401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ListSharedLocations401JSONResponse) VisitListSharedLocationsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListSharedLocations404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ListSharedLocations404JSONResponse) VisitListSharedLocationsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListSharedLocations503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ListSharedLocations503JSONResponse) VisitListSharedLocationsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StopSharingMyLocationRequestObject struct {
+	TripId string `json:"tripId"`
+}
+
+type StopSharingMyLocationResponseObject interface {
+	VisitStopSharingMyLocationResponse(w http.ResponseWriter) error
+}
+
+type StopSharingMyLocation204Response struct {
+}
+
+func (response StopSharingMyLocation204Response) VisitStopSharingMyLocationResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type StopSharingMyLocation401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response StopSharingMyLocation401JSONResponse) VisitStopSharingMyLocationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StopSharingMyLocation404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response StopSharingMyLocation404JSONResponse) VisitStopSharingMyLocationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StopSharingMyLocation503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response StopSharingMyLocation503JSONResponse) VisitStopSharingMyLocationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ShareMyLocationRequestObject struct {
+	TripId string `json:"tripId"`
+	Body   *ShareMyLocationJSONRequestBody
+}
+
+type ShareMyLocationResponseObject interface {
+	VisitShareMyLocationResponse(w http.ResponseWriter) error
+}
+
+type ShareMyLocation200JSONResponse SharedLocation
+
+func (response ShareMyLocation200JSONResponse) VisitShareMyLocationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ShareMyLocation400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response ShareMyLocation400JSONResponse) VisitShareMyLocationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ShareMyLocation401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ShareMyLocation401JSONResponse) VisitShareMyLocationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ShareMyLocation403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response ShareMyLocation403JSONResponse) VisitShareMyLocationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ShareMyLocation404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ShareMyLocation404JSONResponse) VisitShareMyLocationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ShareMyLocation409JSONResponse struct{ ConflictJSONResponse }
+
+func (response ShareMyLocation409JSONResponse) VisitShareMyLocationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ShareMyLocation503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ShareMyLocation503JSONResponse) VisitShareMyLocationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListMeetPointsRequestObject struct {
+	TripId string `json:"tripId"`
+}
+
+type ListMeetPointsResponseObject interface {
+	VisitListMeetPointsResponse(w http.ResponseWriter) error
+}
+
+type ListMeetPoints200JSONResponse MeetPointList
+
+func (response ListMeetPoints200JSONResponse) VisitListMeetPointsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListMeetPoints401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ListMeetPoints401JSONResponse) VisitListMeetPointsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListMeetPoints404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ListMeetPoints404JSONResponse) VisitListMeetPointsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListMeetPoints503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ListMeetPoints503JSONResponse) VisitListMeetPointsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateMeetPointRequestObject struct {
+	TripId string `json:"tripId"`
+	Body   *CreateMeetPointJSONRequestBody
+}
+
+type CreateMeetPointResponseObject interface {
+	VisitCreateMeetPointResponse(w http.ResponseWriter) error
+}
+
+type CreateMeetPoint201JSONResponse MeetPoint
+
+func (response CreateMeetPoint201JSONResponse) VisitCreateMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateMeetPoint400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CreateMeetPoint400JSONResponse) VisitCreateMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateMeetPoint401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CreateMeetPoint401JSONResponse) VisitCreateMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateMeetPoint403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response CreateMeetPoint403JSONResponse) VisitCreateMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateMeetPoint404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CreateMeetPoint404JSONResponse) VisitCreateMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateMeetPoint503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response CreateMeetPoint503JSONResponse) VisitCreateMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteMeetPointRequestObject struct {
+	TripId      string `json:"tripId"`
+	MeetPointId string `json:"meetPointId"`
+}
+
+type DeleteMeetPointResponseObject interface {
+	VisitDeleteMeetPointResponse(w http.ResponseWriter) error
+}
+
+type DeleteMeetPoint204Response struct {
+}
+
+func (response DeleteMeetPoint204Response) VisitDeleteMeetPointResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteMeetPoint401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response DeleteMeetPoint401JSONResponse) VisitDeleteMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteMeetPoint403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response DeleteMeetPoint403JSONResponse) VisitDeleteMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteMeetPoint404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response DeleteMeetPoint404JSONResponse) VisitDeleteMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteMeetPoint503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response DeleteMeetPoint503JSONResponse) VisitDeleteMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateMeetPointRequestObject struct {
+	TripId      string `json:"tripId"`
+	MeetPointId string `json:"meetPointId"`
+	Body        *UpdateMeetPointJSONRequestBody
+}
+
+type UpdateMeetPointResponseObject interface {
+	VisitUpdateMeetPointResponse(w http.ResponseWriter) error
+}
+
+type UpdateMeetPoint200JSONResponse MeetPoint
+
+func (response UpdateMeetPoint200JSONResponse) VisitUpdateMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateMeetPoint400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response UpdateMeetPoint400JSONResponse) VisitUpdateMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateMeetPoint401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response UpdateMeetPoint401JSONResponse) VisitUpdateMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateMeetPoint403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response UpdateMeetPoint403JSONResponse) VisitUpdateMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateMeetPoint404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response UpdateMeetPoint404JSONResponse) VisitUpdateMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateMeetPoint503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response UpdateMeetPoint503JSONResponse) VisitUpdateMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UnconfirmMeetPointRequestObject struct {
+	TripId      string `json:"tripId"`
+	MeetPointId string `json:"meetPointId"`
+}
+
+type UnconfirmMeetPointResponseObject interface {
+	VisitUnconfirmMeetPointResponse(w http.ResponseWriter) error
+}
+
+type UnconfirmMeetPoint200JSONResponse MeetPoint
+
+func (response UnconfirmMeetPoint200JSONResponse) VisitUnconfirmMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UnconfirmMeetPoint401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response UnconfirmMeetPoint401JSONResponse) VisitUnconfirmMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UnconfirmMeetPoint404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response UnconfirmMeetPoint404JSONResponse) VisitUnconfirmMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UnconfirmMeetPoint503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response UnconfirmMeetPoint503JSONResponse) VisitUnconfirmMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ConfirmMeetPointRequestObject struct {
+	TripId      string `json:"tripId"`
+	MeetPointId string `json:"meetPointId"`
+}
+
+type ConfirmMeetPointResponseObject interface {
+	VisitConfirmMeetPointResponse(w http.ResponseWriter) error
+}
+
+type ConfirmMeetPoint200JSONResponse MeetPoint
+
+func (response ConfirmMeetPoint200JSONResponse) VisitConfirmMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ConfirmMeetPoint401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ConfirmMeetPoint401JSONResponse) VisitConfirmMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ConfirmMeetPoint404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ConfirmMeetPoint404JSONResponse) VisitConfirmMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ConfirmMeetPoint503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ConfirmMeetPoint503JSONResponse) VisitConfirmMeetPointResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListMembersRequestObject struct {
 	TripId string `json:"tripId"`
 }
@@ -7156,6 +8245,33 @@ type StrictServerInterface interface {
 	// PutJournalEntry Write your entry for a day
 	// (PUT /v1/trips/{tripId}/journal/{date})
 	PutJournalEntry(ctx context.Context, request PutJournalEntryRequestObject) (PutJournalEntryResponseObject, error)
+	// ListSharedLocations Who is sharing their location
+	// (GET /v1/trips/{tripId}/locations)
+	ListSharedLocations(ctx context.Context, request ListSharedLocationsRequestObject) (ListSharedLocationsResponseObject, error)
+	// StopSharingMyLocation Stop sharing your location
+	// (DELETE /v1/trips/{tripId}/locations/me)
+	StopSharingMyLocation(ctx context.Context, request StopSharingMyLocationRequestObject) (StopSharingMyLocationResponseObject, error)
+	// ShareMyLocation Share or update your location
+	// (PUT /v1/trips/{tripId}/locations/me)
+	ShareMyLocation(ctx context.Context, request ShareMyLocationRequestObject) (ShareMyLocationResponseObject, error)
+	// ListMeetPoints List meet points
+	// (GET /v1/trips/{tripId}/meet-points)
+	ListMeetPoints(ctx context.Context, request ListMeetPointsRequestObject) (ListMeetPointsResponseObject, error)
+	// CreateMeetPoint Propose a meet point
+	// (POST /v1/trips/{tripId}/meet-points)
+	CreateMeetPoint(ctx context.Context, request CreateMeetPointRequestObject) (CreateMeetPointResponseObject, error)
+	// DeleteMeetPoint Delete a meet point
+	// (DELETE /v1/trips/{tripId}/meet-points/{meetPointId})
+	DeleteMeetPoint(ctx context.Context, request DeleteMeetPointRequestObject) (DeleteMeetPointResponseObject, error)
+	// UpdateMeetPoint Change a meet point
+	// (PATCH /v1/trips/{tripId}/meet-points/{meetPointId})
+	UpdateMeetPoint(ctx context.Context, request UpdateMeetPointRequestObject) (UpdateMeetPointResponseObject, error)
+	// UnconfirmMeetPoint Say you are not coming
+	// (DELETE /v1/trips/{tripId}/meet-points/{meetPointId}/confirmation)
+	UnconfirmMeetPoint(ctx context.Context, request UnconfirmMeetPointRequestObject) (UnconfirmMeetPointResponseObject, error)
+	// ConfirmMeetPoint Say you are coming
+	// (PUT /v1/trips/{tripId}/meet-points/{meetPointId}/confirmation)
+	ConfirmMeetPoint(ctx context.Context, request ConfirmMeetPointRequestObject) (ConfirmMeetPointResponseObject, error)
 	// ListMembers List the crew
 	// (GET /v1/trips/{tripId}/members)
 	ListMembers(ctx context.Context, request ListMembersRequestObject) (ListMembersResponseObject, error)
@@ -8210,6 +9326,265 @@ func (sh *strictHandler) PutJournalEntry(w http.ResponseWriter, r *http.Request,
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(PutJournalEntryResponseObject); ok {
 		if err := validResponse.VisitPutJournalEntryResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListSharedLocations operation middleware
+func (sh *strictHandler) ListSharedLocations(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request ListSharedLocationsRequestObject
+
+	request.TripId = tripId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListSharedLocations(ctx, request.(ListSharedLocationsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListSharedLocations")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListSharedLocationsResponseObject); ok {
+		if err := validResponse.VisitListSharedLocationsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// StopSharingMyLocation operation middleware
+func (sh *strictHandler) StopSharingMyLocation(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request StopSharingMyLocationRequestObject
+
+	request.TripId = tripId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.StopSharingMyLocation(ctx, request.(StopSharingMyLocationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "StopSharingMyLocation")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(StopSharingMyLocationResponseObject); ok {
+		if err := validResponse.VisitStopSharingMyLocationResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ShareMyLocation operation middleware
+func (sh *strictHandler) ShareMyLocation(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request ShareMyLocationRequestObject
+
+	request.TripId = tripId
+
+	var body ShareMyLocationJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ShareMyLocation(ctx, request.(ShareMyLocationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ShareMyLocation")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ShareMyLocationResponseObject); ok {
+		if err := validResponse.VisitShareMyLocationResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListMeetPoints operation middleware
+func (sh *strictHandler) ListMeetPoints(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request ListMeetPointsRequestObject
+
+	request.TripId = tripId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListMeetPoints(ctx, request.(ListMeetPointsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListMeetPoints")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListMeetPointsResponseObject); ok {
+		if err := validResponse.VisitListMeetPointsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateMeetPoint operation middleware
+func (sh *strictHandler) CreateMeetPoint(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request CreateMeetPointRequestObject
+
+	request.TripId = tripId
+
+	var body CreateMeetPointJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateMeetPoint(ctx, request.(CreateMeetPointRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateMeetPoint")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateMeetPointResponseObject); ok {
+		if err := validResponse.VisitCreateMeetPointResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteMeetPoint operation middleware
+func (sh *strictHandler) DeleteMeetPoint(w http.ResponseWriter, r *http.Request, tripId string, meetPointId string) {
+	var request DeleteMeetPointRequestObject
+
+	request.TripId = tripId
+	request.MeetPointId = meetPointId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteMeetPoint(ctx, request.(DeleteMeetPointRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteMeetPoint")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteMeetPointResponseObject); ok {
+		if err := validResponse.VisitDeleteMeetPointResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateMeetPoint operation middleware
+func (sh *strictHandler) UpdateMeetPoint(w http.ResponseWriter, r *http.Request, tripId string, meetPointId string) {
+	var request UpdateMeetPointRequestObject
+
+	request.TripId = tripId
+	request.MeetPointId = meetPointId
+
+	var body UpdateMeetPointJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateMeetPoint(ctx, request.(UpdateMeetPointRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateMeetPoint")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdateMeetPointResponseObject); ok {
+		if err := validResponse.VisitUpdateMeetPointResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UnconfirmMeetPoint operation middleware
+func (sh *strictHandler) UnconfirmMeetPoint(w http.ResponseWriter, r *http.Request, tripId string, meetPointId string) {
+	var request UnconfirmMeetPointRequestObject
+
+	request.TripId = tripId
+	request.MeetPointId = meetPointId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UnconfirmMeetPoint(ctx, request.(UnconfirmMeetPointRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UnconfirmMeetPoint")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UnconfirmMeetPointResponseObject); ok {
+		if err := validResponse.VisitUnconfirmMeetPointResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ConfirmMeetPoint operation middleware
+func (sh *strictHandler) ConfirmMeetPoint(w http.ResponseWriter, r *http.Request, tripId string, meetPointId string) {
+	var request ConfirmMeetPointRequestObject
+
+	request.TripId = tripId
+	request.MeetPointId = meetPointId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ConfirmMeetPoint(ctx, request.(ConfirmMeetPointRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ConfirmMeetPoint")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ConfirmMeetPointResponseObject); ok {
+		if err := validResponse.VisitConfirmMeetPointResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
