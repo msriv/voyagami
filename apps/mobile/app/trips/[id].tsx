@@ -191,28 +191,15 @@ export default function TripScreen() {
             <Text variant="title" heading>
               {t("trip.sections")}
             </Text>
-            {sections.map((key) =>
-              key === "itinerary" || key === "bookings" || key === "money" ? (
-                <Button
-                  key={key}
-                  label={t(`trip.${key}`)}
-                  variant="secondary"
-                  fullWidth
-                  onPress={() => router.push(`/trips/${trip.id}/${key}`)}
-                />
-              ) : (
-                // Placeholders until each section is built; disabled so nothing looks tappable that is not.
-                <Button
-                  key={key}
-                  label={t(`trip.${key}`)}
-                  variant="secondary"
-                  fullWidth
-                  disabled
-                  accessibilityLabel={t("trip.sectionSoon", { name: t(`trip.${key}`) })}
-                />
-              ),
-            )}
-            <Text variant="caption">{t("trip.comingSoon")}</Text>
+            {sections.map((key) => (
+              <Button
+                key={key}
+                label={t(`trip.${key}`)}
+                variant="secondary"
+                fullWidth
+                onPress={() => router.push(`/trips/${trip.id}/${key}`)}
+              />
+            ))}
           </View>
 
           {archived ? null : <TripTasks tripId={trip.id} canEdit={canEdit} />}
