@@ -11,6 +11,7 @@ import (
 	"github.com/msriv/voyagami/services/api/internal/api"
 	"github.com/msriv/voyagami/services/api/internal/auth"
 	"github.com/msriv/voyagami/services/api/internal/entitlements"
+	"github.com/msriv/voyagami/services/api/internal/importer"
 	"github.com/msriv/voyagami/services/api/internal/rates"
 	"github.com/msriv/voyagami/services/api/internal/repo"
 )
@@ -58,6 +59,7 @@ type handlers struct {
 	polls       repo.Polls
 	meetPoints  repo.MeetPoints
 	comments    repo.Comments
+	importer    importer.Parser
 	feed        repo.Feed
 	presence    repo.Presence
 	rates       rates.Provider

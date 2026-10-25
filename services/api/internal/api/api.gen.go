@@ -700,6 +700,12 @@ type Booking struct {
 	To       *BookingPlace `json:"to,omitempty"`
 }
 
+// BookingCandidate defines model for BookingCandidate.
+type BookingCandidate struct {
+	Booking    BookingCreate `json:"booking"`
+	Confidence float64       `json:"confidence"`
+}
+
 // BookingCreate defines model for BookingCreate.
 type BookingCreate struct {
 	EndTimeZone *string       `json:"endTimeZone,omitempty"`
@@ -736,6 +742,18 @@ type BookingFields struct {
 	// StartsAt UTC instant. An update can change it but not clear it yet.
 	StartsAt *time.Time    `json:"startsAt,omitempty"`
 	To       *BookingPlace `json:"to,omitempty"`
+}
+
+// BookingImportRequest Exactly one of text or pdfBase64.
+type BookingImportRequest struct {
+	// PdfBase64 A PDF, base64 encoded.
+	PdfBase64 *string `json:"pdfBase64,omitempty"`
+	Text      *string `json:"text,omitempty"`
+}
+
+// BookingImportResult defines model for BookingImportResult.
+type BookingImportResult struct {
+	Candidates []BookingCandidate `json:"candidates"`
 }
 
 // BookingKind defines model for BookingKind.
@@ -1773,6 +1791,9 @@ type UpdateTripJSONRequestBody = TripUpdate
 // CreateBookingJSONRequestBody defines body for CreateBooking for application/json ContentType.
 type CreateBookingJSONRequestBody = BookingCreate
 
+// ImportBookingsJSONRequestBody defines body for ImportBookings for application/json ContentType.
+type ImportBookingsJSONRequestBody = BookingImportRequest
+
 // UpdateBookingJSONRequestBody defines body for UpdateBooking for application/json ContentType.
 type UpdateBookingJSONRequestBody = BookingUpdate
 
@@ -1886,6 +1907,9 @@ type ServerInterface interface {
 	// CreateBooking Add a booking
 	// (POST /v1/trips/{tripId}/bookings)
 	CreateBooking(w http.ResponseWriter, r *http.Request, tripId string)
+	// ImportBookings Read bookings from a pasted confirmation or a PDF
+	// (POST /v1/trips/{tripId}/bookings/import)
+	ImportBookings(w http.ResponseWriter, r *http.Request, tripId string)
 	// DeleteBooking Delete a booking
 	// (DELETE /v1/trips/{tripId}/bookings/{bookingId})
 	DeleteBooking(w http.ResponseWriter, r *http.Request, tripId string, bookingId string)
@@ -2365,6 +2389,32 @@ func (siw *ServerInterfaceWrapper) CreateBooking(w http.ResponseWriter, r *http.
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateBooking(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ImportBookings operation middleware
+func (siw *ServerInterfaceWrapper) ImportBookings(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ImportBookings(w, r, tripId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -4051,6 +4101,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/settlements", wrapper.RecordSettlement)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/bookings", wrapper.ListBookings)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/bookings", wrapper.CreateBooking)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/bookings/import", wrapper.ImportBookings)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/bookings/{bookingId}", wrapper.DeleteBooking)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/trips/{tripId}/bookings/{bookingId}", wrapper.UpdateBooking)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/budget", wrapper.GetBudget)
@@ -5118,6 +5169,99 @@ func (response CreateBooking404JSONResponse) VisitCreateBookingResponse(w http.R
 type CreateBooking503JSONResponse struct{ UnavailableJSONResponse }
 
 func (response CreateBooking503JSONResponse) VisitCreateBookingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ImportBookingsRequestObject struct {
+	TripId string `json:"tripId"`
+	Body   *ImportBookingsJSONRequestBody
+}
+
+type ImportBookingsResponseObject interface {
+	VisitImportBookingsResponse(w http.ResponseWriter) error
+}
+
+type ImportBookings200JSONResponse BookingImportResult
+
+func (response ImportBookings200JSONResponse) VisitImportBookingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ImportBookings400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response ImportBookings400JSONResponse) VisitImportBookingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ImportBookings401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ImportBookings401JSONResponse) VisitImportBookingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ImportBookings403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response ImportBookings403JSONResponse) VisitImportBookingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ImportBookings404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ImportBookings404JSONResponse) VisitImportBookingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ImportBookings503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ImportBookings503JSONResponse) VisitImportBookingsResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -9088,6 +9232,9 @@ type StrictServerInterface interface {
 	// CreateBooking Add a booking
 	// (POST /v1/trips/{tripId}/bookings)
 	CreateBooking(ctx context.Context, request CreateBookingRequestObject) (CreateBookingResponseObject, error)
+	// ImportBookings Read bookings from a pasted confirmation or a PDF
+	// (POST /v1/trips/{tripId}/bookings/import)
+	ImportBookings(ctx context.Context, request ImportBookingsRequestObject) (ImportBookingsResponseObject, error)
 	// DeleteBooking Delete a booking
 	// (DELETE /v1/trips/{tripId}/bookings/{bookingId})
 	DeleteBooking(ctx context.Context, request DeleteBookingRequestObject) (DeleteBookingResponseObject, error)
@@ -9745,6 +9892,39 @@ func (sh *strictHandler) CreateBooking(w http.ResponseWriter, r *http.Request, t
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(CreateBookingResponseObject); ok {
 		if err := validResponse.VisitCreateBookingResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ImportBookings operation middleware
+func (sh *strictHandler) ImportBookings(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request ImportBookingsRequestObject
+
+	request.TripId = tripId
+
+	var body ImportBookingsJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ImportBookings(ctx, request.(ImportBookingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ImportBookings")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ImportBookingsResponseObject); ok {
+		if err := validResponse.VisitImportBookingsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

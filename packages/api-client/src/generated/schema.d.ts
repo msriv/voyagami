@@ -371,6 +371,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/trips/{tripId}/bookings/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Read bookings from a pasted confirmation or a PDF
+         * @description Send either `text` (a pasted confirmation email or page) or `pdfBase64`
+         *     (a PDF, up to 4 MB). Nothing is saved. The answer lists candidate
+         *     bookings, each with a confidence from 0 to 1, for the person to review
+         *     and then add with `createBooking`. The document is treated as data and
+         *     never as instructions. An empty list means nothing could be read.
+         *     Owners and editors only.
+         */
+        post: operations["importBookings"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/trips/{tripId}/bookings/{bookingId}": {
         parameters: {
             query?: never;
@@ -1523,6 +1550,20 @@ export interface components {
             kind?: components["schemas"]["BookingKind"];
             title?: string;
         };
+        /** @description Exactly one of text or pdfBase64. */
+        BookingImportRequest: {
+            text?: string;
+            /** @description A PDF, base64 encoded. */
+            pdfBase64?: string;
+        };
+        BookingImportResult: {
+            candidates: components["schemas"]["BookingCandidate"][];
+        };
+        BookingCandidate: {
+            booking: components["schemas"]["BookingCreate"];
+            /** Format: double */
+            confidence: number;
+        };
         BookingList: {
             bookings: components["schemas"]["Booking"][];
         };
@@ -2557,6 +2598,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Booking"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    importBookings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BookingImportRequest"];
+            };
+        };
+        responses: {
+            /** @description What was found. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookingImportResult"];
                 };
             };
             400: components["responses"]["BadRequest"];

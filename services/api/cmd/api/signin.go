@@ -12,6 +12,7 @@ import (
 	"github.com/msriv/voyagami/services/api/internal/auth"
 	"github.com/msriv/voyagami/services/api/internal/config"
 	"github.com/msriv/voyagami/services/api/internal/entitlements"
+	"github.com/msriv/voyagami/services/api/internal/importer"
 	"github.com/msriv/voyagami/services/api/internal/otp"
 	"github.com/msriv/voyagami/services/api/internal/rates"
 	"github.com/msriv/voyagami/services/api/internal/repo/firestorerepo"
@@ -74,6 +75,13 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 			server.WithEntitlements(entitlements.New(limitsFor(cfg)), planSource{firestorerepo.NewEntitlements(client), trips, cfg.DevPlan}),
 		},
 		close: func() { _ = client.Close() },
+	}
+	if cfg.VertexLocation != "" && cfg.GCPProject != "" {
+		deps.options = append(deps.options, server.WithImporter(&importer.Vertex{
+			Project: cfg.GCPProject, Location: cfg.VertexLocation, Model: cfg.VertexModel,
+		}))
+	} else {
+		logger.Warn("VERTEX_LOCATION or GCP_PROJECT is not set, so reading bookings from text and PDFs is off")
 	}
 	if cfg.Env != "dev" {
 		logger.Warn("no SMS provider for this environment yet, so phone sign-in is off")

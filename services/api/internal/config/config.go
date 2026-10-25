@@ -26,12 +26,17 @@ type Config struct {
 	// DevPlan forces every account onto "free" or "plus" so plan gates can be
 	// tried in dev. Empty means no override. Rejected outside dev.
 	DevPlan string
+	// VertexLocation is the Vertex AI region used to read bookings. Empty
+	// turns booking import off. An empty VertexModel means the importer's default.
+	VertexLocation string
+	VertexModel    string
 }
 
 // minAuthSecret is the shortest AUTH_SECRET accepted.
 const minAuthSecret = 32
 
 const (
+	defaultVertexModel     = "gemini-2.5-flash"
 	defaultPort            = 8080
 	defaultShutdownTimeout = 10 * time.Second
 	defaultRequestTimeout  = 30 * time.Second
@@ -77,6 +82,8 @@ func Load(getenv func(string) string) (Config, error) {
 
 	cfg.GCPProject = getenv("GCP_PROJECT")
 	cfg.AuthSecret = getenv("AUTH_SECRET")
+	cfg.VertexLocation = getenv("VERTEX_LOCATION")
+	cfg.VertexModel = getenv("VERTEX_MODEL")
 	switch cfg.DevPlan = getenv("DEV_PLAN"); {
 	case cfg.DevPlan == "":
 	case cfg.Env != "dev":
