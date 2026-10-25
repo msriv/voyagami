@@ -1231,6 +1231,50 @@ paths:
           $ref: "#/components/responses/NotFound"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/events:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: streamTripChanges
+      tags: [trips]
+      summary: Stream changes to a trip
+      description: |
+        A server-sent event stream of what changed on the trip, so crew edits
+        show up within seconds. Any active member can listen, viewers included.
+
+        Each `change` event carries `{"kind", "id", "op"}` and no content: the
+        app refetches that item. `kind` is one of `trip`, `members`, `stops`,
+        `tasks`, `expenses`, `settlements`, `bookings`, `polls`, `meetPoints`
+        or `comments`. `op` is `upsert` or `delete`. A comment line is sent
+        every 20 seconds to keep the connection open, and the server ends the
+        stream after about four minutes, so the app reconnects.
+
+        Nothing is replayed. When the app reconnects it sends the last event id
+        it saw in `Last-Event-ID`, and the first event is then `resync`, which
+        means refetch everything for the trip.
+      parameters:
+        - name: Last-Event-ID
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The event stream.
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/trips/{tripId}/comments:
     parameters:
       - name: tripId

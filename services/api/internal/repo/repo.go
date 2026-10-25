@@ -259,3 +259,11 @@ type Sessions interface {
 	// Revoke ends the session. Revoking a missing or ended session is not an error.
 	Revoke(ctx context.Context, id string) error
 }
+
+// Feed reports changes to a trip as they happen.
+type Feed interface {
+	// Watch calls emit for every change to the trip made after Watch starts,
+	// until ctx ends. emit may be called from several goroutines. An error
+	// means the watch broke and the caller should reconnect.
+	Watch(ctx context.Context, tripID string, emit func(model.Change)) error
+}

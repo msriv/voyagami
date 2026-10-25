@@ -718,6 +718,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/trips/{tripId}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Stream changes to a trip
+         * @description A server-sent event stream of what changed on the trip, so crew edits
+         *     show up within seconds. Any active member can listen, viewers included.
+         *
+         *     Each `change` event carries `{"kind", "id", "op"}` and no content: the
+         *     app refetches that item. `kind` is one of `trip`, `members`, `stops`,
+         *     `tasks`, `expenses`, `settlements`, `bookings`, `polls`, `meetPoints`
+         *     or `comments`. `op` is `upsert` or `delete`. A comment line is sent
+         *     every 20 seconds to keep the connection open, and the server ends the
+         *     stream after about four minutes, so the app reconnects.
+         *
+         *     Nothing is replayed. When the app reconnects it sends the last event id
+         *     it saw in `Last-Event-ID`, and the first event is then `resync`, which
+         *     means refetch everything for the trip.
+         */
+        get: operations["streamTripChanges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/trips/{tripId}/comments": {
         parameters: {
             query?: never;
@@ -3018,6 +3052,33 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    streamTripChanges: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Last-Event-ID"?: string;
+            };
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The event stream. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": string;
+                };
             };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
