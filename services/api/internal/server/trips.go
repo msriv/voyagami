@@ -23,6 +23,8 @@ type TripStore interface {
 // WithTrips turns on the trip routes. Without it they answer 503.
 func WithTrips(s TripStore) Option { return func(h *handlers) { h.trips = s } }
 
+const msgRoleDenied = "Your role on this trip does not allow that."
+
 const msgNoTrips = "Trips are not available right now."
 
 func identity(ctx context.Context, op string) (auth.Identity, error) {
@@ -153,7 +155,7 @@ func (h *handlers) UpdateTrip(ctx context.Context, req api.UpdateTripRequestObje
 	}
 	b := req.Body
 	if role == model.RoleViewer || (b.Status != nil && role != model.RoleOwner) {
-		return api.UpdateTrip403JSONResponse{ForbiddenJSONResponse: api.ForbiddenJSONResponse(errBody(ctx, codeForbidden, "Your role on this trip does not allow that."))}, nil
+		return api.UpdateTrip403JSONResponse{ForbiddenJSONResponse: api.ForbiddenJSONResponse(errBody(ctx, codeForbidden, msgRoleDenied))}, nil
 	}
 	var patch model.TripPatch
 	if b.Title != nil {

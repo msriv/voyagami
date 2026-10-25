@@ -320,7 +320,7 @@ Write poll: editors and owners. Close and `result`: **server**.
 | `done`             | boolean                                                   | Last writer wins.                                                                                                                      |
 | `doneBy`, `doneAt` | string?, instant?                                         |                                                                                                                                        |
 
-Write: editors; any member may tick a task assigned to them.
+Write: editors; any member may tick a task assigned to them. Until the rules open this collection to the app (D2), the API reads and writes tasks (`/v1/trips/{tripId}/tasks`): owners and editors add, tick and delete; every member reads. Assignees and the worked-out kinds come in D2.
 
 ### `trips/{tripId}/comments/{commentId}`
 

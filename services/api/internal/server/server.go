@@ -48,6 +48,7 @@ type handlers struct {
 	profile Profile
 	trips   TripStore
 	stops   StopStore
+	tasks   TaskStore
 
 	plans      *entitlements.Service
 	planSource PlanSource
