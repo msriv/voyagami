@@ -161,10 +161,17 @@ export default function BookingsScreen() {
         ))}
 
         {canEdit ? (
-          <Button
-            label={t("bookings.add")}
-            onPress={() => router.push(`/trips/${id}/add-booking`)}
-          />
+          <>
+            <Button
+              label={t("bookings.add")}
+              onPress={() => router.push(`/trips/${id}/add-booking`)}
+            />
+            <Button
+              label={t("bookings.import")}
+              variant="secondary"
+              onPress={() => router.push(`/trips/${id}/import-booking`)}
+            />
+          </>
         ) : null}
       </ScrollView>
 

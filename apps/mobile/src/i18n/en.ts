@@ -294,6 +294,7 @@ export const en = {
     empty: "No bookings yet.",
     emptyViewer: "No bookings yet.",
     add: "Add a booking",
+    import: "Import from a confirmation",
     noTime: "No time set",
     bookingLabel: "{{kind}}, {{name}}, {{when}}",
     kinds: {
@@ -330,6 +331,31 @@ export const en = {
       day: "Pick the day it starts.",
       offline: "You're offline. Connect and try again.",
       generic: "Something went wrong. Try again.",
+    },
+  },
+  importBooking: {
+    title: "Import bookings",
+    back: "Back to bookings",
+    intro:
+      "Paste the text of a confirmation email or message. We'll pull out the bookings for you to check.",
+    textLabel: "Confirmation text",
+    find: "Find bookings",
+    nothing:
+      "We couldn't find a booking in that text. Check that you pasted the whole confirmation.",
+    reviewTitle: "Check these bookings",
+    reviewHint: "Untick any that look wrong. Nothing is saved until you add them.",
+    checkThis: "Check this one",
+    noTime: "No time found",
+    include: "Include {{name}}",
+    addSelected_one: "Add {{count}} booking",
+    addSelected_other: "Add {{count}} bookings",
+    startOver: "Paste different text",
+    errors: {
+      empty: "Paste some text first.",
+      offline: "You're offline. Connect and try again.",
+      unavailable: "Importing isn't available right now. You can add the booking by hand.",
+      generic: "Something went wrong. Try again.",
+      partial: "Some bookings couldn't be added. Try again for the rest.",
     },
   },
   settle: {
