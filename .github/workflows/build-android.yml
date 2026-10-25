@@ -1,0 +1,32 @@
+name: Build Android (EAS)
+
+# Manual build of an installable Android APK (VOY-222). It follows the main
+# channel, so later changes arrive through EAS Update without a new build.
+# Needs the EXPO_TOKEN repo secret and an Android keystore on expo.dev.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: eas build
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: pnpm install --frozen-lockfile
+      - name: Build
+        working-directory: apps/mobile
+        run: eas build --platform android --profile preview --non-interactive
