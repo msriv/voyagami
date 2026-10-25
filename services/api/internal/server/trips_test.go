@@ -250,3 +250,14 @@ func TestTripsOffAnswer503(t *testing.T) {
 		t.Fatalf("got %d", got)
 	}
 }
+
+func TestCreateTripNamesOwnerWhenUnnamed(t *testing.T) {
+	store := newFakeTrips()
+	h := tripsServer(store)
+	rec := call(h, "POST", "/v1/trips", "owner", newTripBody)
+	var trip api.Trip
+	_ = json.Unmarshal(rec.Body.Bytes(), &trip)
+	if got := store.members[trip.Id]["u-owner"].DisplayName; got != fallbackName {
+		t.Fatalf("owner name %q, want %q", got, fallbackName)
+	}
+}

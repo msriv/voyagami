@@ -88,6 +88,20 @@ func (h *handlers) ListTrips(ctx context.Context, _ api.ListTripsRequestObject) 
 	return api.ListTrips200JSONResponse(out), nil
 }
 
+// memberName is the name a crew list shows: the profile name, else the sign-in name, else a fallback.
+// People who skipped naming themselves must still be able to make a trip.
+func (h *handlers) memberName(ctx context.Context, id auth.Identity) string {
+	if h.profile != nil {
+		if u, err := h.profile.Get(ctx, id.UserID); err == nil && u.DisplayName != "" {
+			return u.DisplayName
+		}
+	}
+	if id.DisplayName != "" {
+		return id.DisplayName
+	}
+	return fallbackName
+}
+
 // CreateTrip makes a trip with the caller as owner.
 func (h *handlers) CreateTrip(ctx context.Context, req api.CreateTripRequestObject) (api.CreateTripResponseObject, error) {
 	id, err := identity(ctx, "CreateTrip")
@@ -108,7 +122,7 @@ func (h *handlers) CreateTrip(ctx context.Context, req api.CreateTripRequestObje
 		Status:             model.TripPlanned,
 		Budget:             budgetFrom(b.Budget),
 	}
-	created, err := h.trips.Create(ctx, trip, model.Member{UID: id.UserID, DisplayName: id.DisplayName})
+	created, err := h.trips.Create(ctx, trip, model.Member{UID: id.UserID, DisplayName: h.memberName(ctx, id)})
 	if err != nil {
 		if msg, ok := badRequest(err); ok {
 			return api.CreateTrip400JSONResponse{BadRequestJSONResponse: api.BadRequestJSONResponse(errBody(ctx, codeBadRequest, msg))}, nil
