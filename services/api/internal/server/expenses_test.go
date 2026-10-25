@@ -250,3 +250,97 @@ func TestExpensesOffAnswer503(t *testing.T) {
 		t.Errorf("got %d", c)
 	}
 }
+
+type fakeSettlements struct{ byID map[string]model.Settlement }
+
+func (f *fakeSettlements) Create(_ context.Context, _ string, s model.Settlement) (model.Settlement, error) {
+	if err := s.Validate(); err != nil {
+		return model.Settlement{}, err
+	}
+	if _, ok := f.byID[s.ID]; ok {
+		return model.Settlement{}, repo.ErrAlreadyExists
+	}
+	f.byID[s.ID] = s
+	return s, nil
+}
+
+func (f *fakeSettlements) Get(_ context.Context, _, id string) (model.Settlement, error) {
+	s, ok := f.byID[id]
+	if !ok {
+		return model.Settlement{}, repo.ErrNotFound
+	}
+	return s, nil
+}
+
+func (f *fakeSettlements) List(context.Context, string) ([]model.Settlement, error) {
+	var out []model.Settlement
+	for _, s := range f.byID {
+		out = append(out, s)
+	}
+	return out, nil
+}
+
+func TestSettleUp(t *testing.T) {
+	trips := newFakeTrips()
+	v := tokenVerifier{"owner": "u-owner", "editor": "u-editor", "viewer": "u-viewer", "other": "u-other"}
+	h := NewHandler(slog.New(slog.DiscardHandler), v, WithTrips(trips), WithExpenses(newFakeExpenses()),
+		WithSettleUp(&fakeSettlements{byID: map[string]model.Settlement{}}))
+	var trip api.Trip
+	_ = json.Unmarshal(call(h, "POST", "/v1/trips", "owner", tripBodyIn("JPY")).Body.Bytes(), &trip)
+	trips.members[trip.Id]["u-editor"] = model.Member{UID: "u-editor", Role: model.RoleEditor, Status: model.MemberActive}
+	trips.members[trip.Id]["u-viewer"] = model.Member{UID: "u-viewer", Role: model.RoleViewer, Status: model.MemberActive}
+	base := "/v1/trips/" + trip.Id
+
+	// The owner pays 1000 yen for three people.
+	spend := `{"description":"Dinner","paidByUid":"u-owner","date":"2027-02-02","original":{"amountMinor":1000,"currency":"JPY"},` +
+		`"split":{"method":"equal","parts":[{"uid":"u-owner"},{"uid":"u-editor"},{"uid":"u-viewer"}]}}`
+	if c := call(h, "POST", base+"/expenses", "owner", spend).Code; c != 201 {
+		t.Fatalf("expense: %d", c)
+	}
+	get := func() api.Balances {
+		rec := call(h, "GET", base+"/balances", "viewer", "")
+		var b api.Balances
+		if rec.Code != 200 {
+			t.Fatalf("balances: %d %s", rec.Code, rec.Body)
+		}
+		_ = json.Unmarshal(rec.Body.Bytes(), &b)
+		return b
+	}
+	b := get()
+	var sum int64
+	for _, x := range b.Balances {
+		sum += x.AmountMinor
+	}
+	if b.Currency != "JPY" || sum != 0 || len(b.Transfers) != 2 || b.Transfers[0].ToUid != "u-owner" {
+		t.Fatalf("balances: %+v", b)
+	}
+
+	pay := `{"id":"p1","fromUid":"u-viewer","toUid":"u-owner","amountMinor":333,"method":"manual"}`
+	if c := call(h, "POST", base+"/settlements", "editor", pay).Code; c != 403 {
+		t.Errorf("bystander records: %d", c)
+	}
+	if c := call(h, "POST", base+"/settlements", "viewer", strings.Replace(pay, "u-owner", "u-other", 1)).Code; c != 400 {
+		t.Errorf("outsider paid: %d", c)
+	}
+	if c := call(h, "POST", base+"/settlements", "viewer", strings.Replace(pay, "333", "0", 1)).Code; c != 400 {
+		t.Errorf("zero: %d", c)
+	}
+	// A viewer can still settle up: it is always free and is not trip content.
+	for i := 0; i < 2; i++ {
+		if c := call(h, "POST", base+"/settlements", "viewer", pay).Code; c != 201 {
+			t.Fatalf("record %d: %d", i, c)
+		}
+	}
+	if c := call(h, "POST", base+"/settlements", "other", pay).Code; c != 404 {
+		t.Errorf("non-member: %d", c)
+	}
+	var list api.SettlementList
+	_ = json.Unmarshal(call(h, "GET", base+"/settlements", "owner", "").Body.Bytes(), &list)
+	if len(list.Settlements) != 1 || list.Settlements[0].Amount.Currency != "JPY" {
+		t.Fatalf("settlements: %+v", list)
+	}
+	b = get()
+	if len(b.Transfers) != 1 || b.Transfers[0].FromUid != "u-editor" {
+		t.Fatalf("after payment: %+v", b)
+	}
+}

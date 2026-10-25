@@ -395,6 +395,8 @@ Server-owned (consistency over availability). The ID is the idempotency key, so 
 | `markedBy`         | string                 |                                                                  |
 | `paidAt`           | instant?               |                                                                  |
 
+API (VOY-151): `GET /v1/trips/{id}/balances` works out each member's net balance from the expenses and these payments, and suggests payments that clear everyone (at most one fewer than the number of people; greedy, largest debt to largest credit, ties by `uid`). `POST/GET /v1/trips/{id}/settlements` records and lists payments, already `paid`. The payer, the person paid or the owner can record one. Sending the same `id` again returns the stored payment.
+
 Settle-up is always free and works from any plan.
 
 ### `trips/{tripId}/journal/{entryId}`

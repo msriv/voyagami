@@ -264,6 +264,60 @@ export interface paths {
         patch: operations["updateExpense"];
         trace?: never;
     };
+    "/v1/trips/{tripId}/balances": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Who owes whom
+         * @description Net balance per member in the trip's settlement currency, worked out
+         *     from the expenses and the payments already recorded, plus a short list
+         *     of payments that would clear everyone. Positive means the group owes
+         *     that person. Any active member can read; settle-up is free on every plan.
+         */
+        get: operations["getBalances"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/settlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * List recorded payments
+         * @description Payments members have marked as paid, oldest first.
+         */
+        get: operations["listSettlements"];
+        put?: never;
+        /**
+         * Mark a payment as paid
+         * @description Records that one member paid another, in the settlement currency.
+         *     Voyagami never moves money. Only the payer, the person paid or the
+         *     trip owner can record it. Sending the same `id` again returns the
+         *     stored payment instead of adding another.
+         */
+        post: operations["recordSettlement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/trips/{tripId}/stops": {
         parameters: {
             query?: never;
@@ -753,6 +807,41 @@ export interface components {
             original?: components["schemas"]["Money"];
             rate?: components["schemas"]["Rate"];
             split?: components["schemas"]["SplitInput"];
+        };
+        Transfer: {
+            fromUid: string;
+            toUid: string;
+            /** Format: int64 */
+            amountMinor: number;
+        };
+        Balances: {
+            /** @description The trip's settlement currency. */
+            currency: string;
+            balances: components["schemas"]["ExpenseShare"][];
+            transfers: components["schemas"]["Transfer"][];
+        };
+        SettlementCreate: {
+            id?: string;
+            fromUid: string;
+            toUid: string;
+            /**
+             * Format: int64
+             * @description In the settlement currency.
+             */
+            amountMinor: number;
+            /** @description The payment app used, or "manual". */
+            method?: string;
+        };
+        Settlement: {
+            id: string;
+            fromUid: string;
+            toUid: string;
+            amount: components["schemas"]["Money"];
+            method?: string;
+            markedBy: string;
+        };
+        SettlementList: {
+            settlements: components["schemas"]["Settlement"][];
         };
         Task: {
             id: string;
@@ -1305,6 +1394,87 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Expense"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    getBalances: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Balances and suggested payments. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Balances"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    listSettlements: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The payments. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettlementList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    recordSettlement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettlementCreate"];
+            };
+        };
+        responses: {
+            /** @description The recorded payment. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Settlement"];
                 };
             };
             400: components["responses"]["BadRequest"];

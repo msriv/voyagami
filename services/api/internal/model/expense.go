@@ -82,3 +82,34 @@ func (e Expense) Validate() error {
 	}
 	return p.err()
 }
+
+// Settlement is a payment one member says they made to another. Voyagami
+// never moves money; this only changes balances.
+type Settlement struct {
+	ID        string
+	FromUID   string
+	ToUID     string
+	Amount    Money // always in the trip's settlement currency
+	Method    string
+	MarkedBy  string
+	CreatedAt time.Time
+}
+
+// Validate checks a Settlement before it is stored.
+func (s Settlement) Validate() error {
+	var p problems
+	if s.ID == "" {
+		p.addf("id is required")
+	}
+	if s.FromUID == "" || s.ToUID == "" || s.FromUID == s.ToUID {
+		p.addf("a payment needs two different people")
+	}
+	if s.Amount.AmountMinor < 1 {
+		p.addf("amount must be more than zero")
+	}
+	s.Amount.validate(&p, "amount")
+	if utf8.RuneCountInString(s.Method) > 20 {
+		p.addf("method must be at most 20 characters")
+	}
+	return p.err()
+}

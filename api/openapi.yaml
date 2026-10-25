@@ -452,6 +452,92 @@ paths:
           $ref: "#/components/responses/NotFound"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/balances:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getBalances
+      tags: [settle-up]
+      summary: Who owes whom
+      description: |
+        Net balance per member in the trip's settlement currency, worked out
+        from the expenses and the payments already recorded, plus a short list
+        of payments that would clear everyone. Positive means the group owes
+        that person. Any active member can read; settle-up is free on every plan.
+      responses:
+        "200":
+          description: Balances and suggested payments.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Balances"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/settlements:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: listSettlements
+      tags: [settle-up]
+      summary: List recorded payments
+      description: Payments members have marked as paid, oldest first.
+      responses:
+        "200":
+          description: The payments.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SettlementList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    post:
+      operationId: recordSettlement
+      tags: [settle-up]
+      summary: Mark a payment as paid
+      description: |
+        Records that one member paid another, in the settlement currency.
+        Voyagami never moves money. Only the payer, the person paid or the
+        trip owner can record it. Sending the same `id` again returns the
+        stored payment instead of adding another.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettlementCreate"
+      responses:
+        "201":
+          description: The recorded payment.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settlement"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/trips/{tripId}/stops:
     parameters:
       - name: tripId
@@ -1297,6 +1383,75 @@ components:
           $ref: "#/components/schemas/Rate"
         split:
           $ref: "#/components/schemas/SplitInput"
+    Transfer:
+      type: object
+      required: [fromUid, toUid, amountMinor]
+      properties:
+        fromUid:
+          type: string
+        toUid:
+          type: string
+        amountMinor:
+          type: integer
+          format: int64
+    Balances:
+      type: object
+      required: [currency, balances, transfers]
+      properties:
+        currency:
+          type: string
+          description: The trip's settlement currency.
+        balances:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExpenseShare"
+        transfers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Transfer"
+    SettlementCreate:
+      type: object
+      required: [fromUid, toUid, amountMinor]
+      properties:
+        id:
+          type: string
+        fromUid:
+          type: string
+        toUid:
+          type: string
+        amountMinor:
+          type: integer
+          format: int64
+          minimum: 1
+          description: In the settlement currency.
+        method:
+          type: string
+          maxLength: 20
+          description: The payment app used, or "manual".
+    Settlement:
+      type: object
+      required: [id, fromUid, toUid, amount, markedBy]
+      properties:
+        id:
+          type: string
+        fromUid:
+          type: string
+        toUid:
+          type: string
+        amount:
+          $ref: "#/components/schemas/Money"
+        method:
+          type: string
+        markedBy:
+          type: string
+    SettlementList:
+      type: object
+      required: [settlements]
+      properties:
+        settlements:
+          type: array
+          items:
+            $ref: "#/components/schemas/Settlement"
     Task:
       type: object
       required: [id, title, done]
