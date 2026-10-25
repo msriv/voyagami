@@ -1,0 +1,146 @@
+{
+  "note": "Shared by the Go and TypeScript tests. Amounts are integer minor units. Value is a weight, an amount or basis points, depending on the mode.",
+  "cases": [
+    {
+      "name": "even equal",
+      "total": 900,
+      "mode": "equal",
+      "parts": [
+        ["a", 0],
+        ["b", 0],
+        ["c", 0]
+      ],
+      "want": [300, 300, 300]
+    },
+    {
+      "name": "equal one over",
+      "total": 1000,
+      "mode": "equal",
+      "parts": [
+        ["a", 0],
+        ["b", 0],
+        ["c", 0]
+      ],
+      "want": [334, 333, 333]
+    },
+    {
+      "name": "equal ties go by ID, not by position",
+      "total": 1000,
+      "mode": "equal",
+      "parts": [
+        ["c", 0],
+        ["a", 0],
+        ["b", 0]
+      ],
+      "want": [333, 334, 333]
+    },
+    {
+      "name": "equal fewer units than people",
+      "total": 2,
+      "mode": "equal",
+      "parts": [
+        ["a", 0],
+        ["b", 0],
+        ["c", 0],
+        ["d", 0],
+        ["e", 0]
+      ],
+      "want": [1, 1, 0, 0, 0]
+    },
+    {
+      "name": "shares",
+      "total": 1000,
+      "mode": "shares",
+      "parts": [
+        ["a", 2],
+        ["b", 1],
+        ["c", 1]
+      ],
+      "want": [500, 250, 250]
+    },
+    {
+      "name": "shares with a zero",
+      "total": 500,
+      "mode": "shares",
+      "parts": [
+        ["a", 0],
+        ["b", 3],
+        ["c", 2]
+      ],
+      "want": [0, 300, 200]
+    },
+    {
+      "name": "percent",
+      "total": 1001,
+      "mode": "percent",
+      "parts": [
+        ["a", 3333],
+        ["b", 6667]
+      ],
+      "want": [334, 667]
+    },
+    {
+      "name": "exact",
+      "total": 1000,
+      "mode": "exact",
+      "parts": [
+        ["a", 250],
+        ["b", 750]
+      ],
+      "want": [250, 750]
+    },
+    {
+      "name": "refund",
+      "total": -1000,
+      "mode": "equal",
+      "parts": [
+        ["a", 0],
+        ["b", 0],
+        ["c", 0]
+      ],
+      "want": [-334, -333, -333]
+    },
+    {
+      "name": "large amount",
+      "total": 4503599627370497,
+      "mode": "shares",
+      "parts": [
+        ["a", 3],
+        ["b", 5],
+        ["c", 7]
+      ],
+      "want": [900719925474099, 1501199875790166, 2101679826106232]
+    },
+    {
+      "name": "exact does not add up",
+      "total": 100,
+      "mode": "exact",
+      "parts": [
+        ["a", 10],
+        ["b", 20]
+      ],
+      "error": true
+    },
+    {
+      "name": "percent does not add up",
+      "total": 100,
+      "mode": "percent",
+      "parts": [
+        ["a", 5000],
+        ["b", 4000]
+      ],
+      "error": true
+    },
+    {
+      "name": "duplicate person",
+      "total": 100,
+      "mode": "equal",
+      "parts": [
+        ["a", 0],
+        ["a", 0]
+      ],
+      "error": true
+    },
+    { "name": "nobody", "total": 100, "mode": "equal", "parts": [], "error": true }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@voyagami/split",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Divides an amount in minor units between people. The same rules as services/api/internal/split, so the app preview matches the server.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "eslint": "^9.39.1",
+    "vitest": "^5.0.5"
+  }
+}
