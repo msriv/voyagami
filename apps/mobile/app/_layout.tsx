@@ -9,6 +9,9 @@ import "@/i18n";
 import { ProfileProvider } from "@/profile";
 import { fontAssets, ThemeProvider } from "@/theme";
 
+// Shows a render error on screen with a retry button instead of a blank screen.
+export { ErrorBoundary } from "expo-router";
+
 void SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {

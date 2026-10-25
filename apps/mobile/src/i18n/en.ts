@@ -465,6 +465,7 @@ export const en = {
     },
   },
   signIn: {
+    back: "Back",
     title: "Let's get you a passport.",
     intro: "Your crew finds you by phone number, so invites land in the right place.",
     phoneLabel: "Mobile number",
@@ -490,8 +491,16 @@ export const en = {
   onboarding: {
     welcome: {
       title: "Trips are better planned together.",
-      intro:
-        "Plan the route, split the costs and keep the memories, all in one place with your crew.",
+      titleStart: "Trips are better planned ",
+      titleAccent: "together.",
+      stamp: "Day one",
+      invite: "I got an invite link",
+      cards: {
+        plan: { label: "Plan it", text: "9 days, 4 friends" },
+        live: { label: "Live it", text: "One plan, one wallet" },
+        keep: { label: "Keep it", text: "A journal that writes itself" },
+      },
+      intro: "Itinerary, bookings, money and memories, for weekend escapes and big trips abroad.",
       start: "Get started",
     },
     region: {
@@ -560,8 +569,28 @@ export const en = {
   home: {
     welcomeNamed: "Welcome, {{name}}",
     welcome: "Welcome",
+    goodMorning: "Good morning",
+    goodMorningNamed: "Good morning, {{name}}",
+    goodAfternoon: "Good afternoon",
+    goodAfternoonNamed: "Good afternoon, {{name}}",
+    goodEvening: "Good evening",
+    goodEveningNamed: "Good evening, {{name}}",
+    profileButton: "Open your profile",
+    quick: {
+      place: "Add a place to {{trip}}",
+      booking: "Add a booking to {{trip}}",
+      todo: "Open the to-do list for {{trip}}",
+      expense: "Add an expense to {{trip}}",
+      placeShort: "Place",
+      bookingShort: "Booking",
+      todoShort: "To-do",
+      expenseShort: "Expense",
+    },
     whereNext: "Where to next?",
     brand: "voyagami",
+    upNext: "Up next",
+    daysToGo_one: "day to go",
+    daysToGo_other: "days to go",
     upcoming: "Upcoming",
     past: "Past trips",
     newTrip: "New trip",

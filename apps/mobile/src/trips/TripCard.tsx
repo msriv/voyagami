@@ -1,6 +1,6 @@
 import { formatDate } from "@voyagami/locale";
 import { useRouter } from "expo-router";
-import { Pressable } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
@@ -60,6 +60,8 @@ export function TripCard({ trip, locale, today, featured = false }: TripCardProp
       </Card>
     );
   }
+  const stripe = [colors.vermilion, colors.washi, colors.indigo, colors.washi];
+  const country = trip.destinations[0]?.countryCode;
   return (
     <Pressable
       accessibilityRole="button"
@@ -69,23 +71,107 @@ export function TripCard({ trip, locale, today, featured = false }: TripCardProp
         backgroundColor: colors.indigo,
         borderRadius: radius.card + 4,
         padding: 22,
-        gap: 10,
+        paddingBottom: 28,
+        gap: 18,
         overflow: "hidden",
       }}
     >
       <WavePattern opacity={0.09} />
+      <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
+        <View style={{ flex: 1, gap: 8 }}>
+          <View
+            style={{
+              alignSelf: "flex-start",
+              backgroundColor: "rgba(255,255,255,0.18)",
+              borderRadius: radius.pill,
+              paddingHorizontal: 11,
+              paddingVertical: 5,
+            }}
+          >
+            <Text variant="caption" color="white" style={{ fontWeight: "700", letterSpacing: 0.5 }}>
+              {t("home.upNext").toUpperCase()}
+            </Text>
+          </View>
+          <Text variant="display" color="white" style={{ fontSize: 28, lineHeight: 30 }}>
+            {trip.title}
+          </Text>
+          <Text color="white" style={{ fontSize: 14 }}>
+            {[places, dates].filter(Boolean).join(t("home.listSeparator"))}
+          </Text>
+        </View>
+        {country ? (
+          <View
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            style={{
+              width: 74,
+              height: 86,
+              backgroundColor: colors.white,
+              borderRadius: 6,
+              borderWidth: 3,
+              borderColor: colors.vermilion,
+              borderStyle: "dashed",
+              transform: [{ rotate: "6deg" }],
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text variant="display" style={{ fontSize: 26, lineHeight: 30 }}>
+              {country}
+            </Text>
+          </View>
+        ) : null}
+      </View>
       {when ? (
-        <Text variant="caption" color="white" style={{ fontWeight: "800" }}>
-          {when.toUpperCase()}
-        </Text>
+        <View
+          style={{
+            borderTopWidth: 2,
+            borderTopColor: "rgba(255,255,255,0.35)",
+            borderStyle: "dashed",
+            paddingTop: 14,
+            flexDirection: "row",
+            alignItems: "baseline",
+            gap: 8,
+          }}
+        >
+          {c.kind === "in" && c.days > 0 ? (
+            <>
+              <Text variant="display" color="white" style={{ fontSize: 44, lineHeight: 46 }}>
+                {c.days}
+              </Text>
+              <Text color="white" style={{ fontWeight: "700" }}>
+                {t("home.daysToGo", { count: c.days })}
+              </Text>
+            </>
+          ) : (
+            <Text variant="title" color="white">
+              {when}
+            </Text>
+          )}
+        </View>
       ) : null}
-      <Text variant="display" color="white">
-        {trip.title}
-      </Text>
-      <Text color="white">{places}</Text>
-      <Text variant="caption" color="white">
-        {dates}
-      </Text>
+      <View
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 6,
+          flexDirection: "row",
+        }}
+      >
+        {Array.from({ length: 40 }, (_, i) => (
+          <View
+            key={i}
+            style={{
+              flex: 1,
+              backgroundColor: stripe[i % 4] ?? colors.washi,
+            }}
+          />
+        ))}
+      </View>
     </Pressable>
   );
 }

@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { RefreshControl, ScrollView, View } from "react-native";
+import { Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAuth } from "@/auth";
@@ -13,7 +13,7 @@ import { Button, Card, Seal, Text } from "@/ui";
 
 export default function HomeScreen() {
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, hitArea } = useTheme();
   const { api } = useAuth();
   const router = useRouter();
   const { locale, displayName: name } = useProfile();
@@ -39,6 +39,8 @@ export default function HomeScreen() {
   const { upcoming, past } = partitionTrips(trips ?? [], today);
   const empty = trips !== undefined && trips.length === 0;
   const [next, ...later] = upcoming;
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "goodMorning" : hour < 18 ? "goodAfternoon" : "goodEvening";
 
   return (
     <SafeAreaView
@@ -57,16 +59,37 @@ export default function HomeScreen() {
           />
         }
       >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Text variant="accent" style={{ fontSize: 30 }}>
-            {t("home.brand")}
-          </Text>
-          <Seal size={24} />
+        <View
+          style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Text variant="accent" style={{ fontSize: 30 }}>
+              {t("home.brand")}
+            </Text>
+            <Seal size={24} />
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("home.profileButton")}
+            onPress={() => router.push("/profile")}
+            style={{
+              width: hitArea.min,
+              height: hitArea.min,
+              borderRadius: hitArea.min / 2,
+              backgroundColor: colors.ink,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text variant="bodyStrong" color="white">
+              {(name ?? "").trim().charAt(0).toUpperCase() || "·"}
+            </Text>
+          </Pressable>
         </View>
 
         <View style={{ gap: 4 }}>
           <Text variant="accent" color="muted" style={{ fontSize: 22 }}>
-            {name ? t("home.welcomeNamed", { name }) : t("home.welcome")}
+            {name ? t(`home.${greeting}Named`, { name }) : t(`home.${greeting}`)}
           </Text>
           <Text variant="display" heading style={{ fontSize: 38, lineHeight: 40 }}>
             {empty ? t("home.emptyTitle") : t("home.whereNext")}
@@ -101,6 +124,42 @@ export default function HomeScreen() {
         ) : null}
 
         {next ? <TripCard trip={next} locale={locale} today={today} featured /> : null}
+        {next ? (
+          <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 10 }}>
+            {(
+              [
+                ["place", `/trips/${next.id}/add-place`, colors.vermilion],
+                ["booking", `/trips/${next.id}/add-booking`, colors.white],
+                ["todo", `/trips/${next.id}`, colors.white],
+                ["expense", `/trips/${next.id}/add-expense`, colors.white],
+              ] as const
+            ).map(([key, href, fill]) => (
+              <Pressable
+                key={key}
+                accessibilityRole="button"
+                accessibilityLabel={t(`home.quick.${key}`, { trip: next.title })}
+                onPress={() => router.push(href as never)}
+                style={{ flex: 1, alignItems: "center", gap: 8, minHeight: hitArea.min }}
+              >
+                <View
+                  style={{
+                    width: 58,
+                    height: 58,
+                    borderRadius: 20,
+                    backgroundColor: fill,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text variant="title">{"+"}</Text>
+                </View>
+                <Text variant="caption" style={{ color: colors.ink, fontWeight: "700" }}>
+                  {t(`home.quick.${key}Short`)}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
         {later.length > 0 ? (
           <View style={{ gap: 10 }}>
             <Text variant="title" heading>
