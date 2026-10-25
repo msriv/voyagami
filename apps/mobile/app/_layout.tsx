@@ -64,6 +64,8 @@ function Screens() {
         <Stack.Screen name="trips/[id]/itinerary" />
         <Stack.Screen name="trips/[id]/add-place" />
         <Stack.Screen name="trips/[id]/money" />
+        <Stack.Screen name="trips/[id]/bookings" />
+        <Stack.Screen name="trips/[id]/add-booking" />
         <Stack.Screen name="trips/[id]/add-expense" />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>

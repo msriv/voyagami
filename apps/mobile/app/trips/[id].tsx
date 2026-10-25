@@ -192,7 +192,7 @@ export default function TripScreen() {
               {t("trip.sections")}
             </Text>
             {sections.map((key) =>
-              key === "itinerary" || key === "money" ? (
+              key === "itinerary" || key === "bookings" || key === "money" ? (
                 <Button
                   key={key}
                   label={t(`trip.${key}`)}
