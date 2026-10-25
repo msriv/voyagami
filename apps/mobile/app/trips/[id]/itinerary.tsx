@@ -260,6 +260,16 @@ export default function ItineraryScreen() {
                       ) : null}
                       {s.note ? <Text color="muted">{s.note}</Text> : null}
                     </Pressable>
+                    <Button
+                      label={t("itinerary.comments", { name: placeName })}
+                      variant="secondary"
+                      onPress={() =>
+                        router.push({
+                          pathname: "/trips/[id]/comments",
+                          params: { id, stopId: s.id, title: placeName },
+                        })
+                      }
+                    />
                   </Card>
                 </DraggableStop>
               );
