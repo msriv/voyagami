@@ -113,3 +113,19 @@ func TestUserPatchValidate(t *testing.T) {
 		}
 	}
 }
+
+func TestTaskValidation(t *testing.T) {
+	if err := (Task{ID: "t", Title: "Book SIM"}).Validate(); err != nil {
+		t.Fatalf("valid task: %v", err)
+	}
+	if err := (Task{ID: "t", Title: "  "}).Validate(); !IsValidation(err) {
+		t.Fatalf("blank title: %v", err)
+	}
+	long := strings.Repeat("é", MaxTaskTitle+1)
+	if err := (Task{ID: "t", Title: long}).Validate(); !IsValidation(err) {
+		t.Fatalf("long title: %v", err)
+	}
+	if err := (Task{ID: "t", Title: strings.Repeat("é", MaxTaskTitle)}).Validate(); err != nil {
+		t.Fatalf("120 characters should pass: %v", err)
+	}
+}

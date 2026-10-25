@@ -225,6 +225,115 @@ paths:
           $ref: "#/components/responses/NotFound"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/tasks:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: listTasks
+      tags: [tasks]
+      summary: List a trip's to-dos
+      description: Open tasks first, then done ones, oldest first within each. Any member can read.
+      responses:
+        "200":
+          description: The trip's tasks.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    post:
+      operationId: createTask
+      tags: [tasks]
+      summary: Add a to-do
+      description: Owners and editors only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskCreate"
+      responses:
+        "201":
+          description: The new task.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/tasks/{taskId}:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          type: string
+    patch:
+      operationId: updateTask
+      tags: [tasks]
+      summary: Tick, untick or rename a to-do
+      description: Owners and editors only. Changes only the fields that are sent.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskUpdate"
+      responses:
+        "200":
+          description: The task after the change.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    delete:
+      operationId: deleteTask
+      tags: [tasks]
+      summary: Delete a to-do
+      description: Owners and editors only. Deleting a task that is already gone succeeds.
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/auth/otp/request:
     post:
       operationId: requestOtp
@@ -610,6 +719,39 @@ components:
           type: string
           enum: [owner, editor, viewer]
           description: The caller's role on this trip.
+    Task:
+      type: object
+      required: [id, title, done]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        done:
+          type: boolean
+    TaskList:
+      type: object
+      required: [tasks]
+      properties:
+        tasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/Task"
+    TaskCreate:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          maxLength: 120
+    TaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 120
+        done:
+          type: boolean
     TripList:
       type: object
       required: [trips]

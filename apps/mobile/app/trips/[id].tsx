@@ -12,6 +12,7 @@ import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { daysBetween, daysInRange, isoToDate } from "@/trips/dates";
 import type { Trip } from "@/trips/summary";
+import { TripTasks } from "@/trips/TripTasks";
 import { Button, Card, IconButton, Input, Sheet, Text, WavePattern } from "@/ui";
 
 type State =
@@ -203,6 +204,8 @@ export default function TripScreen() {
             ))}
             <Text variant="caption">{t("trip.comingSoon")}</Text>
           </View>
+
+          {archived ? null : <TripTasks tripId={trip.id} canEdit={canEdit} />}
         </View>
       </ScrollView>
 

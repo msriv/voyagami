@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 // ValidationError means a value is not acceptable. It lists every problem.
@@ -305,6 +306,37 @@ func (m Member) Validate() error {
 	}
 	if m.DisplayName == "" {
 		p.addf("displayName is required")
+	}
+	return p.err()
+}
+
+// MaxTaskTitle is the longest task title, in characters.
+const MaxTaskTitle = 120
+
+func validTaskTitle(p *problems, title string) {
+	t := strings.TrimSpace(title)
+	if t == "" {
+		p.addf("title is required")
+	} else if utf8.RuneCountInString(t) > MaxTaskTitle {
+		p.addf("title must be at most %d characters", MaxTaskTitle)
+	}
+}
+
+// Validate checks a Task before it is stored.
+func (t Task) Validate() error {
+	var p problems
+	if t.ID == "" {
+		p.addf("id is required")
+	}
+	validTaskTitle(&p, t.Title)
+	return p.err()
+}
+
+// Validate checks a patch for the fields it sets.
+func (t TaskPatch) Validate() error {
+	var p problems
+	if t.Title != nil {
+		validTaskTitle(&p, *t.Title)
 	}
 	return p.err()
 }

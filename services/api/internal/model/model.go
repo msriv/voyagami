@@ -216,3 +216,21 @@ type Session struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
+
+// Task is one to-do on a trip.
+type Task struct {
+	ID        string
+	Title     string
+	Done      bool
+	DoneBy    string // uid of whoever ticked it
+	DoneAt    time.Time
+	CreatedAt time.Time
+}
+
+// TaskPatch changes only the fields that are set.
+type TaskPatch struct {
+	Title *string
+	Done  *bool
+	// By is who made the change; it is recorded when Done is set to true.
+	By string
+}

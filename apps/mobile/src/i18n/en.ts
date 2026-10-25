@@ -76,6 +76,22 @@ export const en = {
       blankName: "Enter a trip name.",
     },
   },
+  tasks: {
+    heading: "To-dos",
+    loading: "Loading to-dos…",
+    loadError: "We couldn't load the to-dos.",
+    retry: "Try again",
+    empty: "Nothing to do yet. Add the first one below.",
+    emptyViewer: "Nothing to do yet.",
+    newLabel: "New to-do",
+    add: "Add to-do",
+    delete: "Delete {{title}}",
+    errors: {
+      blank: "Enter a to-do.",
+      offline: "You're offline. Connect and try again.",
+      generic: "Something went wrong. Try again.",
+    },
+  },
   signIn: {
     title: "Let's get you a passport.",
     intro: "Your crew finds you by phone number, so invites land in the right place.",
