@@ -64,6 +64,20 @@ type Trips interface {
 	EndMembership(ctx context.Context, tripID, uid string, status model.MemberStatus) error
 }
 
+// Tasks stores a trip's to-dos. The caller has already checked that the
+// person may use the trip.
+type Tasks interface {
+	// Create stores a task. It returns ErrAlreadyExists if the ID is taken.
+	Create(ctx context.Context, tripID string, t model.Task) (model.Task, error)
+	// List returns open tasks first, then done ones, oldest first within each.
+	List(ctx context.Context, tripID string) ([]model.Task, error)
+	// Update changes only the fields set in the patch. It returns ErrNotFound
+	// if the task does not exist.
+	Update(ctx context.Context, tripID, taskID string, p model.TaskPatch) (model.Task, error)
+	// Delete removes a task. Deleting a missing task is not an error.
+	Delete(ctx context.Context, tripID, taskID string) error
+}
+
 // Accounts links a phone number to a user without storing the number. The
 // caller passes a keyed hash of the number, never the number itself.
 type Accounts interface {

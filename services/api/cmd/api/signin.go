@@ -58,6 +58,7 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 		options: []server.Option{
 			server.WithProfile(firestorerepo.NewUsers(client)),
 			server.WithTrips(trips),
+			server.WithTasks(firestorerepo.NewTasks(client)),
 			server.WithEntitlements(entitlements.New(limitsFor(cfg)), planSource{firestorerepo.NewEntitlements(client), trips, cfg.DevPlan}),
 		},
 		close: func() { _ = client.Close() },

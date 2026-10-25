@@ -38,6 +38,7 @@ describe("Trip overview", () => {
     mockApi({
       "GET /v1/me": () => json(200, { id: "u1" }),
       "GET /v1/trips/t1": () => json(200, trip("owner")),
+      "GET /v1/trips/t1/tasks": () => json(200, { tasks: [] }),
     });
     await renderRouter(routes, { initialUrl: "/trips/t1" });
     expect(await screen.findByText("Hanoi food week")).toBeTruthy();
@@ -59,6 +60,7 @@ describe("Trip overview", () => {
     const calls = mockApi({
       "GET /v1/me": () => json(200, { id: "u1" }),
       "GET /v1/trips/t1": () => json(200, trip("owner")),
+      "GET /v1/trips/t1/tasks": () => json(200, { tasks: [] }),
       "PATCH /v1/trips/t1": () => json(200, trip("owner", "past")),
     });
     await renderRouter(routes, { initialUrl: "/trips/t1" });
@@ -74,6 +76,7 @@ describe("Trip overview", () => {
     mockApi({
       "GET /v1/me": () => json(200, { id: "u2" }),
       "GET /v1/trips/t1": () => json(200, trip("viewer")),
+      "GET /v1/trips/t1/tasks": () => json(200, { tasks: [] }),
     });
     await renderRouter(routes, { initialUrl: "/trips/t1" });
     await fireEvent.press(await screen.findByRole("button", { name: "Trip menu" }));
