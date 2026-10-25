@@ -2,6 +2,7 @@ package model
 
 import (
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 )
@@ -10,17 +11,23 @@ import (
 const (
 	maxNoteLen     = 2000
 	maxPlaceName   = 200
+	maxAddressLen  = 300
 	maxDurationMin = 24 * 60
 )
 
 var hhmm = regexp.MustCompile(`^([01]\d|2[0-3]):[0-5]\d$`)
 
+// PlaceCategories are the kinds of place a person can pick for their own pin.
+var PlaceCategories = []string{"food", "sights", "activity", "shopping", "stay", "transport", "other"}
+
 // PlaceRef points at a place: a catalogue place by ID, or a pin the person dropped.
 type PlaceRef struct {
-	PlaceID string // set for a catalogue place
-	Name    string // set for a custom place
-	Lat     float64
-	Lng     float64
+	PlaceID  string // set for a catalogue place
+	Name     string // set for a custom place
+	Lat      float64
+	Lng      float64
+	Address  string // custom place, optional
+	Category string // custom place, optional; one of PlaceCategories
 }
 
 // Custom reports whether this is a dropped pin rather than a catalogue place.
@@ -32,6 +39,12 @@ func (p PlaceRef) validate(pr *problems) {
 	}
 	if n := strings.TrimSpace(p.Name); n == "" || len(n) > maxPlaceName {
 		pr.addf("place.name is required and at most %d characters", maxPlaceName)
+	}
+	if len(p.Address) > maxAddressLen {
+		pr.addf("place.address must be at most %d characters", maxAddressLen)
+	}
+	if p.Category != "" && !slices.Contains(PlaceCategories, p.Category) {
+		pr.addf("place.category must be one of %s", strings.Join(PlaceCategories, ", "))
 	}
 	if p.Lat < -90 || p.Lat > 90 || p.Lng < -180 || p.Lng > 180 {
 		pr.addf("place.lat and place.lng must be real coordinates")
