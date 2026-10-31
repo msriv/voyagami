@@ -100,3 +100,73 @@ func TestPlanLimits(t *testing.T) {
 		t.Fatalf("sixth import: %d %s", rec.Code, rec.Body)
 	}
 }
+
+// A Plus person who used more than the Free limits downgrades. Nothing is
+// deleted or hidden; the extra use is refused and the entitlements say read-only.
+func TestDowngradeKeepsContentAndRefusesMore(t *testing.T) {
+	plans := &livePlans{plus: true, usage: map[model.UsageCounter]int{}}
+	trips := newFakeTrips()
+	h := NewHandler(slog.New(slog.DiscardHandler), tokenVerifier{"owner": "u-owner"}, WithTrips(trips),
+		WithStops(&fakeStops{stops: map[string]model.Stop{}}),
+		WithBookings(&fakeBookings{byID: map[string]model.Booking{}}), WithImporter(oneBooking{}),
+		WithUsage(plans), WithEntitlements(entitlements.New(entitlements.Free()), plans))
+	var tr api.Trip
+	_ = json.Unmarshal(call(h, "POST", "/v1/trips", "owner", newTripBody).Body.Bytes(), &tr)
+	imp := "/v1/trips/" + tr.Id + "/bookings/import"
+
+	// A booking the person saved while on Plus.
+	if rec := call(h, "POST", "/v1/trips/"+tr.Id+"/bookings", "owner", `{"kind":"stay","title":"Old Quarter hotel"}`); rec.Code != 201 {
+		t.Fatalf("save booking: %d %s", rec.Code, rec.Body)
+	}
+
+	// On Plus: seven imports and three best-order runs, all above the Free limits.
+	for range 7 {
+		if rec := call(h, "POST", imp, "owner", `{"text":"x"}`); rec.Code != 200 {
+			t.Fatalf("plus import: %d %s", rec.Code, rec.Body)
+		}
+	}
+	day := "/v1/trips/" + tr.Id + "/days/2027-02-01/best-order"
+	for range 3 {
+		if rec := call(h, "POST", day, "owner", ""); rec.Code != 200 {
+			t.Fatalf("plus best order: %d %s", rec.Code, rec.Body)
+		}
+	}
+	list := func() int {
+		var out struct {
+			Bookings []json.RawMessage `json:"bookings"`
+		}
+		rec := call(h, "GET", "/v1/trips/"+tr.Id+"/bookings", "owner", "")
+		if rec.Code != 200 {
+			t.Fatalf("list bookings: %d %s", rec.Code, rec.Body)
+		}
+		_ = json.Unmarshal(rec.Body.Bytes(), &out)
+		return len(out.Bookings)
+	}
+	before := list()
+
+	// Downgrade.
+	plans.plus = false
+	if after := list(); after != before || before == 0 {
+		t.Fatalf("bookings before %d, after the downgrade %d: nothing may be deleted or hidden", before, after)
+	}
+	for _, c := range []struct{ name, path, body, feature string }{
+		{"import", imp, `{"text":"x"}`, "forwardedBookings"},
+		{"best order", day, "", "bestOrder"},
+	} {
+		rec := call(h, "POST", c.path, "owner", c.body)
+		var e api.Error
+		_ = json.Unmarshal(rec.Body.Bytes(), &e)
+		if rec.Code != 403 || e.Feature == nil || *e.Feature != c.feature {
+			t.Errorf("%s after the downgrade: %d %s", c.name, rec.Code, rec.Body)
+		}
+	}
+	var ent api.Entitlements
+	rec := call(h, "GET", "/v1/trips/"+tr.Id+"/entitlements", "owner", "")
+	_ = json.Unmarshal(rec.Body.Bytes(), &ent)
+	for _, f := range []entitlements.Feature{entitlements.ForwardedBookings, entitlements.BestOrder} {
+		d := ent.Features[string(f)]
+		if d.Allowed || !d.ReadOnly {
+			t.Errorf("%s: %+v, want not allowed and read-only", f, d)
+		}
+	}
+}
