@@ -73,6 +73,7 @@ type handlers struct {
 	usage         repo.TripUsage
 	devices       repo.Devices
 	events        Publisher
+	stamps        repo.Stamps
 	billing       billing.Store
 	billingSecret string
 	feed          repo.Feed

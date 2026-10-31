@@ -44,6 +44,17 @@ type TripUsage interface {
 	Add(ctx context.Context, tripID string, c model.UsageCounter, n int) error
 }
 
+// Stamps stores the starter stamps a person has earned (VOY-202).
+type Stamps interface {
+	// Award records a stamp the first time. It reports whether this call earned it.
+	Award(ctx context.Context, uid string, kind model.StampKind, at time.Time) (bool, error)
+	// AddPlace counts one place the person added and awards the Add 3 places
+	// stamp when the count reaches model.PlacesForStamp.
+	AddPlace(ctx context.Context, uid string, at time.Time) error
+	// List returns the stamps the person has earned, in no set order.
+	List(ctx context.Context, uid string) ([]model.EarnedStamp, error)
+}
+
 // Devices stores the phones a person is signed in on and their push tokens.
 type Devices interface {
 	// Put stores or refreshes a device, keeping one document per device ID.

@@ -252,6 +252,7 @@ func (h *handlers) CreateExpense(ctx context.Context, req api.CreateExpenseReque
 		}
 		return nil, err
 	}
+	h.award(ctx, id.UserID, model.StampLogExpense)
 	h.emit(ctx, notify.KindExpenseAdded, req.TripId, id.UserID)
 	return api.CreateExpense201JSONResponse(expenseFrom(saved)), nil
 }

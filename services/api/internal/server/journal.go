@@ -109,6 +109,7 @@ func (h *handlers) PutJournalEntry(ctx context.Context, req api.PutJournalEntryR
 		}
 		return nil, err
 	}
+	h.award(ctx, uid, model.StampWriteJournal)
 	return api.PutJournalEntry200JSONResponse(journalFrom(saved)), nil
 }
 

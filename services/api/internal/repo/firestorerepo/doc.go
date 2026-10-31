@@ -42,3 +42,5 @@ func mapErr(op string, err error) error {
 }
 
 func isNotFound(err error) bool { return status.Code(err) == codes.NotFound }
+
+func isAlreadyExists(err error) bool { return status.Code(err) == codes.AlreadyExists }
