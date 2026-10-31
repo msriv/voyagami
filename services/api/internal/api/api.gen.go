@@ -495,6 +495,30 @@ func (e PollResultDecidedBy) Valid() bool {
 	}
 }
 
+// Defines values for RecommendationReason.
+const (
+	Distance   RecommendationReason = "distance"
+	Popularity RecommendationReason = "popularity"
+	Quality    RecommendationReason = "quality"
+	Style      RecommendationReason = "style"
+)
+
+// Valid indicates whether the value is a known member of the RecommendationReason enum.
+func (e RecommendationReason) Valid() bool {
+	switch e {
+	case Distance:
+		return true
+	case Popularity:
+		return true
+	case Quality:
+		return true
+	case Style:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for SplitInputMethod.
 const (
 	SplitInputMethodEqual   SplitInputMethod = "equal"
@@ -1600,6 +1624,28 @@ type RecapHighlight struct {
 	Text      string `json:"text"`
 }
 
+// Recommendation defines model for Recommendation.
+type Recommendation struct {
+	Place   CatalogPlace           `json:"place"`
+	Reasons []RecommendationReason `json:"reasons"`
+
+	// Score 0 to 1. Only for ordering; do not show it.
+	Score float64 `json:"score"`
+}
+
+// RecommendationList defines model for RecommendationList.
+type RecommendationList struct {
+	Category PlaceGroup `json:"category"`
+
+	// HasMore True when more picks exist than were returned.
+	HasMore bool             `json:"hasMore"`
+	Items   []Recommendation `json:"items"`
+}
+
+// RecommendationReason Why a pick scored well: fits the crew's style, well rated, close to the
+// trip's stops, or saved by many crews (only from 20 crews).
+type RecommendationReason string
+
 // RefreshRequest defines model for RefreshRequest.
 type RefreshRequest struct {
 	RefreshToken string `json:"refreshToken"`
@@ -2047,6 +2093,22 @@ type StreamTripChangesParams struct {
 	LastEventID *string `json:"Last-Event-ID,omitempty"`
 }
 
+// ListRecommendationsParams defines parameters for ListRecommendations.
+type ListRecommendationsParams struct {
+	Category PlaceGroup `form:"category" json:"category"`
+	Lat      *float64   `form:"lat,omitempty" json:"lat,omitempty"`
+	Lng      *float64   `form:"lng,omitempty" json:"lng,omitempty"`
+
+	// RadiusMeters Defaults to 10000, at most 20000.
+	RadiusMeters *int `form:"radiusMeters,omitempty" json:"radiusMeters,omitempty"`
+
+	// Limit How many picks to return. Defaults to 20, at most 50.
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Lang Preferred name language (BCP 47).
+	Lang *string `form:"lang,omitempty" json:"lang,omitempty"`
+}
+
 // ListStayLinksParams defines parameters for ListStayLinks.
 type ListStayLinksParams struct {
 	// Guests How many people are staying. Left out when missing.
@@ -2343,6 +2405,9 @@ type ServerInterface interface {
 	// GetRecap The facts for the trip recap
 	// (GET /v1/trips/{tripId}/recap)
 	GetRecap(w http.ResponseWriter, r *http.Request, tripId string)
+	// ListRecommendations Picks for you in one category
+	// (GET /v1/trips/{tripId}/recommendations)
+	ListRecommendations(w http.ResponseWriter, r *http.Request, tripId string, params ListRecommendationsParams)
 	// ListSettlements List recorded payments
 	// (GET /v1/trips/{tripId}/settlements)
 	ListSettlements(w http.ResponseWriter, r *http.Request, tripId string)
@@ -4276,6 +4341,113 @@ func (siw *ServerInterfaceWrapper) GetRecap(w http.ResponseWriter, r *http.Reque
 	handler.ServeHTTP(w, r)
 }
 
+// ListRecommendations operation middleware
+func (siw *ServerInterfaceWrapper) ListRecommendations(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListRecommendationsParams
+
+	// ------------- Required query parameter "category" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "category", r.URL.Query(), &params.Category, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "category"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "category", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "lat" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "lat", r.URL.Query(), &params.Lat, runtime.BindQueryParameterOptions{Type: "number", Format: "double"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "lat"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "lat", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "lng" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "lng", r.URL.Query(), &params.Lng, runtime.BindQueryParameterOptions{Type: "number", Format: "double"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "lng"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "lng", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "radiusMeters" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "radiusMeters", r.URL.Query(), &params.RadiusMeters, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "radiusMeters"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "radiusMeters", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "lang" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "lang", r.URL.Query(), &params.Lang, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "lang"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "lang", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListRecommendations(w, r, tripId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListSettlements operation middleware
 func (siw *ServerInterfaceWrapper) ListSettlements(w http.ResponseWriter, r *http.Request) {
 
@@ -4765,6 +4937,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/entitlements", wrapper.GetTripEntitlements)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/stays/links", wrapper.ListStayLinks)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/stays/clicks", wrapper.RecordStayClick)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/recommendations", wrapper.ListRecommendations)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/me", wrapper.GetMe)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/me", wrapper.UpdateMe)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/me/devices/{deviceId}", wrapper.RemoveDevice)
@@ -9502,6 +9675,85 @@ func (response GetRecap503JSONResponse) VisitGetRecapResponse(w http.ResponseWri
 	return err
 }
 
+type ListRecommendationsRequestObject struct {
+	TripId string `json:"tripId"`
+	Params ListRecommendationsParams
+}
+
+type ListRecommendationsResponseObject interface {
+	VisitListRecommendationsResponse(w http.ResponseWriter) error
+}
+
+type ListRecommendations200JSONResponse RecommendationList
+
+func (response ListRecommendations200JSONResponse) VisitListRecommendationsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListRecommendations400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response ListRecommendations400JSONResponse) VisitListRecommendationsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListRecommendations401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ListRecommendations401JSONResponse) VisitListRecommendationsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListRecommendations404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ListRecommendations404JSONResponse) VisitListRecommendationsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListRecommendations503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ListRecommendations503JSONResponse) VisitListRecommendationsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListSettlementsRequestObject struct {
 	TripId string `json:"tripId"`
 }
@@ -10653,6 +10905,9 @@ type StrictServerInterface interface {
 	// GetRecap The facts for the trip recap
 	// (GET /v1/trips/{tripId}/recap)
 	GetRecap(ctx context.Context, request GetRecapRequestObject) (GetRecapResponseObject, error)
+	// ListRecommendations Picks for you in one category
+	// (GET /v1/trips/{tripId}/recommendations)
+	ListRecommendations(ctx context.Context, request ListRecommendationsRequestObject) (ListRecommendationsResponseObject, error)
 	// ListSettlements List recorded payments
 	// (GET /v1/trips/{tripId}/settlements)
 	ListSettlements(ctx context.Context, request ListSettlementsRequestObject) (ListSettlementsResponseObject, error)
@@ -12565,6 +12820,33 @@ func (sh *strictHandler) GetRecap(w http.ResponseWriter, r *http.Request, tripId
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetRecapResponseObject); ok {
 		if err := validResponse.VisitGetRecapResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListRecommendations operation middleware
+func (sh *strictHandler) ListRecommendations(w http.ResponseWriter, r *http.Request, tripId string, params ListRecommendationsParams) {
+	var request ListRecommendationsRequestObject
+
+	request.TripId = tripId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListRecommendations(ctx, request.(ListRecommendationsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListRecommendations")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListRecommendationsResponseObject); ok {
+		if err := validResponse.VisitListRecommendationsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

@@ -124,6 +124,34 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/trips/{tripId}/recommendations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Picks for you in one category
+         * @description Catalogue places ranked for this trip's crew: how well they fit the
+         *     crew's travel style, quality, distance to the trip's stops, and how
+         *     many crews saved them. Whether a place pays us never matters. Each
+         *     pick comes with up to two reason codes; the app turns them into plain
+         *     words. The search is centred on `lat` and `lng` when given, otherwise
+         *     on the middle of the trip's stops that have a position. With neither
+         *     the answer is 400. Needs a bearer token and membership.
+         */
+        get: operations["listRecommendations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me": {
         parameters: {
             query?: never;
@@ -1517,6 +1545,27 @@ export interface components {
             /** @description Present when more places follow. */
             nextCursor?: string;
         };
+        /**
+         * @description Why a pick scored well: fits the crew's style, well rated, close to the
+         *     trip's stops, or saved by many crews (only from 20 crews).
+         * @enum {string}
+         */
+        RecommendationReason: "style" | "quality" | "distance" | "popularity";
+        Recommendation: {
+            place: components["schemas"]["CatalogPlace"];
+            /**
+             * Format: double
+             * @description 0 to 1. Only for ordering; do not show it.
+             */
+            score: number;
+            reasons: components["schemas"]["RecommendationReason"][];
+        };
+        RecommendationList: {
+            category: components["schemas"]["PlaceGroup"];
+            items: components["schemas"]["Recommendation"][];
+            /** @description True when more picks exist than were returned. */
+            hasMore: boolean;
+        };
         /** @enum {string} */
         StampKind: "createTrip" | "inviteCrew" | "addPlaces" | "logExpense" | "writeJournal";
         Stamp: {
@@ -2418,6 +2467,42 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    listRecommendations: {
+        parameters: {
+            query: {
+                category: components["schemas"]["PlaceGroup"];
+                lat?: number;
+                lng?: number;
+                /** @description Defaults to 10000, at most 20000. */
+                radiusMeters?: number;
+                /** @description How many picks to return. Defaults to 20, at most 50. */
+                limit?: number;
+                /** @description Preferred name language (BCP 47). */
+                lang?: string;
+            };
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Picks, best first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecommendationList"];
+                };
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];

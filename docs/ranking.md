@@ -32,3 +32,15 @@ Each result carries up to two reason codes: fit to the crew, close to the anchor
 ## Not here
 
 Choosing candidates (the trip's cities, opening on its dates, inside the budget), weather, holidays, and the free plan's top 5 cut are done around this function, not inside it.
+
+## The endpoint (VOY-182)
+
+`GET /v1/trips/{tripId}/recommendations?category=eat` ranks catalogue places for a trip's crew. Members only.
+
+- **Category** is one of our six groups: `see`, `eat`, `stay`, `do`, `shop`, `nightlife`.
+- **Centre** is `lat` and `lng` when given, otherwise the middle of the trip's stops that have a position. With neither the answer is 400. The pool is the 200 nearest places in the group within `radiusMeters` (default 10 km, at most 20 km).
+- **Style** is the union of the active members' interests and their average spend (shoestring 1, comfort 2, splurge 3). A place suits an interest when its `tags` contain the onboarding interest id (for example `foodTrails`), so the places pipeline must write tags in those words.
+- **Not stored yet**, so they read as unknown: crew saves, opening hours and the must-see flag.
+- **Reasons** come back as codes (`style`, `quality`, `distance`, `popularity`). The app turns them into plain words through i18n; the server writes no sentences.
+- **hasMore** is true when more picks exist than `limit` (default 20, at most 50). The Free plan's top 5 cut is VOY-173.
+- No sponsored items until P2.
