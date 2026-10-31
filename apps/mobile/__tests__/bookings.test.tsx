@@ -129,4 +129,29 @@ describe("Add booking", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Save booking" }));
     expect(await screen.findByText("Pick the day it starts.")).toBeTruthy();
   });
+
+  it("checks a flight's status, and says so when no provider is set up", async () => {
+    let ok = true;
+    mockApi({
+      ...base("owner", [{ id: "b1", kind: "flight", title: "VN 123" }]),
+      "GET /v1/trips/t1/bookings/b1/flight-status": () =>
+        ok
+          ? json(200, {
+              state: "delayed",
+              departure: {
+                scheduled: "2099-11-19T02:30:00Z",
+                estimated: "2099-11-19T03:15:00Z",
+                gate: "B4",
+              },
+            })
+          : json(503, { code: "unavailable", message: "x" }),
+    });
+    await renderRouter(routes, { initialUrl: "/trips/t1/bookings" });
+    await fireEvent.press(await screen.findByRole("button", { name: "Check flight status" }));
+    expect(await screen.findByText("Delayed")).toBeTruthy();
+    expect(screen.getByText(/Gate B4/)).toBeTruthy();
+    ok = false;
+    await fireEvent.press(screen.getByRole("button", { name: "Check flight status" }));
+    expect(await screen.findByText("Live flight status is not available yet.")).toBeTruthy();
+  });
 });

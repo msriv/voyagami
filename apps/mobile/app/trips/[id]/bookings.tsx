@@ -7,6 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ApiError, NetworkError, type components } from "@voyagami/api-client";
 
+import { FlightStatus } from "@/bookings/FlightStatus";
 import { localFirst } from "@/local/localFirst";
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
@@ -170,6 +171,7 @@ export default function BookingsScreen() {
               {b.provider ? <Text color="muted">{b.provider}</Text> : null}
               <Text variant="caption">{when(b)}</Text>
             </Pressable>
+            {b.kind === "flight" ? <FlightStatus tripId={id} bookingId={b.id} /> : null}
           </Card>
         ))}
 
