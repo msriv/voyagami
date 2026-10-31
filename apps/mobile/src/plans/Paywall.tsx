@@ -30,7 +30,16 @@ export function usePaywall(): PaywallApi {
 }
 
 /** Features that have their own words. Everything else gets the general ones. */
-const MOMENTS = ["bestOrder", "multiCurrency"] as const;
+const MOMENTS = [
+  "bestOrder",
+  "multiCurrency",
+  "forwardedBookings",
+  "files",
+  "journalPhotos",
+  "topPicks",
+  "offlineMaps",
+  "askDrafts",
+] as const;
 type Moment = (typeof MOMENTS)[number];
 const momentFor = (feature: string): Moment | "default" =>
   (MOMENTS as readonly string[]).includes(feature) ? (feature as Moment) : "default";
@@ -75,7 +84,9 @@ export function PaywallProvider({ children }: { children: ReactNode }) {
           <Text variant="caption">{t("paywall.passFrom", { price: prices.pass.week })}</Text>
         ) : null}
         <Button label={t("paywall.notNow")} variant="ghost" onPress={close} />
-        <Text variant="caption">{t("paywall.stillFree")}</Text>
+        <Text variant="caption">
+          {t(moment === "offlineMaps" ? "paywall.offlineStillFree" : "paywall.stillFree")}
+        </Text>
       </Sheet>
     </Paywall.Provider>
   );
