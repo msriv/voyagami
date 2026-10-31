@@ -45,6 +45,7 @@ jobs:
               - '**/*.md'
               - 'design/tokens.json'
               - '.github/workflows/ci.yml'
+              - 'scripts/check-bundle-size.sh'
             api:
               - 'services/api/**'
               - 'api/**'
@@ -83,6 +84,8 @@ jobs:
         run: pnpm run typecheck
       - name: Unit tests
         run: pnpm run test
+      - name: Bundle size budget
+        run: scripts/check-bundle-size.sh
 
   api:
     name: Go API
