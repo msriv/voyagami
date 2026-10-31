@@ -104,6 +104,12 @@ export const en = {
       "Plus is on. The whole crew gets best order, currencies and the live map on your trips.",
     freeNote:
       "You are on the Free plan. Joining trips, settling up and meet points are always free.",
+    renews: "Renews on {{date}}.",
+    endsOn: "Plus ends on {{date}}. It works until then.",
+    trial: "You are on the free trial.",
+    trialEnds: "Your free trial ends on {{date}}.",
+    subscribed: "Your subscription is active.",
+    billingIssue: "The store could not take your payment. Update your payment method in the store.",
     cancelTitle: "Change or cancel",
     cancelBody:
       "The App Store or Google Play looks after your subscription, so you change or cancel it there. Open the page below, pick Voyagami and choose what you want.",
@@ -258,6 +264,8 @@ export const en = {
   },
   trip: {
     passActive: "Trip Pass active. It covers the whole crew on this trip.",
+    passBoughtBy: "Trip Pass from {{name}}. It covers the whole crew on this trip.",
+    passEnds: "Works until {{date}}.",
     plusActive: "Plus covers the whole crew on this trip.",
     passSuggest: "A {{name}} Trip Pass fits this trip. See plans",
     readOnly:
@@ -485,6 +493,7 @@ export const en = {
     updated: "Last seen {{time}}",
     errors: {
       where: "Say where to meet.",
+      consentOff: "Location sharing is turned off in Data and privacy.",
       denied: "Allow location in your phone settings to share where you are.",
       offline: "You're offline. Connect and try again.",
       generic: "Something went wrong. Try again.",
@@ -515,6 +524,7 @@ export const en = {
   },
   crew: {
     title: "Crew",
+    passNote: "This trip has a Trip Pass. It covers everyone in the crew, whoever bought it.",
     chat: "Trip chat",
     live: "Live locations",
     polls: "Polls",
@@ -1038,6 +1048,30 @@ export const en = {
     saveFailed: "We couldn't save that. Check your connection and try again.",
     offline: "You're offline. Try again when you're back online.",
   },
+  privacy: {
+    title: "Data and privacy",
+    back: "Back",
+    intro:
+      "Choose what Voyagami may use. You can change these any time. Your phone still asks before it shares anything.",
+    items: {
+      location: {
+        title: "Share my location with my crew",
+        body: "Only when you press share, only with people on that trip, and it ends by itself.",
+      },
+      notifications: {
+        title: "Send me notifications",
+        body: "Updates from your trips, like a new poll or a reminder. Choose which in Notifications.",
+      },
+      photos: {
+        title: "Use my photos",
+        body: "Lets you add photos to your journal. You choose whether the location in a photo is kept.",
+      },
+      analytics: {
+        title: "Help improve Voyagami",
+        body: "Shares which screens are used. Never your phone number, places or anything you type.",
+      },
+    },
+  },
   help: {
     title: "Help",
     back: "Back",
@@ -1111,6 +1145,7 @@ export const en = {
   },
   profile: {
     notifications: "Notifications",
+    privacy: "Data and privacy",
     help: "Help",
     plan: "Plans",
     homeRegion: "Home country",

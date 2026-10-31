@@ -79,6 +79,8 @@ type handlers struct {
 	devices       repo.Devices
 	consents      repo.Consents
 	export        *export.Sources
+	support       repo.Support
+	supportLimit  *userLimiter
 	events        Publisher
 	stamps        repo.Stamps
 	stampReward   StampRewarder
