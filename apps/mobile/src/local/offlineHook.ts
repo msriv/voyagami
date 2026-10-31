@@ -1,6 +1,6 @@
 import type { ApiClient, OfflineHook } from "@voyagami/api-client";
 
-import { enqueue, flush, type Outcome, type QueueEntry } from "./queue";
+import { enqueue, flush, type Outcome, type QueuedOp, type QueueEntry } from "./queue";
 
 /** Set on the stand-in answer so the queue's own resend is not taken for a real success. */
 export const queuedHeader = "x-voyagami-queued";
@@ -15,27 +15,26 @@ export function newId(): string {
   return `${h()}${h()}-${h()}-4${h().slice(1)}-${variant}${h().slice(1)}-${h()}${h()}${h()}`;
 }
 
-/**
- * When a new expense cannot reach the server, keep it in the write queue and answer as if it was
- * created (201 with what was sent), marked as queued. Every other call fails as before.
- */
 const expensesPath = /^\/v1\/trips\/([^/]+)\/expenses$/;
-const isNewExpense = (request: Request) =>
-  request.method === "POST" && expensesPath.test(new URL(request.url).pathname);
 
+type ExpenseBody = QueuedOp extends { body: infer B } ? B : never;
+
+/** Keeps a new expense in the write queue; the form then carries on as if it was saved. */
+export async function queueExpense(tripId: string, body: ExpenseBody) {
+  await enqueue({ op: "createExpense", tripId, id: body.id as string, body });
+}
+
+/**
+ * Client hook form of the same thing: when a new expense cannot reach the server, queue it and
+ * answer as if it was created (201 with what was sent), marked as queued. Other calls fail as before.
+ */
 export const offlineHook: OfflineHook = {
-  handles: isNewExpense,
   async onNetworkError(request) {
     const m = expensesPath.exec(new URL(request.url).pathname);
-    if (!isNewExpense(request) || !m) return undefined;
-    const body = (await request.json().catch(() => undefined)) as { id?: unknown } | undefined;
+    if (request.method !== "POST" || !m) return undefined;
+    const body = (await request.json().catch(() => undefined)) as ExpenseBody | undefined;
     if (!body || typeof body.id !== "string" || !body.id) return undefined;
-    await enqueue({
-      op: "createExpense",
-      tripId: decodeURIComponent(m[1] as string),
-      id: body.id,
-      body: body as never,
-    });
+    await queueExpense(decodeURIComponent(m[1] as string), body);
     return new Response(JSON.stringify(body), {
       status: 201,
       headers: { "Content-Type": "application/json", [queuedHeader]: "1" },

@@ -18,8 +18,6 @@ export interface StoredTokens {
  * `undefined` to let the failure surface as a NetworkError.
  */
 export interface OfflineHook {
-  /** Cheap, synchronous check; when it says no, the failure surfaces without waiting on the hook. */
-  handles?(request: Request): boolean;
   onNetworkError(request: Request, error: unknown): Promise<Response | undefined>;
 }
 
@@ -52,10 +50,7 @@ export function createApiClient(options: ApiClientOptions) {
     try {
       return await baseFetch(request);
     } catch (error) {
-      const standIn =
-        options.offline && (options.offline.handles?.(retryCopy) ?? true)
-          ? await options.offline.onNetworkError(retryCopy, error)
-          : undefined;
+      const standIn = await options.offline?.onNetworkError(retryCopy, error);
       if (standIn) return standIn;
       throw new NetworkError(error);
     }

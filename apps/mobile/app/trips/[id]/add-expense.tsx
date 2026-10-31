@@ -8,7 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { NetworkError, type components } from "@voyagami/api-client";
 
 import { useAuth } from "@/auth";
-import { newId } from "@/local/offlineHook";
+import { newId, queueExpense } from "@/local/offlineHook";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { daysInRange } from "@/trips/dates";
@@ -141,27 +141,31 @@ export default function AddExpenseScreen() {
     if (sharedBy.length === 0) return setError(t("addExpense.errors.sharers"));
     setBusy(true);
     setError(undefined);
+    const body = {
+      id: expenseId.current,
+      description: description.trim(),
+      ...(category ? { category } : null),
+      paidByUid: paidBy,
+      date: chosen,
+      original: { amountMinor: minor, currency },
+      ...(foreign && rate ? { rate } : null),
+      split: { method: "equal" as const, parts: sharedBy.map((uid) => ({ uid })) },
+    };
     try {
       await api.unwrap(
-        api.POST("/v1/trips/{tripId}/expenses", {
-          params: { path: { tripId: id } },
-          body: {
-            id: expenseId.current,
-            description: description.trim(),
-            ...(category ? { category } : null),
-            paidByUid: paidBy,
-            date: chosen,
-            original: { amountMinor: minor, currency },
-            ...(foreign && rate ? { rate } : null),
-            split: { method: "equal", parts: sharedBy.map((uid) => ({ uid })) },
-          },
-        }),
+        api.POST("/v1/trips/{tripId}/expenses", { params: { path: { tripId: id } }, body }),
       );
       router.back();
     } catch (e) {
-      setError(
-        t(e instanceof NetworkError ? "addExpense.errors.offline" : "addExpense.errors.generic"),
-      );
+      if (e instanceof NetworkError) {
+        // No connection: keep it on the phone and send it when the network is back.
+        await queueExpense(id, body).then(
+          () => router.back(),
+          () => setError(t("addExpense.errors.offline")),
+        );
+      } else {
+        setError(t("addExpense.errors.generic"));
+      }
     } finally {
       setBusy(false);
     }
