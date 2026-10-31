@@ -72,6 +72,7 @@ export const en = {
         body: "Tap Invite to send a link on any chat app. Everyone edits the same plan and sees changes live.",
       },
     },
+  },
   manageSub: {
     title: "Your subscription",
     current: "Your plan",
