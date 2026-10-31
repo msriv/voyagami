@@ -75,6 +75,11 @@ export default function ProfileScreen() {
         </Card>
 
         <Button
+          label={t("profile.plan")}
+          variant="secondary"
+          onPress={() => router.push("/plans")}
+        />
+        <Button
           label={t("profile.notifications")}
           variant="secondary"
           onPress={() => router.push("/notifications")}
