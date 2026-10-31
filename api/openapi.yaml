@@ -3044,13 +3044,11 @@ components:
           format: date-time
         props:
           type: object
-          description: Short strings (up to 64 characters), numbers and booleans only.
-          additionalProperties:
-            oneOf:
-              - type: string
-                maxLength: 64
-              - type: number
-              - type: boolean
+          description: |
+            At most 10 properties. Values are identifiers (letters, digits and
+            `_ . : -`, up to 64 characters), numbers or booleans; the server drops
+            anything else, and any property whose name suggests personal data.
+          additionalProperties: {}
     EventBatch:
       type: object
       required: [events]

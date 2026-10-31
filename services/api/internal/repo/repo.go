@@ -8,6 +8,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/msriv/voyagami/services/api/internal/analytics"
 	"github.com/msriv/voyagami/services/api/internal/model"
 )
 
@@ -72,6 +73,12 @@ type Consents interface {
 	Get(ctx context.Context, uid string) (model.Consents, error)
 	// Update applies the patch in one transaction and returns the result.
 	Update(ctx context.Context, uid string, p model.ConsentsPatch, now time.Time) (model.Consents, error)
+}
+
+// Events stores checked product events.
+type Events interface {
+	// Add stores the events for one person.
+	Add(ctx context.Context, uid string, events []analytics.Event, now time.Time) error
 }
 
 // Support stores messages from the Help screen.

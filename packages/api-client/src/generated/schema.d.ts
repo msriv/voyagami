@@ -1864,9 +1864,13 @@ export interface components {
             name: string;
             /** Format: date-time */
             at: string;
-            /** @description Short strings (up to 64 characters), numbers and booleans only. */
+            /**
+             * @description At most 10 properties. Values are identifiers (letters, digits and
+             *     `_ . : -`, up to 64 characters), numbers or booleans; the server drops
+             *     anything else, and any property whose name suggests personal data.
+             */
             props?: {
-                [key: string]: string | number | boolean;
+                [key: string]: unknown;
             };
         };
         EventBatch: {
