@@ -38,6 +38,7 @@ func catalogRig() (*fakeCatalog, func(method, path, token string) (int, []byte))
 	lake := model.CatalogPlace{
 		ID: "p1", Name: map[string]string{"vi": "Hồ Hoàn Kiếm", "en": "Hoan Kiem Lake"}, Lat: 21.0285, Lng: 105.852,
 		Group: model.GroupSee, Categories: []string{"park"}, CountryCode: "VN",
+		Hours:      []model.OpeningPeriod{{Day: "sat", Open: "22:00", Close: "02:00"}},
 		Photos:     []model.PlacePhoto{{URL: "https://img.example/lake.jpg", Attribution: "Photo by A, CC BY-SA 4.0", Source: "wikimedia", Licence: "CC-BY-SA-4.0"}},
 		Provenance: map[string]model.PlaceSource{"name": {Source: "osm", Licence: "ODbL"}, "location": {Source: "foursquare", Licence: "Apache-2.0", SourceID: "fsq1"}},
 	}
@@ -105,6 +106,9 @@ func TestGetCatalogPlace(t *testing.T) {
 	_ = json.Unmarshal(body, &p)
 	if p.Name != "Hoan Kiem Lake" || len(p.Photos) != 1 || p.Photos[0].Attribution == "" {
 		t.Fatalf("place %+v", p)
+	}
+	if p.OpeningHours == nil || len(*p.OpeningHours) != 1 || (*p.OpeningHours)[0].Day != api.Sat || (*p.OpeningHours)[0].Close != "02:00" {
+		t.Errorf("hours %+v", p.OpeningHours)
 	}
 	if len(p.Sources) != 2 || p.Sources[0].Field != "location" || p.Sources[0].SourceId == nil || p.Sources[1].Licence != "ODbL" {
 		t.Errorf("sources %+v", p.Sources)

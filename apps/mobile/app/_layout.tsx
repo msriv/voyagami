@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "@/auth";
 import "@/i18n";
 import { installRemoteLog, reporter } from "@/logging/remoteLog";
 import { PaywallProvider } from "@/plans/Paywall";
+import { ConsentProvider } from "@/privacy/Consent";
 import { TourProvider } from "@/tour/Tour";
 import { ProfileProvider } from "@/profile";
 import { fontAssets, ThemeProvider } from "@/theme";
@@ -33,9 +34,11 @@ export default function RootLayout() {
       <AuthProvider>
         <ProfileProvider>
           <StatusBar style="dark" />
-          <TourProvider>
-            <Screens />
-          </TourProvider>
+          <ConsentProvider>
+            <TourProvider>
+              <Screens />
+            </TourProvider>
+          </ConsentProvider>
         </ProfileProvider>
       </AuthProvider>
     </ThemeProvider>
@@ -69,6 +72,7 @@ function Screens() {
         <Stack.Protected guard={signedIn}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="gallery" />
+          <Stack.Screen name="privacy" />
           <Stack.Screen name="onboarding/region" />
           <Stack.Screen name="onboarding/style" />
           <Stack.Screen name="onboarding/connect" />

@@ -363,6 +363,39 @@ func (e MemberRoleChangeRole) Valid() bool {
 	}
 }
 
+// Defines values for OpeningPeriodDay.
+const (
+	Fri OpeningPeriodDay = "fri"
+	Mon OpeningPeriodDay = "mon"
+	Sat OpeningPeriodDay = "sat"
+	Sun OpeningPeriodDay = "sun"
+	Thu OpeningPeriodDay = "thu"
+	Tue OpeningPeriodDay = "tue"
+	Wed OpeningPeriodDay = "wed"
+)
+
+// Valid indicates whether the value is a known member of the OpeningPeriodDay enum.
+func (e OpeningPeriodDay) Valid() bool {
+	switch e {
+	case Fri:
+		return true
+	case Mon:
+		return true
+	case Sat:
+		return true
+	case Sun:
+		return true
+	case Thu:
+		return true
+	case Tue:
+		return true
+	case Wed:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PlaceGroup.
 const (
 	PlaceGroupDo        PlaceGroup = "do"
@@ -564,6 +597,24 @@ func (e StampKind) Valid() bool {
 	case LogExpense:
 		return true
 	case WriteJournal:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for SubscriptionInfoState.
+const (
+	Subscribed SubscriptionInfoState = "subscribed"
+	Trial      SubscriptionInfoState = "trial"
+)
+
+// Valid indicates whether the value is a known member of the SubscriptionInfoState enum.
+func (e SubscriptionInfoState) Valid() bool {
+	switch e {
+	case Subscribed:
+		return true
+	case Trial:
 		return true
 	default:
 		return false
@@ -957,10 +1008,14 @@ type CatalogPlace struct {
 	Lng            float64    `json:"lng"`
 
 	// Name In the requested language when we have it.
-	Name     string               `json:"name"`
-	Photos   []CatalogPlacePhoto  `json:"photos"`
-	Sources  []CatalogPlaceSource `json:"sources"`
-	TimeZone *string              `json:"timeZone,omitempty"`
+	Name string `json:"name"`
+
+	// OpeningHours When the place is open, in its own time zone (`timeZone`). Left out when
+	// we do not know. A weekday with no entry is closed that day.
+	OpeningHours *[]OpeningPeriod     `json:"openingHours,omitempty"`
+	Photos       []CatalogPlacePhoto  `json:"photos"`
+	Sources      []CatalogPlaceSource `json:"sources"`
+	TimeZone     *string              `json:"timeZone,omitempty"`
 }
 
 // CatalogPlaceList defines model for CatalogPlaceList.
@@ -1083,6 +1138,11 @@ type Entitlements struct {
 
 	// Plan `pass` only when asked about a trip that has a Trip Pass.
 	Plan EntitlementsPlan `json:"plan"`
+
+	// Subscription How the signed-in person's own Plus is running. Left out on Free, and when
+	// Plus comes only from a crew member or a Trip Pass. The Manage subscription
+	// screen uses it.
+	Subscription *SubscriptionInfo `json:"subscription,omitempty"`
 }
 
 // EntitlementsPlan `pass` only when asked about a trip that has a Trip Pass.
@@ -1414,6 +1474,19 @@ type Money struct {
 	// Currency ISO 4217 code.
 	Currency string `json:"currency"`
 }
+
+// OpeningPeriod defines model for OpeningPeriod.
+type OpeningPeriod struct {
+	// Close Closing time. Earlier than `open` means it closes after midnight, on the next day.
+	Close string           `json:"close"`
+	Day   OpeningPeriodDay `json:"day"`
+
+	// Open Opening time, 24-hour HH:MM. The app formats it for the person's clock setting.
+	Open string `json:"open"`
+}
+
+// OpeningPeriodDay defines model for OpeningPeriod.Day.
+type OpeningPeriodDay string
 
 // OtpRequest defines model for OtpRequest.
 type OtpRequest struct {
@@ -1852,6 +1925,27 @@ type StopUpdate struct {
 	// StartLocal Start time as HH:mm, in the stop's time zone.
 	StartLocal *string `json:"startLocal,omitempty"`
 }
+
+// SubscriptionInfo How the signed-in person's own Plus is running. Left out on Free, and when
+// Plus comes only from a crew member or a Trip Pass. The Manage subscription
+// screen uses it.
+type SubscriptionInfo struct {
+	// BillingIssue True when the store could not take payment. Tell the person to fix their payment method.
+	BillingIssue bool `json:"billingIssue"`
+
+	// EndsAt When it renews (willRenew is true) or ends (false), or when the trial ends. Left out when the store has not said.
+	EndsAt *time.Time `json:"endsAt,omitempty"`
+
+	// ProductId The store product, for example to say monthly or yearly.
+	ProductId *string               `json:"productId,omitempty"`
+	State     SubscriptionInfoState `json:"state"`
+
+	// WillRenew False after the person turned renewal off. Plus still works until endsAt. Always false for a trial.
+	WillRenew bool `json:"willRenew"`
+}
+
+// SubscriptionInfoState defines model for SubscriptionInfo.State.
+type SubscriptionInfoState string
 
 // Task defines model for Task.
 type Task struct {
