@@ -136,6 +136,7 @@ export default function TripScreen() {
     "journal",
     "crew",
     "stays",
+    "picks",
     "recap",
   ] as const;
 
