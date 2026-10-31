@@ -5,7 +5,10 @@
 // plan mock accounts skip every limit (see User.Unlimited); Free holds the real values.
 package entitlements
 
-import "sort"
+import (
+	"sort"
+	"time"
+)
 
 // Feature is something a plan can limit.
 type Feature string
@@ -124,10 +127,25 @@ func NoLimits() Limits {
 	return l
 }
 
+// Subscription is how a person's Plus is running. The app shows it on the
+// Manage subscription screen.
+type Subscription struct {
+	// Trial is true while the Plus comes from a free trial, not a purchase.
+	Trial bool
+	// EndsAt is when the subscription renews or ends, or when the trial ends.
+	// Zero when the store has not told us.
+	EndsAt       time.Time
+	WillRenew    bool
+	BillingIssue bool
+	ProductID    string
+}
+
 // User is what the service needs to know about the person asking.
 type User struct {
 	// Plus is true while the person has an active Plus subscription or trial.
 	Plus bool
+	// Sub says how Plus is running, and is nil without it. Dev mock accounts have none.
+	Sub *Subscription
 	// Unlimited lifts every limit for the person. Only dev accounts that are not
 	// one of the plan mock accounts get it, so the owner can test without caps.
 	Unlimited bool

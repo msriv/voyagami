@@ -603,6 +603,24 @@ func (e StampKind) Valid() bool {
 	}
 }
 
+// Defines values for SubscriptionInfoState.
+const (
+	Subscribed SubscriptionInfoState = "subscribed"
+	Trial      SubscriptionInfoState = "trial"
+)
+
+// Valid indicates whether the value is a known member of the SubscriptionInfoState enum.
+func (e SubscriptionInfoState) Valid() bool {
+	switch e {
+	case Subscribed:
+		return true
+	case Trial:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for TravelStyleInterests.
 const (
 	TravelStyleInterestsBeaches        TravelStyleInterests = "beaches"
@@ -1120,6 +1138,11 @@ type Entitlements struct {
 
 	// Plan `pass` only when asked about a trip that has a Trip Pass.
 	Plan EntitlementsPlan `json:"plan"`
+
+	// Subscription How the signed-in person's own Plus is running. Left out on Free, and when
+	// Plus comes only from a crew member or a Trip Pass. The Manage subscription
+	// screen uses it.
+	Subscription *SubscriptionInfo `json:"subscription,omitempty"`
 }
 
 // EntitlementsPlan `pass` only when asked about a trip that has a Trip Pass.
@@ -1902,6 +1925,27 @@ type StopUpdate struct {
 	// StartLocal Start time as HH:mm, in the stop's time zone.
 	StartLocal *string `json:"startLocal,omitempty"`
 }
+
+// SubscriptionInfo How the signed-in person's own Plus is running. Left out on Free, and when
+// Plus comes only from a crew member or a Trip Pass. The Manage subscription
+// screen uses it.
+type SubscriptionInfo struct {
+	// BillingIssue True when the store could not take payment. Tell the person to fix their payment method.
+	BillingIssue bool `json:"billingIssue"`
+
+	// EndsAt When it renews (willRenew is true) or ends (false), or when the trial ends. Left out when the store has not said.
+	EndsAt *time.Time `json:"endsAt,omitempty"`
+
+	// ProductId The store product, for example to say monthly or yearly.
+	ProductId *string               `json:"productId,omitempty"`
+	State     SubscriptionInfoState `json:"state"`
+
+	// WillRenew False after the person turned renewal off. Plus still works until endsAt. Always false for a trial.
+	WillRenew bool `json:"willRenew"`
+}
+
+// SubscriptionInfoState defines model for SubscriptionInfo.State.
+type SubscriptionInfoState string
 
 // Task defines model for Task.
 type Task struct {

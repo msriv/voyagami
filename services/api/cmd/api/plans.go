@@ -25,10 +25,11 @@ type planSource struct {
 }
 
 func (p planSource) User(ctx context.Context, uid string) (entitlements.User, error) {
-	plus, drafts, err := p.accounts.Account(ctx, uid)
+	acct, err := p.accounts.AccountPlan(ctx, uid)
 	if err != nil {
 		return entitlements.User{}, err
 	}
+	plus, drafts := acct.Plus, acct.AskDrafts
 	upcoming, err := p.upcomingOwned(ctx, uid)
 	if err != nil {
 		return entitlements.User{}, err
@@ -44,7 +45,7 @@ func (p planSource) User(ctx context.Context, uid string) (entitlements.User, er
 		}
 		unlimited = dp == ""
 	}
-	return entitlements.User{Plus: plus, Unlimited: unlimited, Used: map[entitlements.Feature]int{
+	return entitlements.User{Plus: plus, Sub: acct.Sub, Unlimited: unlimited, Used: map[entitlements.Feature]int{
 		entitlements.AskDrafts: drafts, entitlements.UpcomingTrips: upcoming,
 	}}, nil
 }

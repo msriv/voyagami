@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"testing"
+	"time"
 
 	"github.com/msriv/voyagami/services/api/internal/api"
 	"github.com/msriv/voyagami/services/api/internal/entitlements"
@@ -68,6 +69,20 @@ func TestEntitlementsRoutes(t *testing.T) {
 	}
 	if me.Pass != nil {
 		t.Fatal("the person's own answer has no pass")
+	}
+	if me.Subscription != nil {
+		t.Fatal("a Free account has no subscription")
+	}
+
+	// Plus on its own: renewal date and whether it renews.
+	ends := time.Date(2026, 12, 1, 0, 0, 0, 0, time.UTC)
+	subH := NewHandler(slog.New(slog.DiscardHandler), v, WithTrips(store),
+		WithEntitlements(entitlements.New(entitlements.Free()), fakePlans{user: entitlements.User{Plus: true,
+			Sub: &entitlements.Subscription{EndsAt: ends, WillRenew: true, ProductID: "plus_yearly"}}}))
+	var sub api.Entitlements
+	_ = json.Unmarshal(call(subH, "GET", "/v1/me/entitlements", "owner", "").Body.Bytes(), &sub)
+	if s := sub.Subscription; s == nil || s.State != api.Subscribed || !s.WillRenew || s.EndsAt == nil || !s.EndsAt.Equal(ends) || s.ProductId == nil || *s.ProductId != "plus_yearly" {
+		t.Fatalf("subscription: %+v", sub.Subscription)
 	}
 
 	for _, c := range []struct {

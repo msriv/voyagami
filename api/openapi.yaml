@@ -2547,6 +2547,32 @@ components:
             $ref: "#/components/schemas/EntitlementDecision"
         pass:
           $ref: "#/components/schemas/PassInfo"
+        subscription:
+          $ref: "#/components/schemas/SubscriptionInfo"
+    SubscriptionInfo:
+      type: object
+      description: |
+        How the signed-in person's own Plus is running. Left out on Free, and when
+        Plus comes only from a crew member or a Trip Pass. The Manage subscription
+        screen uses it.
+      required: [state, willRenew, billingIssue]
+      properties:
+        state:
+          type: string
+          enum: [subscribed, trial]
+        endsAt:
+          type: string
+          format: date-time
+          description: When it renews (willRenew is true) or ends (false), or when the trial ends. Left out when the store has not said.
+        willRenew:
+          type: boolean
+          description: False after the person turned renewal off. Plus still works until endsAt. Always false for a trial.
+        billingIssue:
+          type: boolean
+          description: True when the store could not take payment. Tell the person to fix their payment method.
+        productId:
+          type: string
+          description: The store product, for example to say monthly or yearly.
     PassInfo:
       type: object
       description: |
