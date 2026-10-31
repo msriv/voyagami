@@ -56,10 +56,12 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 	}
 
 	trips := firestorerepo.NewTrips(client)
+	users := firestorerepo.NewUsers(client)
+	devices := firestorerepo.NewDevices(client)
 	deps := signInDeps{
 		verifier: signin.NewVerifier(keys),
 		options: []server.Option{
-			server.WithProfile(firestorerepo.NewUsers(client)),
+			server.WithProfile(users),
 			server.WithTrips(trips),
 			server.WithStops(firestorerepo.NewStops(client)),
 			server.WithTasks(firestorerepo.NewTasks(client)),
@@ -70,8 +72,9 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 			server.WithMeetPoints(firestorerepo.NewMeetPoints(client), firestorerepo.NewPresence(client)),
 			server.WithPolls(firestorerepo.NewPolls(client)),
 			server.WithInvites(firestorerepo.NewInvites(client)),
+			server.WithDevices(devices),
+			server.WithCrewEvents(newCrewEvents(cfg, logger, trips, users, devices)),
 			server.WithUsage(firestorerepo.NewUsage(client)),
-			server.WithDevices(firestorerepo.NewDevices(client)),
 			server.WithJournal(firestorerepo.NewJournal(client)),
 			server.WithBookings(firestorerepo.NewBookings(client)),
 			server.WithSettleUp(firestorerepo.NewSettlements(client)),

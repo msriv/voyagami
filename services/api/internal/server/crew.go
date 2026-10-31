@@ -11,6 +11,7 @@ import (
 
 	"github.com/msriv/voyagami/services/api/internal/api"
 	"github.com/msriv/voyagami/services/api/internal/model"
+	"github.com/msriv/voyagami/services/api/internal/notify"
 	"github.com/msriv/voyagami/services/api/internal/repo"
 )
 
@@ -318,10 +319,12 @@ func (h *handlers) JoinTrip(ctx context.Context, req api.JoinTripRequestObject) 
 	if m.DisplayName == "" {
 		m.DisplayName = fallbackName
 	}
-	if err := h.trips.AddMember(ctx, inv.TripID, m); err != nil && !errors.Is(err, repo.ErrAlreadyExists) {
-		if errors.Is(err, repo.ErrNotFound) {
-			return invalid, nil // the trip is gone
-		}
+	switch err := h.trips.AddMember(ctx, inv.TripID, m); {
+	case err == nil:
+		h.emit(ctx, notify.KindMemberJoined, inv.TripID, id.UserID)
+	case errors.Is(err, repo.ErrNotFound):
+		return invalid, nil // the trip is gone
+	case !errors.Is(err, repo.ErrAlreadyExists):
 		return nil, err
 	}
 	return h.joined(ctx, inv.TripID, inv.Role)

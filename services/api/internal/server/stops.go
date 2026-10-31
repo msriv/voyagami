@@ -8,6 +8,7 @@ import (
 	"github.com/msriv/voyagami/services/api/internal/api"
 	"github.com/msriv/voyagami/services/api/internal/fracindex"
 	"github.com/msriv/voyagami/services/api/internal/model"
+	"github.com/msriv/voyagami/services/api/internal/notify"
 	"github.com/msriv/voyagami/services/api/internal/repo"
 )
 
@@ -105,6 +106,9 @@ func (h *handlers) CreateStop(ctx context.Context, req api.CreateStopRequestObje
 	created, err := h.stops.Create(ctx, stop)
 	if err != nil {
 		return h.createStopError(ctx, err)
+	}
+	if id, err := identity(ctx, "CreateStop"); err == nil {
+		h.emit(ctx, notify.KindStopAdded, trip.ID, id.UserID)
 	}
 	return api.CreateStop201JSONResponse(stopFrom(created)), nil
 }

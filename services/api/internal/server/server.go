@@ -68,6 +68,7 @@ type handlers struct {
 	devLogs     devlog.Store
 	usage       repo.TripUsage
 	devices     repo.Devices
+	events      Publisher
 	feed        repo.Feed
 	presence    repo.Presence
 	rates       rates.Provider

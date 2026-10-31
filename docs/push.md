@@ -16,3 +16,15 @@ A token the push service no longer knows (`UNREGISTERED`) deletes that device. O
 Message `data` carries a `kind` and ids for the deep link, never free text typed by people. Real APNs credentials (an APNs key uploaded to the Firebase project) arrive in D4 and P2; until then iOS devices are accepted but pushes to them fail at the push service.
 
 The crew notification tickets (VOY-157 and VOY-158) are what call `SendToUser`.
+
+## Crew notifications
+
+When someone joins a trip, adds a place, starts a poll, adds an expense or adds a meet point, the API sends a push to the other active members. The code is in `internal/notify/crew.go`; handlers report events through `WithCrewEvents`.
+
+- Title is the trip title. Body is the actor's name and what they did, for example "Asha added a place". No free text from people goes in a push.
+- Data carries `kind`, `tripId` and `route`. The route opens the matching trip screen (crew, itinerary, polls, money, live).
+- Settings: the person's `notifications` map. `all: false` mutes everything; a kind set to false mutes that kind.
+- Quiet window: at most one push per kind, trip, actor and person each minute, so a burst of edits is one buzz.
+- Dev logs pushes instead of sending them. Other environments send through FCM.
+
+Not done yet: quiet hours (users have no timezone field) and a Pub/Sub queue. The quiet window is in memory per instance.

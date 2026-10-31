@@ -9,6 +9,7 @@ import (
 	"github.com/msriv/voyagami/services/api/internal/api"
 	"github.com/msriv/voyagami/services/api/internal/entitlements"
 	"github.com/msriv/voyagami/services/api/internal/model"
+	"github.com/msriv/voyagami/services/api/internal/notify"
 	"github.com/msriv/voyagami/services/api/internal/repo"
 )
 
@@ -102,6 +103,7 @@ func (h *handlers) CreateMeetPoint(ctx context.Context, req api.CreateMeetPointR
 		}
 		return nil, err
 	}
+	h.emit(ctx, notify.KindMeetPoint, req.TripId, uid)
 	return api.CreateMeetPoint201JSONResponse(meetFrom(created, uid, time.Now())), nil
 }
 

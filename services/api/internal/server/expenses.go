@@ -10,6 +10,7 @@ import (
 	"github.com/msriv/voyagami/services/api/internal/entitlements"
 	"github.com/msriv/voyagami/services/api/internal/locale"
 	"github.com/msriv/voyagami/services/api/internal/model"
+	"github.com/msriv/voyagami/services/api/internal/notify"
 	"github.com/msriv/voyagami/services/api/internal/repo"
 	"github.com/msriv/voyagami/services/api/internal/split"
 )
@@ -251,6 +252,7 @@ func (h *handlers) CreateExpense(ctx context.Context, req api.CreateExpenseReque
 		}
 		return nil, err
 	}
+	h.emit(ctx, notify.KindExpenseAdded, req.TripId, id.UserID)
 	return api.CreateExpense201JSONResponse(expenseFrom(saved)), nil
 }
 
