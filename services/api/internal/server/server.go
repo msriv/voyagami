@@ -17,6 +17,7 @@ import (
 	"github.com/msriv/voyagami/services/api/internal/places"
 	"github.com/msriv/voyagami/services/api/internal/rates"
 	"github.com/msriv/voyagami/services/api/internal/repo"
+	"github.com/msriv/voyagami/services/api/internal/stays"
 )
 
 // NewHandler returns the API's router. Routes and request types come from the
@@ -81,6 +82,9 @@ type handlers struct {
 	billing       billing.Store
 	billingSecret string
 	trialJob      TrialReminderJob
+	stayPartners  []stays.Partner
+	stayClicks    StayClicks
+	staysOn       bool
 	jobsSecret    string
 	feed          repo.Feed
 	presence      repo.Presence

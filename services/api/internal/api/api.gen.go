@@ -1633,6 +1633,24 @@ type StampList struct {
 	Total  int     `json:"total"`
 }
 
+// StayClick defines model for StayClick.
+type StayClick struct {
+	PartnerId string `json:"partnerId"`
+}
+
+// StayLink defines model for StayLink.
+type StayLink struct {
+	// Name The partner's name, shown on the button.
+	Name      string `json:"name"`
+	PartnerId string `json:"partnerId"`
+	Url       string `json:"url"`
+}
+
+// StayLinkList defines model for StayLinkList.
+type StayLinkList struct {
+	Links []StayLink `json:"links"`
+}
+
 // Stop defines model for Stop.
 type Stop struct {
 	// Date The day, YYYY-MM-DD.
@@ -1929,6 +1947,12 @@ type StreamTripChangesParams struct {
 	LastEventID *string `json:"Last-Event-ID,omitempty"`
 }
 
+// ListStayLinksParams defines parameters for ListStayLinks.
+type ListStayLinksParams struct {
+	// Guests How many people are staying. Left out when missing.
+	Guests *int `form:"guests,omitempty" json:"guests,omitempty"`
+}
+
 // RequestOtpJSONRequestBody defines body for RequestOtp for application/json ContentType.
 type RequestOtpJSONRequestBody = OtpRequest
 
@@ -2009,6 +2033,9 @@ type VotePollJSONRequestBody = PollVote
 
 // RecordSettlementJSONRequestBody defines body for RecordSettlement for application/json ContentType.
 type RecordSettlementJSONRequestBody = SettlementCreate
+
+// RecordStayClickJSONRequestBody defines body for RecordStayClick for application/json ContentType.
+type RecordStayClickJSONRequestBody = StayClick
 
 // CreateStopJSONRequestBody defines body for CreateStop for application/json ContentType.
 type CreateStopJSONRequestBody = StopCreate
@@ -2216,6 +2243,12 @@ type ServerInterface interface {
 	// RecordSettlement Mark a payment as paid
 	// (POST /v1/trips/{tripId}/settlements)
 	RecordSettlement(w http.ResponseWriter, r *http.Request, tripId string)
+	// RecordStayClick Count a tap on a stay link
+	// (POST /v1/trips/{tripId}/stays/clicks)
+	RecordStayClick(w http.ResponseWriter, r *http.Request, tripId string)
+	// ListStayLinks Hand-off links to stay partners for this trip
+	// (GET /v1/trips/{tripId}/stays/links)
+	ListStayLinks(w http.ResponseWriter, r *http.Request, tripId string, params ListStayLinksParams)
 	// ListStops List a trip's stops
 	// (GET /v1/trips/{tripId}/stops)
 	ListStops(w http.ResponseWriter, r *http.Request, tripId string)
@@ -4036,6 +4069,74 @@ func (siw *ServerInterfaceWrapper) RecordSettlement(w http.ResponseWriter, r *ht
 	handler.ServeHTTP(w, r)
 }
 
+// RecordStayClick operation middleware
+func (siw *ServerInterfaceWrapper) RecordStayClick(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RecordStayClick(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListStayLinks operation middleware
+func (siw *ServerInterfaceWrapper) ListStayLinks(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListStayLinksParams
+
+	// ------------- Optional query parameter "guests" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "guests", r.URL.Query(), &params.Guests, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "guests"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "guests", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListStayLinks(w, r, tripId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListStops operation middleware
 func (siw *ServerInterfaceWrapper) ListStops(w http.ResponseWriter, r *http.Request) {
 
@@ -4403,6 +4504,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/health", wrapper.GetHealth)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/me/entitlements", wrapper.GetMyEntitlements)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/entitlements", wrapper.GetTripEntitlements)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/stays/links", wrapper.ListStayLinks)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/stays/clicks", wrapper.RecordStayClick)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/me", wrapper.GetMe)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/me", wrapper.UpdateMe)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/me/devices/{deviceId}", wrapper.RemoveDevice)
@@ -9166,6 +9269,158 @@ func (response RecordSettlement503JSONResponse) VisitRecordSettlementResponse(w 
 	return err
 }
 
+type RecordStayClickRequestObject struct {
+	TripId string `json:"tripId"`
+	Body   *RecordStayClickJSONRequestBody
+}
+
+type RecordStayClickResponseObject interface {
+	VisitRecordStayClickResponse(w http.ResponseWriter) error
+}
+
+type RecordStayClick204Response struct {
+}
+
+func (response RecordStayClick204Response) VisitRecordStayClickResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type RecordStayClick400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response RecordStayClick400JSONResponse) VisitRecordStayClickResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RecordStayClick401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response RecordStayClick401JSONResponse) VisitRecordStayClickResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RecordStayClick404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response RecordStayClick404JSONResponse) VisitRecordStayClickResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RecordStayClick503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response RecordStayClick503JSONResponse) VisitRecordStayClickResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListStayLinksRequestObject struct {
+	TripId string `json:"tripId"`
+	Params ListStayLinksParams
+}
+
+type ListStayLinksResponseObject interface {
+	VisitListStayLinksResponse(w http.ResponseWriter) error
+}
+
+type ListStayLinks200JSONResponse StayLinkList
+
+func (response ListStayLinks200JSONResponse) VisitListStayLinksResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListStayLinks400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response ListStayLinks400JSONResponse) VisitListStayLinksResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListStayLinks401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ListStayLinks401JSONResponse) VisitListStayLinksResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListStayLinks404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ListStayLinks404JSONResponse) VisitListStayLinksResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListStayLinks503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ListStayLinks503JSONResponse) VisitListStayLinksResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListStopsRequestObject struct {
 	TripId string `json:"tripId"`
 }
@@ -10008,6 +10263,12 @@ type StrictServerInterface interface {
 	// RecordSettlement Mark a payment as paid
 	// (POST /v1/trips/{tripId}/settlements)
 	RecordSettlement(ctx context.Context, request RecordSettlementRequestObject) (RecordSettlementResponseObject, error)
+	// RecordStayClick Count a tap on a stay link
+	// (POST /v1/trips/{tripId}/stays/clicks)
+	RecordStayClick(ctx context.Context, request RecordStayClickRequestObject) (RecordStayClickResponseObject, error)
+	// ListStayLinks Hand-off links to stay partners for this trip
+	// (GET /v1/trips/{tripId}/stays/links)
+	ListStayLinks(ctx context.Context, request ListStayLinksRequestObject) (ListStayLinksResponseObject, error)
 	// ListStops List a trip's stops
 	// (GET /v1/trips/{tripId}/stops)
 	ListStops(ctx context.Context, request ListStopsRequestObject) (ListStopsResponseObject, error)
@@ -11914,6 +12175,66 @@ func (sh *strictHandler) RecordSettlement(w http.ResponseWriter, r *http.Request
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(RecordSettlementResponseObject); ok {
 		if err := validResponse.VisitRecordSettlementResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RecordStayClick operation middleware
+func (sh *strictHandler) RecordStayClick(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request RecordStayClickRequestObject
+
+	request.TripId = tripId
+
+	var body RecordStayClickJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.RecordStayClick(ctx, request.(RecordStayClickRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RecordStayClick")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(RecordStayClickResponseObject); ok {
+		if err := validResponse.VisitRecordStayClickResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListStayLinks operation middleware
+func (sh *strictHandler) ListStayLinks(w http.ResponseWriter, r *http.Request, tripId string, params ListStayLinksParams) {
+	var request ListStayLinksRequestObject
+
+	request.TripId = tripId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListStayLinks(ctx, request.(ListStayLinksRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListStayLinks")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListStayLinksResponseObject); ok {
+		if err := validResponse.VisitListStayLinksResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

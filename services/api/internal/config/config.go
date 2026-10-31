@@ -37,6 +37,8 @@ type Config struct {
 	RevenueCatWebhookSecret string
 	// JobsSecret is the bearer secret the scheduler sends to /v1/jobs/*. Empty turns the jobs off.
 	JobsSecret string
+	// StayPartners is the JSON list of stay partners (see docs/stays.md). Empty means none.
+	StayPartners string
 }
 
 // minAuthSecret is the shortest AUTH_SECRET accepted.
@@ -94,6 +96,7 @@ func Load(getenv func(string) string) (Config, error) {
 	cfg.PlacesAPIKey = getenv("PLACES_API_KEY")
 	cfg.RevenueCatWebhookSecret = getenv("REVENUECAT_WEBHOOK_SECRET")
 	cfg.JobsSecret = getenv("JOBS_SECRET")
+	cfg.StayPartners = getenv("STAY_PARTNERS")
 	switch cfg.DevPlan = getenv("DEV_PLAN"); {
 	case cfg.DevPlan == "":
 	case cfg.Env != "dev":
