@@ -7,6 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ApiError, NetworkError, type components } from "@voyagami/api-client";
 
+import { localFirst } from "@/local/localFirst";
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
@@ -38,11 +39,19 @@ export default function BookingsScreen() {
 
   const load = useCallback(async () => {
     try {
-      const [trip, { bookings }] = await Promise.all([
-        api.unwrap(api.GET("/v1/trips/{tripId}", { params: { path: { tripId: id } } })),
-        api.unwrap(api.GET("/v1/trips/{tripId}/bookings", { params: { path: { tripId: id } } })),
-      ]);
-      setState({ kind: "ready", trip, bookings });
+      await localFirst(
+        `bookings:${id}`,
+        async () => {
+          const [trip, { bookings }] = await Promise.all([
+            api.unwrap(api.GET("/v1/trips/{tripId}", { params: { path: { tripId: id } } })),
+            api.unwrap(
+              api.GET("/v1/trips/{tripId}/bookings", { params: { path: { tripId: id } } }),
+            ),
+          ]);
+          return { trip, bookings };
+        },
+        (d) => setState({ kind: "ready", ...d }),
+      );
     } catch (e) {
       setState(
         e instanceof ApiError && e.code === "not_found" ? { kind: "notFound" } : { kind: "error" },

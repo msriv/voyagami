@@ -16,6 +16,16 @@
 - How live co-editing (D2) and offline edits meet.
 - What changes for the planned Cloud SQL and PowerSync move (P3).
 
+## Local store (VOY-166)
+
+`apps/mobile/src/local/store.ts` defines `LocalStore` (`get`, `put`, `remove`, `clear`, `sizeBytes`). The app uses the SQLite implementation (`expo-sqlite`, one table `docs(key, json, updated_at)`). Tests use the in-memory one. Screens never touch SQLite, so a PowerSync move (P3) swaps only this file.
+
+Keys are the screen's whole payload as the API returned it: `trips`, `stops:{tripId}` (trip and stops), `bookings:{tripId}`, `expenses:{tripId}` (trip, expenses, budget, members), `journal:{tripId}`.
+
+`localFirst(key, fetch, onData)` is how screens read: it shows the device copy straight away, asks the server, then shows and saves the fresh answer. If the fresh read fails and a copy exists, the copy stays on screen. A 404 or 403 drops the copy (the trip is gone or no longer shared). Signing out clears the whole store.
+
+**Migrations.** `PRAGMA user_version` holds the schema version (now 1). The documents are a cache of server data, so a layout change that cannot be migrated in place drops the table and the next read refills it. Nothing is lost that the server does not hold; writes made offline live in the queue (VOY-167), which has its own table and must be migrated, not dropped.
+
 ## Live changes (change feed)
 
 `GET /v1/trips/{id}/events` is a server-sent event stream for one trip. It tells the app what changed so it can refetch, and carries no content.

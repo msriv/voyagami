@@ -7,6 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ApiError, NetworkError, type components } from "@voyagami/api-client";
 
+import { localFirst } from "@/local/localFirst";
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
@@ -180,13 +181,19 @@ export default function JournalScreen() {
 
   const load = useCallback(async () => {
     try {
-      const [trip, { entries }, { stops }, me] = await Promise.all([
-        api.unwrap(api.GET("/v1/trips/{tripId}", { params: { path: { tripId: id } } })),
-        api.unwrap(api.GET("/v1/trips/{tripId}/journal", { params: { path: { tripId: id } } })),
-        api.unwrap(api.GET("/v1/trips/{tripId}/stops", { params: { path: { tripId: id } } })),
-        api.unwrap(api.GET("/v1/me")),
-      ]);
-      setState({ kind: "ready", trip, entries, stops, me: me.id });
+      await localFirst(
+        `journal:${id}`,
+        async () => {
+          const [trip, { entries }, { stops }, me] = await Promise.all([
+            api.unwrap(api.GET("/v1/trips/{tripId}", { params: { path: { tripId: id } } })),
+            api.unwrap(api.GET("/v1/trips/{tripId}/journal", { params: { path: { tripId: id } } })),
+            api.unwrap(api.GET("/v1/trips/{tripId}/stops", { params: { path: { tripId: id } } })),
+            api.unwrap(api.GET("/v1/me")),
+          ]);
+          return { trip, entries, stops, me: me.id };
+        },
+        (d) => setState({ kind: "ready", ...d }),
+      );
     } catch (e) {
       setState(
         e instanceof ApiError && e.code === "not_found" ? { kind: "notFound" } : { kind: "error" },
