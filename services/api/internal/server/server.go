@@ -13,6 +13,7 @@ import (
 	"github.com/msriv/voyagami/services/api/internal/devlog"
 	"github.com/msriv/voyagami/services/api/internal/entitlements"
 	"github.com/msriv/voyagami/services/api/internal/importer"
+	"github.com/msriv/voyagami/services/api/internal/places"
 	"github.com/msriv/voyagami/services/api/internal/rates"
 	"github.com/msriv/voyagami/services/api/internal/repo"
 )
@@ -69,6 +70,7 @@ type handlers struct {
 	feed        repo.Feed
 	presence    repo.Presence
 	rates       rates.Provider
+	places      places.Searcher
 
 	plans      *entitlements.Service
 	planSource PlanSource

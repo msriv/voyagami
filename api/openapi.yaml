@@ -958,6 +958,82 @@ paths:
           $ref: "#/components/responses/NotFound"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/places/search:
+    get:
+      operationId: searchPlaces
+      tags: [places]
+      summary: Search for a place by name
+      description: |
+        Autocomplete-style search so the person can add a place without typing
+        coordinates. The provider key stays on the server. Results are for
+        display now; only the pin the person picks is stored on the stop.
+        Pass `lat` and `lng` to prefer results near the trip. Any signed-in
+        person can search.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 100
+        - name: lat
+          in: query
+          schema:
+            type: number
+            format: double
+        - name: lng
+          in: query
+          schema:
+            type: number
+            format: double
+      responses:
+        "200":
+          description: Up to 10 matches, best first.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlaceSearchResults"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/places/resolve:
+    post:
+      operationId: resolvePlaceLink
+      tags: [places]
+      summary: Turn a pasted maps link into a place candidate
+      description: |
+        Reads a Google Maps, OpenStreetMap or `geo:` link and returns the pin
+        and name in it, for the person to confirm. The link is treated as data:
+        only maps hosts are ever contacted, and only to follow a short link.
+        404 when no place can be read from the link.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url:
+                  type: string
+                  maxLength: 2000
+      responses:
+        "200":
+          description: The place found in the link.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlaceSearchResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /v1/trips/{tripId}/polls:
     parameters:
       - name: tripId
@@ -2877,6 +2953,32 @@ components:
         asOf:
           type: string
           description: The UTC day the rate is for, YYYY-MM-DD.
+    PlaceSearchResults:
+      type: object
+      required: [results]
+      properties:
+        results:
+          type: array
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/PlaceSearchResult"
+    PlaceSearchResult:
+      type: object
+      required: [name, lat, lng]
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+        category:
+          type: string
+          enum: [food, sights, activity, shopping, stay, transport, other]
     PollOptionInput:
       type: object
       required: [label]

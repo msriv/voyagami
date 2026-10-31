@@ -8,6 +8,7 @@ import { ApiError, NetworkError, type components } from "@voyagami/api-client";
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
+import { useTripChanges } from "@/trips/useTripChanges";
 import type { Trip } from "@/trips/summary";
 import { Button, Card, Chip, IconButton, Input, Sheet, Text } from "@/ui";
 import { Icon } from "@/ui/icons";
@@ -51,6 +52,8 @@ export default function PollsScreen() {
       );
     }
   }, [api, id]);
+
+  useTripChanges(id, () => void load());
 
   useFocusEffect(
     useCallback(() => {

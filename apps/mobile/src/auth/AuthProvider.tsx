@@ -11,6 +11,7 @@ import {
 } from "react";
 
 import { reporter } from "@/logging/remoteLog";
+import { parseSse } from "@/trips/sse";
 
 import { apiBaseUrl } from "./config";
 import { clearDevice, loadOnboarded, loadTokens, saveOnboarded, saveTokens } from "./tokenStore";
@@ -38,6 +39,67 @@ function withBreadcrumbs(base?: typeof fetch): typeof fetch {
   };
 }
 
+/**
+ * Listens to a trip's change stream and calls onChange when something changed
+ * (or when it may have, after a reconnect). Returns a function that stops it.
+ * React Native's fetch cannot stream, so this reads the response as it arrives
+ * through XMLHttpRequest. It reconnects on its own with a growing pause.
+ */
+function openTripStream(
+  tripId: string,
+  token: () => string | null,
+  refresh: () => Promise<unknown>,
+  onChange: () => void,
+): () => void {
+  let stopped = false;
+  let xhr: XMLHttpRequest | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let pause = 1000;
+  let reconnecting = false;
+
+  const connect = () => {
+    if (stopped) return;
+    const req = new XMLHttpRequest();
+    xhr = req;
+    let seen = 0;
+    let buffer = "";
+    req.open("GET", `${apiBaseUrl}/v1/trips/${encodeURIComponent(tripId)}/events`);
+    req.setRequestHeader("Accept", "text/event-stream");
+    const t = token();
+    if (t) req.setRequestHeader("Authorization", `Bearer ${t}`);
+    // The server sends a resync first when it sees this header.
+    if (reconnecting) req.setRequestHeader("Last-Event-ID", "0");
+    req.onprogress = () => {
+      if (req.status === 200) pause = 1000;
+      buffer += req.responseText.slice(seen);
+      seen = req.responseText.length;
+      const { events, rest } = parseSse(buffer);
+      buffer = rest;
+      if (events.some((e) => e.event === "change" || e.event === "resync")) onChange();
+    };
+    const again = () => {
+      if (stopped) return;
+      reconnecting = true;
+      const wait = pause;
+      pause = Math.min(pause * 2, 30000);
+      timer = setTimeout(connect, wait);
+    };
+    req.onerror = again;
+    req.onload = () => {
+      // 401: the access token is old. A normal call refreshes it; then try again.
+      if (req.status === 401) void refresh().finally(again);
+      else again();
+    };
+    req.send();
+  };
+  connect();
+  return () => {
+    stopped = true;
+    clearTimeout(timer);
+    xhr?.abort();
+  };
+}
+
 export type AuthStatus = "loading" | "signedOut" | "signedIn";
 
 interface AuthContextValue {
@@ -54,6 +116,8 @@ interface AuthContextValue {
   /** The number the code was sent to. Held in memory only, so it is not in a route or a log. */
   pendingPhone: string | null;
   setPendingPhone: (phone: string | null) => void;
+  /** Calls onChange whenever a trip changes. Returns a stop function. Does nothing in tests. */
+  watchTrip: (tripId: string, onChange: () => void) => () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -133,6 +197,20 @@ export function AuthProvider({
     await saveOnboarded(true).catch(() => undefined);
   }, []);
 
+  const watchTrip = useCallback(
+    (tripId: string, onChange: () => void) => {
+      // Tests pass their own fetch; they have no server to stream from.
+      if (fetchImpl || typeof XMLHttpRequest === "undefined") return () => undefined;
+      return openTripStream(
+        tripId,
+        () => tokens.current?.accessToken ?? null,
+        () => api.GET("/v1/me").catch(() => undefined),
+        onChange,
+      );
+    },
+    [api, fetchImpl],
+  );
+
   const value = useMemo(
     () => ({
       status,
@@ -144,8 +222,19 @@ export function AuthProvider({
       finishOnboarding,
       pendingPhone,
       setPendingPhone,
+      watchTrip,
     }),
-    [status, api, signIn, signOut, resetDevice, onboarded, finishOnboarding, pendingPhone],
+    [
+      status,
+      api,
+      signIn,
+      signOut,
+      resetDevice,
+      onboarded,
+      finishOnboarding,
+      pendingPhone,
+      watchTrip,
+    ],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
