@@ -67,6 +67,7 @@ type handlers struct {
 	importer    importer.Parser
 	devLogs     devlog.Store
 	devices     repo.Devices
+	events      Publisher
 	feed        repo.Feed
 	presence    repo.Presence
 	rates       rates.Provider

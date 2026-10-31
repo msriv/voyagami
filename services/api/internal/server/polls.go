@@ -7,6 +7,7 @@ import (
 
 	"github.com/msriv/voyagami/services/api/internal/api"
 	"github.com/msriv/voyagami/services/api/internal/model"
+	"github.com/msriv/voyagami/services/api/internal/notify"
 	"github.com/msriv/voyagami/services/api/internal/repo"
 )
 
@@ -136,6 +137,7 @@ func (h *handlers) CreatePoll(ctx context.Context, req api.CreatePollRequestObje
 		}
 		return nil, err
 	}
+	h.emit(ctx, notify.KindPollCreated, req.TripId, uid)
 	return api.CreatePoll201JSONResponse(pollView(created, nil, uid, time.Now())), nil
 }
 
