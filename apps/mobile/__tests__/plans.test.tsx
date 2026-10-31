@@ -63,6 +63,15 @@ describe("Plans", () => {
     expect(restore).toHaveBeenCalledTimes(1);
   });
 
+  it("opens the paywall when any call answers limit_reached", async () => {
+    mockApi({
+      "GET /v1/me/entitlements": () =>
+        json(403, { code: "limit_reached", message: "Limit.", feature: "multiCurrency" }),
+    });
+    await renderRouter(routes, { initialUrl: "/plans" });
+    expect(await screen.findByText("Add a second currency?")).toBeTruthy();
+  });
+
   it("compares Free and Plus from the server's table", async () => {
     mockApi({
       ...entitlements("free"),

@@ -1,8 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { act, fireEvent, render, screen } from "@testing-library/react-native";
 
 import "@/i18n";
 import { ThemeProvider } from "@/theme";
 
+import { emitLimitReached } from "./limitEvents";
 import { PaywallProvider, usePaywall } from "./Paywall";
 import { PlanPricesProvider } from "./prices";
 
@@ -55,5 +56,11 @@ describe("Paywall", () => {
     await fireEvent.press(screen.getByLabelText("open"));
     expect(screen.getByText("This is a Plus feature")).toBeTruthy();
     expect(screen.getByText("Or a week Trip Pass for €4.99")).toBeTruthy();
+  });
+
+  it("opens when the server says limit_reached", async () => {
+    await setup("files");
+    await act(async () => emitLimitReached("bestOrder"));
+    expect(screen.getByText("Find the best order again")).toBeTruthy();
   });
 });

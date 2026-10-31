@@ -172,6 +172,8 @@ export const en = {
     attention_other: "{{count}} changes need attention",
   },
   trip: {
+    readOnly:
+      "Some of this trip is over the Free limit. You can read it but not change it. Plus lifts the limit.",
     invite: "+ Invite",
     international: "International",
     crewLabel: "Crew: {{names}}",

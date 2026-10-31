@@ -14,10 +14,22 @@ import {
 } from "react";
 
 import { reporter } from "@/logging/remoteLog";
+import { emitLimitReached } from "@/plans/limitEvents";
 import { parseSse } from "@/trips/sse";
 
 import { apiBaseUrl } from "./config";
 import { clearDevice, loadOnboarded, loadTokens, saveOnboarded, saveTokens } from "./tokenStore";
+
+/** A 403 `limit_reached` opens the paywall for its feature. No screen handles this itself. */
+function reportLimit(response: Response): void {
+  response
+    .clone()
+    .json()
+    .then((b: { code?: string; feature?: string }) => {
+      if (b.code === "limit_reached" && b.feature) emitLimitReached(b.feature);
+    })
+    .catch(() => undefined);
+}
 
 /** Leaves a breadcrumb for every API call (method, path without query, status) and nothing else. */
 function withBreadcrumbs(base?: typeof fetch): typeof fetch {
@@ -33,6 +45,7 @@ function withBreadcrumbs(base?: typeof fetch): typeof fetch {
       const response = await (base ?? globalThis.fetch)(input, init);
       markReachable(true);
       reporter.breadcrumb(`${method} ${path} ${response.status}`);
+      if (response.status === 403) reportLimit(response);
       if (response.status >= 500) reporter.log("warn", `${method} ${path} ${response.status}`);
       return response;
     } catch (e) {

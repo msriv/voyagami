@@ -48,6 +48,23 @@ describe("Trip overview", () => {
     expect(screen.getByRole("button", { name: "Journal" })).toBeTruthy();
   });
 
+  it("says when content is over the Free limit and read-only", async () => {
+    mockApi({
+      "GET /v1/me": () => json(200, { id: "u1" }),
+      "GET /v1/trips/t1": () => json(200, trip("owner")),
+      "GET /v1/trips/t1/tasks": () => json(200, { tasks: [] }),
+      "GET /v1/trips/t1/entitlements": () =>
+        json(200, {
+          plan: "free",
+          features: {
+            files: { allowed: false, limit: 3, used: 5, needsPlus: true, readOnly: true },
+          },
+        }),
+    });
+    await renderRouter(routes, { initialUrl: "/trips/t1" });
+    expect(await screen.findByText(/over the Free limit/)).toBeTruthy();
+  });
+
   it("shows the crew and an Invite button to the owner only", async () => {
     mockApi({
       "GET /v1/me": () => json(200, { id: "u1" }),
