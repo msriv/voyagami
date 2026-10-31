@@ -66,6 +66,7 @@ type handlers struct {
 	comments    repo.Comments
 	importer    importer.Parser
 	devLogs     devlog.Store
+	usage       repo.TripUsage
 	feed        repo.Feed
 	presence    repo.Presence
 	rates       rates.Provider

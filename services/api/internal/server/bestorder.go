@@ -7,6 +7,7 @@ import (
 
 	"github.com/msriv/voyagami/services/api/internal/api"
 	"github.com/msriv/voyagami/services/api/internal/bestorder"
+	"github.com/msriv/voyagami/services/api/internal/entitlements"
 	"github.com/msriv/voyagami/services/api/internal/fracindex"
 	"github.com/msriv/voyagami/services/api/internal/model"
 	"github.com/msriv/voyagami/services/api/internal/repo"
@@ -43,6 +44,15 @@ func (h *handlers) SuggestBestOrder(ctx context.Context, req api.SuggestBestOrde
 	if _, ok := deny.(api.NotFoundJSONResponse); ok {
 		return api.SuggestBestOrder404JSONResponse{NotFoundJSONResponse: errNotFound(ctx)}, nil
 	}
+	id, err := identity(ctx, "SuggestBestOrder")
+	if err != nil {
+		return nil, err
+	}
+	if over, err := h.overLimit(ctx, id.UserID, req.TripId, entitlements.BestOrder, msgBestOrderLimit); err != nil {
+		return nil, err
+	} else if over != nil {
+		return api.SuggestBestOrder403JSONResponse{ForbiddenJSONResponse: api.ForbiddenJSONResponse(*over)}, nil
+	}
 	if !model.ValidDate(req.Date) {
 		return api.SuggestBestOrder400JSONResponse{BadRequestJSONResponse: errInvalid(ctx, "date must be YYYY-MM-DD.")}, nil
 	}
@@ -65,6 +75,9 @@ func (h *handlers) SuggestBestOrder(ctx context.Context, req api.SuggestBestOrde
 	}
 	res, err := bestorder.Suggest(ctx, in, bestorder.Straight{Points: points, KmPerHour: cityKmPerHour})
 	if err != nil {
+		return nil, err
+	}
+	if err := h.countUsage(ctx, req.TripId, model.UsageBestOrderRuns, 1); err != nil {
 		return nil, err
 	}
 	return api.SuggestBestOrder200JSONResponse(api.BestOrder{

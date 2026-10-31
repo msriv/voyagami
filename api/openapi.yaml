@@ -167,6 +167,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "503":
           $ref: "#/components/responses/Unavailable"
   /v1/trips/{tripId}:
@@ -1865,6 +1867,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
         "503":
@@ -2037,7 +2041,9 @@ components:
           schema:
             $ref: "#/components/schemas/Error"
     Forbidden:
-      description: The person is on the trip but their role does not allow this.
+      description: |
+        The person is on the trip but their role does not allow this, or (code
+        `limit_reached`, with `feature`) the plan limit does.
       content:
         application/json:
           schema:
@@ -3414,7 +3420,9 @@ components:
       description: |
         The one error shape every non-2xx response uses. Codes: `bad_request`,
         `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,
-        `method_not_allowed`, `internal`, `unavailable`, `timeout`.
+        `method_not_allowed`, `internal`, `unavailable`, `timeout`, `limit_reached`.
+        A `limit_reached` answer is a 403 that also names the `feature` whose
+        plan limit stopped the request; Plus or a Trip Pass would lift it.
       required: [code, message]
       properties:
         code:
@@ -3426,6 +3434,9 @@ components:
         requestId:
           type: string
           description: Same value as the `X-Request-Id` response header. Quote it in bug reports. Callers may send their own `X-Request-Id` (1 to 64 characters from letters, digits, `-`, `_`, `.`); otherwise the server makes one.
+        feature:
+          type: string
+          description: Only on `limit_reached`. The plan feature that is at its limit, for example `bestOrder`.
         fieldErrors:
           type: array
           items:

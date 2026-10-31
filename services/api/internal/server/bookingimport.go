@@ -9,7 +9,9 @@ import (
 	"unicode/utf8"
 
 	"github.com/msriv/voyagami/services/api/internal/api"
+	"github.com/msriv/voyagami/services/api/internal/entitlements"
 	"github.com/msriv/voyagami/services/api/internal/importer"
+	"github.com/msriv/voyagami/services/api/internal/model"
 )
 
 // WithImporter turns on reading bookings from pasted text and PDFs. It also
@@ -26,7 +28,7 @@ func (h *handlers) ImportBookings(ctx context.Context, req api.ImportBookingsReq
 	if h.bookingsOff() || h.importer == nil {
 		return api.ImportBookings503JSONResponse{UnavailableJSONResponse: api.UnavailableJSONResponse(errBody(ctx, codeUnavailable, msgNoImport))}, nil
 	}
-	_, deny, err := h.bookingAccess(ctx, "ImportBookings", req.TripId, true)
+	uid, deny, err := h.bookingAccess(ctx, "ImportBookings", req.TripId, true)
 	if err != nil {
 		return nil, err
 	}
@@ -35,6 +37,12 @@ func (h *handlers) ImportBookings(ctx context.Context, req api.ImportBookingsReq
 		return api.ImportBookings404JSONResponse{NotFoundJSONResponse: d}, nil
 	case api.ForbiddenJSONResponse:
 		return api.ImportBookings403JSONResponse{ForbiddenJSONResponse: d}, nil
+	}
+
+	if over, err := h.overLimit(ctx, uid, req.TripId, entitlements.ForwardedBookings, msgImportLimit); err != nil {
+		return nil, err
+	} else if over != nil {
+		return api.ImportBookings403JSONResponse{ForbiddenJSONResponse: api.ForbiddenJSONResponse(*over)}, nil
 	}
 
 	b := req.Body
@@ -69,6 +77,9 @@ func (h *handlers) ImportBookings(ctx context.Context, req api.ImportBookingsReq
 		// The error holds no document text. Log it without the request body.
 		slog.Default().Error("booking import failed", "requestId", requestIDFrom(ctx), "error", err)
 		return api.ImportBookings503JSONResponse{UnavailableJSONResponse: api.UnavailableJSONResponse(errBody(ctx, codeUnavailable, msgImportErr))}, nil
+	}
+	if err := h.countUsage(ctx, req.TripId, model.UsageForwardedBookings, len(cands)); err != nil {
+		return nil, err
 	}
 	for _, c := range cands {
 		bk := bookingFrom(c.Booking)

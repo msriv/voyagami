@@ -38,6 +38,12 @@ type Users interface {
 	Update(ctx context.Context, id string, patch model.UserPatch) (model.User, error)
 }
 
+// TripUsage counts what a trip has used of the plan limits.
+type TripUsage interface {
+	// Add raises one counter on the trip by n, atomically.
+	Add(ctx context.Context, tripID string, c model.UsageCounter, n int) error
+}
+
 // Trips stores trips and who is on them. Membership changes keep the trip's
 // memberUids mirror in step inside one transaction.
 type Trips interface {
