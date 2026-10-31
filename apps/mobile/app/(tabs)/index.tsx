@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { localFirst } from "@/local/localFirst";
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
+import { StampBoard } from "@/stamps/StampBoard";
 import { useTheme } from "@/theme";
 import { useProfile } from "@/profile";
 import { partitionTrips, todayIso, type Trip } from "@/trips/summary";
@@ -107,6 +108,8 @@ export default function HomeScreen() {
             {empty ? t("home.emptyTitle") : t("home.whereNext")}
           </Text>
         </View>
+
+        <StampBoard />
 
         {trips === undefined && !failed ? <Text color="muted">{t("home.loading")}</Text> : null}
         {failed && trips === undefined ? (
