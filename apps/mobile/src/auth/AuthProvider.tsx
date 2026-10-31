@@ -1,4 +1,3 @@
-import { offlineHook } from "@/local/offlineHook";
 import { localStore } from "@/local/store";
 import { useWriteQueue } from "@/local/useWriteQueue";
 import { createApiClient, type ApiClient, type StoredTokens } from "@voyagami/api-client";
