@@ -16,18 +16,10 @@ func (h *handlers) ExportMyData(ctx context.Context, _ api.ExportMyDataRequestOb
 	return api.ExportMyData503JSONResponse{UnavailableJSONResponse: api.UnavailableJSONResponse(errBody(ctx, codeUnavailable, msgNotBuilt))}, nil
 }
 
-func (h *handlers) GetMyConsents(ctx context.Context, _ api.GetMyConsentsRequestObject) (api.GetMyConsentsResponseObject, error) {
-	return api.GetMyConsents503JSONResponse{UnavailableJSONResponse: api.UnavailableJSONResponse(errBody(ctx, codeUnavailable, msgNotBuilt))}, nil
-}
-
 func (h *handlers) GetMyDeletion(ctx context.Context, _ api.GetMyDeletionRequestObject) (api.GetMyDeletionResponseObject, error) {
 	return api.GetMyDeletion503JSONResponse{UnavailableJSONResponse: api.UnavailableJSONResponse(errBody(ctx, codeUnavailable, msgNotBuilt))}, nil
 }
 
 func (h *handlers) ScheduleMyDeletion(ctx context.Context, _ api.ScheduleMyDeletionRequestObject) (api.ScheduleMyDeletionResponseObject, error) {
 	return api.ScheduleMyDeletion503JSONResponse{UnavailableJSONResponse: api.UnavailableJSONResponse(errBody(ctx, codeUnavailable, msgNotBuilt))}, nil
-}
-
-func (h *handlers) UpdateMyConsents(ctx context.Context, _ api.UpdateMyConsentsRequestObject) (api.UpdateMyConsentsResponseObject, error) {
-	return api.UpdateMyConsents503JSONResponse{UnavailableJSONResponse: api.UnavailableJSONResponse(errBody(ctx, codeUnavailable, msgNotBuilt))}, nil
 }

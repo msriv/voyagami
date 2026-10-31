@@ -75,6 +75,7 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 			server.WithPolls(firestorerepo.NewPolls(client)),
 			server.WithInvites(firestorerepo.NewInvites(client)),
 			server.WithDevices(devices),
+			server.WithConsents(firestorerepo.NewConsents(client)),
 			server.WithSupport(firestorerepo.NewSupport(client)),
 			server.WithCatalog(firestorerepo.NewCatalog(client)),
 			server.WithStamps(firestorerepo.NewStamps(client)),
