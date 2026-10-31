@@ -75,7 +75,7 @@ type placeJSON struct {
 func (v *Vertex) Draft(ctx context.Context, in Input) ([]Day, Usage, error) {
 	places := make([]placeJSON, len(in.Places))
 	for i, p := range in.Places {
-		places[i] = placeJSON{p.ID, p.Name, p.Group, p.Tags}
+		places[i] = placeJSON(p)
 	}
 	list, err := json.Marshal(places)
 	if err != nil {
