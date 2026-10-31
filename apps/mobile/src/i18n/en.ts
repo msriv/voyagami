@@ -1093,6 +1093,24 @@ export const en = {
   privacy: {
     title: "Data and privacy",
     back: "Back",
+    exportTitle: "Get a copy of your data",
+    exportBody: "A ZIP file with your trips, expenses and journal. Free for everyone.",
+    exportButton: "Export my data",
+    exporting: "Getting your data ready...",
+    exportError: "We couldn't get your data. Try again in a moment.",
+    exportUnavailable: "Saving files needs the latest version of the app.",
+    deleteTitle: "Delete my account",
+    deleteBody:
+      "Your account and personal data are deleted after 30 days, and you can change your mind before then. Other people keep the trips and expenses you shared with them, without your name.",
+    deleteButton: "Delete my account",
+    deleteConfirm: "Delete your account in 30 days? You can keep it any time before then.",
+    deleteYes: "Yes, delete my account",
+    deleteNo: "Keep my account",
+    deleteScheduled: "Your account will be deleted on {{date}}.",
+    deleteKeep: "Keep my account",
+    deleteSubscription:
+      "You have a subscription running. Cancel it in your store's subscription settings first, then delete your account.",
+    deleteError: "That didn't work. Try again in a moment.",
     intro:
       "Choose what Voyagami may use. You can change these any time. Your phone still asks before it shares anything.",
     items: {
