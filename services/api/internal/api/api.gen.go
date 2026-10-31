@@ -1076,6 +1076,11 @@ type Entitlements struct {
 	// Features One decision per feature, keyed by feature name.
 	Features map[string]EntitlementDecision `json:"features"`
 
+	// Pass The trip's Trip Pass. Only on the trip's entitlements, and only while the
+	// trip has a pass that was not refunded and has not ended. It covers the
+	// whole crew, whoever bought it.
+	Pass *PassInfo `json:"pass,omitempty"`
+
 	// Plan `pass` only when asked about a trip that has a Trip Pass.
 	Plan EntitlementsPlan `json:"plan"`
 }
@@ -1431,6 +1436,17 @@ type OtpVerifyRequest struct {
 
 	// Region Device region (ISO 3166-1 alpha-2). Only used when the account is created, until onboarding confirms it.
 	Region *string `json:"region,omitempty"`
+}
+
+// PassInfo The trip's Trip Pass. Only on the trip's entitlements, and only while the
+// trip has a pass that was not refunded and has not ended. It covers the
+// whole crew, whoever bought it.
+type PassInfo struct {
+	// BoughtBy The id of the member who bought it. Look the name up in the crew.
+	BoughtBy string `json:"boughtBy"`
+
+	// EndsOn The last day the pass works, YYYY-MM-DD. Left out when the trip has no end date, so the pass has no end yet.
+	EndsOn *string `json:"endsOn,omitempty"`
 }
 
 // PlaceGroup defines model for PlaceGroup.

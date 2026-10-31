@@ -77,7 +77,9 @@ func (p planSource) Trip(ctx context.Context, tripID string) (entitlements.Trip,
 			if err != nil {
 				return entitlements.Trip{}, err
 			}
-			t.Pass = t.Pass || dp == devPlanPass
+			if dp == devPlanPass {
+				t.Pass, t.PassBoughtBy = true, m.UID
+			}
 		}
 		plus, _, err := p.accounts.Account(ctx, m.UID)
 		if err != nil {
@@ -88,11 +90,16 @@ func (p planSource) Trip(ctx context.Context, tripID string) (entitlements.Trip,
 			break
 		}
 	}
-	has, err := p.billing.HasPass(ctx, tripID)
+	by, has, err := p.billing.ActivePass(ctx, tripID)
 	if err != nil {
 		return entitlements.Trip{}, err
 	}
-	t.Pass = t.Pass || has && passCovers(trip.Dates.End, time.Now())
+	if has && passCovers(trip.Dates.End, time.Now()) && !t.Pass {
+		t.Pass, t.PassBoughtBy = true, by
+	}
+	if t.Pass {
+		t.PassEndsOn = passEndsOn(trip.Dates.End)
+	}
 	return t, nil
 }
 
@@ -110,6 +117,16 @@ func passCovers(end string, now time.Time) bool {
 		return true
 	}
 	return now.Before(day.Add(24*time.Hour + passGrace))
+}
+
+// passEndsOn is the last day a pass works for a trip with this end date, or ""
+// when the trip has no usable end date and so the pass has no end yet.
+func passEndsOn(end string) string {
+	day, err := time.Parse("2006-01-02", end)
+	if end == "" || err != nil {
+		return ""
+	}
+	return day.Add(passGrace).Format("2006-01-02")
 }
 
 // upcomingOwned counts the trips the person owns that are still to come. Trips
