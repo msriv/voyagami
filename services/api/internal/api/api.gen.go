@@ -1161,6 +1161,9 @@ type Me struct {
 	// Id Stable account ID. Not the phone number.
 	Id string `json:"id"`
 
+	// Notifications Push settings. Keys are `all` and the event kinds memberJoined, stopAdded, pollCreated, expenseAdded and meetPoint. A missing key means on. `all: false` mutes everything.
+	Notifications *map[string]bool `json:"notifications,omitempty"`
+
 	// RegionSource `device` when guessed from the phone, `confirmed` once the person chose.
 	RegionSource *MeRegionSource `json:"regionSource,omitempty"`
 
@@ -1183,6 +1186,9 @@ type MeUpdate struct {
 
 	// HomeRegion ISO 3166-1 alpha-2 code of the person's home country.
 	HomeRegion *string `json:"homeRegion,omitempty"`
+
+	// Notifications Push settings. Keys are `all` and the event kinds memberJoined, stopAdded, pollCreated, expenseAdded and meetPoint. A missing key means on. `all: false` mutes everything.
+	Notifications *map[string]bool `json:"notifications,omitempty"`
 
 	// RegionSource `device` when guessed from the phone, `confirmed` once the person chose.
 	RegionSource *MeUpdateRegionSource `json:"regionSource,omitempty"`

@@ -1302,6 +1302,10 @@ export interface components {
             /** @description Name the person chose, if any. */
             displayName?: string;
             travelStyle?: components["schemas"]["TravelStyle"];
+            /** @description Push settings. Keys are `all` and the event kinds memberJoined, stopAdded, pollCreated, expenseAdded and meetPoint. A missing key means on. `all: false` mutes everything. */
+            notifications?: {
+                [key: string]: boolean;
+            };
             /** @description ISO 3166-1 alpha-2 code of the person's home country. */
             homeRegion?: string;
             /** @description ISO 4217 code. Used for display and as a default for new trips. */
@@ -1345,6 +1349,10 @@ export interface components {
         MeUpdate: {
             displayName?: string;
             travelStyle?: components["schemas"]["TravelStyle"];
+            /** @description Push settings. Keys are `all` and the event kinds memberJoined, stopAdded, pollCreated, expenseAdded and meetPoint. A missing key means on. `all: false` mutes everything. */
+            notifications?: {
+                [key: string]: boolean;
+            };
             /** @description ISO 3166-1 alpha-2 code of the person's home country. */
             homeRegion?: string;
             /** @description ISO 4217 code. Used for display and as a default for new trips. */

@@ -181,3 +181,12 @@ func Render(ev Event, actor, tripTitle string) Message {
 		Data:  map[string]string{"kind": string(ev.Kind), "tripId": ev.TripID, "route": route},
 	}
 }
+
+// ValidSetting reports whether key is a notification setting the app may store.
+func ValidSetting(key string) bool {
+	switch Kind(key) {
+	case KindMemberJoined, KindStopAdded, KindPollCreated, KindExpenseAdded, KindMeetPoint:
+		return true
+	}
+	return key == "all"
+}

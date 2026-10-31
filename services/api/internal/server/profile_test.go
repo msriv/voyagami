@@ -121,3 +121,18 @@ func TestGetMeWithProfile(t *testing.T) {
 		t.Errorf("storage failure: %d", rec.Code)
 	}
 }
+
+func TestUpdateMeNotifications(t *testing.T) {
+	verifier := fakeVerifier{token: "good", id: auth.Identity{UserID: "u_1"}}
+	f := &fakeProfile{}
+	h := NewHandler(quiet(), verifier, WithProfile(f))
+	if rec := patchMe(h, `{"notifications":{"all":true,"pollCreated":false}}`); rec.Code != http.StatusOK {
+		t.Fatalf("status %d: %s", rec.Code, rec.Body)
+	}
+	if got := *f.gotPatch.Notifications; got["pollCreated"] || !got["all"] {
+		t.Fatalf("patch = %v", got)
+	}
+	if rec := patchMe(h, `{"notifications":{"shouting":true}}`); rec.Code != http.StatusBadRequest {
+		t.Fatalf("unknown key status %d", rec.Code)
+	}
+}

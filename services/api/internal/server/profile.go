@@ -8,6 +8,7 @@ import (
 	"github.com/msriv/voyagami/services/api/internal/api"
 	"github.com/msriv/voyagami/services/api/internal/auth"
 	"github.com/msriv/voyagami/services/api/internal/model"
+	"github.com/msriv/voyagami/services/api/internal/notify"
 )
 
 // Profile is the profile storage the routes need. repo.Users implements it.
@@ -45,6 +46,14 @@ func (h *handlers) UpdateMe(ctx context.Context, req api.UpdateMeRequestObject) 
 			}
 		}
 		b := req.Body
+		if b.Notifications != nil {
+			for k := range *b.Notifications {
+				if !notify.ValidSetting(k) {
+					return api.UpdateMe400JSONResponse{BadRequestJSONResponse: errInvalid(ctx, "Unknown notification setting.")}, nil
+				}
+			}
+			patch.Notifications = b.Notifications
+		}
 		patch.HomeRegion, patch.HomeCurrency = b.HomeRegion, b.HomeCurrency
 		if u := b.Units; u != nil {
 			patch.Units = &model.Units{
@@ -101,6 +110,10 @@ func meFrom(u model.User) api.Me {
 			style.Spend = &spend
 		}
 		me.TravelStyle = &style
+	}
+	if len(u.Notifications) > 0 {
+		n := u.Notifications
+		me.Notifications = &n
 	}
 	if u.HomeRegion != "" {
 		me.HomeRegion = &u.HomeRegion

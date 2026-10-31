@@ -28,3 +28,9 @@ When someone joins a trip, adds a place, starts a poll, adds an expense or adds 
 - Dev logs pushes instead of sending them. Other environments send through FCM.
 
 Not done yet: quiet hours (users have no timezone field) and a Pub/Sub queue. The quiet window is in memory per instance.
+
+## Notification settings
+
+`GET /v1/me` returns `notifications` and `PATCH /v1/me` replaces it. Keys are `all` and the five event kinds; a missing key means on; unknown keys answer 400. The app has a Notifications screen under Profile with one switch per kind.
+
+Not done: asking for the push permission at a useful moment and registering the device token. The onboarding screen asks for permission already, but registering a token needs Firebase config files from Mihir. Quiet hours and per-trip mute are not built (quiet hours need a user timezone).
