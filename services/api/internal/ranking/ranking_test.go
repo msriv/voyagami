@@ -46,7 +46,7 @@ func TestGolden(t *testing.T) {
 	out, _ := json.MarshalIndent(g, "", "  ")
 	out = append(out, '\n')
 	if *update {
-		if err := os.WriteFile(file, out, 0o644); err != nil {
+		if err := os.WriteFile(file, out, 0o600); err != nil {
 			t.Fatal(err)
 		}
 		return
