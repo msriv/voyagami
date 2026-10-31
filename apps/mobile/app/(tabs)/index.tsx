@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { localFirst } from "@/local/localFirst";
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
@@ -24,9 +25,14 @@ export default function HomeScreen() {
 
   const load = useCallback(async () => {
     try {
-      const list = await api.unwrap(api.GET("/v1/trips"));
-      setTrips(list.trips);
-      setFailed(false);
+      await localFirst(
+        "trips",
+        async () => (await api.unwrap(api.GET("/v1/trips"))).trips,
+        (list) => {
+          setTrips(list);
+          setFailed(false);
+        },
+      );
     } catch {
       setFailed(true);
     }

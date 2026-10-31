@@ -21,3 +21,7 @@ jest.mock("react-native-maps", () => {
     Polyline: () => null,
   };
 });
+
+// Every test starts with an empty device store and never touches native SQLite.
+import { memoryStore, setLocalStore } from "../src/local/store";
+beforeEach(() => setLocalStore(memoryStore()));

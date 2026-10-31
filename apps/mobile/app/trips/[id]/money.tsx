@@ -7,6 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ApiError, NetworkError, type components } from "@voyagami/api-client";
 
+import { localFirst } from "@/local/localFirst";
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
@@ -51,15 +52,23 @@ export default function MoneyScreen() {
 
   const load = useCallback(async () => {
     try {
-      const [trip, { expenses }, budget, me, { members }] = await Promise.all([
-        api.unwrap(api.GET("/v1/trips/{tripId}", { params: { path: { tripId: id } } })),
-        api.unwrap(api.GET("/v1/trips/{tripId}/expenses", { params: { path: { tripId: id } } })),
-        api.unwrap(api.GET("/v1/trips/{tripId}/budget", { params: { path: { tripId: id } } })),
-        api.unwrap(api.GET("/v1/me")),
-        api.unwrap(api.GET("/v1/trips/{tripId}/members", { params: { path: { tripId: id } } })),
-      ]);
-      const names = Object.fromEntries(members.map((m) => [m.uid, m.displayName ?? ""]));
-      setState({ kind: "ready", trip, expenses, budget, me: me.id, names });
+      await localFirst(
+        `expenses:${id}`,
+        async () => {
+          const [trip, { expenses }, budget, me, { members }] = await Promise.all([
+            api.unwrap(api.GET("/v1/trips/{tripId}", { params: { path: { tripId: id } } })),
+            api.unwrap(
+              api.GET("/v1/trips/{tripId}/expenses", { params: { path: { tripId: id } } }),
+            ),
+            api.unwrap(api.GET("/v1/trips/{tripId}/budget", { params: { path: { tripId: id } } })),
+            api.unwrap(api.GET("/v1/me")),
+            api.unwrap(api.GET("/v1/trips/{tripId}/members", { params: { path: { tripId: id } } })),
+          ]);
+          const names = Object.fromEntries(members.map((m) => [m.uid, m.displayName ?? ""]));
+          return { trip, expenses, budget, me: me.id, names };
+        },
+        (d) => setState({ kind: "ready", ...d }),
+      );
     } catch (e) {
       setState(
         e instanceof ApiError && e.code === "not_found" ? { kind: "notFound" } : { kind: "error" },

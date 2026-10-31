@@ -7,6 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ApiError, NetworkError } from "@voyagami/api-client";
 
+import { localFirst } from "@/local/localFirst";
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
@@ -43,11 +44,17 @@ export default function ItineraryScreen() {
 
   const load = useCallback(async () => {
     try {
-      const [trip, { stops }] = await Promise.all([
-        api.unwrap(api.GET("/v1/trips/{tripId}", { params: { path: { tripId: id } } })),
-        api.unwrap(api.GET("/v1/trips/{tripId}/stops", { params: { path: { tripId: id } } })),
-      ]);
-      setState({ kind: "ready", trip, stops });
+      await localFirst(
+        `stops:${id}`,
+        async () => {
+          const [trip, { stops }] = await Promise.all([
+            api.unwrap(api.GET("/v1/trips/{tripId}", { params: { path: { tripId: id } } })),
+            api.unwrap(api.GET("/v1/trips/{tripId}/stops", { params: { path: { tripId: id } } })),
+          ]);
+          return { trip, stops };
+        },
+        (d) => setState({ kind: "ready", ...d }),
+      );
     } catch (e) {
       setState(
         e instanceof ApiError && e.code === "not_found" ? { kind: "notFound" } : { kind: "error" },

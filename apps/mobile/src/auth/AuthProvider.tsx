@@ -1,3 +1,4 @@
+import { localStore } from "@/local/store";
 import { createApiClient, type ApiClient, type StoredTokens } from "@voyagami/api-client";
 import {
   createContext,
@@ -179,6 +180,10 @@ export function AuthProvider({
     await api.POST("/v1/auth/sign-out").catch(() => undefined);
     tokens.current = null;
     await saveTokens(null).catch(() => undefined);
+    // Trips cached on the device belong to the person who just left.
+    await localStore()
+      .clear()
+      .catch(() => undefined);
     // The next person to sign in on this device goes through onboarding.
     await saveOnboarded(false).catch(() => undefined);
     setOnboarded(false);
@@ -188,6 +193,9 @@ export function AuthProvider({
   const resetDevice = useCallback(async () => {
     tokens.current = null;
     await clearDevice().catch(() => undefined);
+    await localStore()
+      .clear()
+      .catch(() => undefined);
     setOnboarded(false);
     setStatus("signedOut");
   }, []);
