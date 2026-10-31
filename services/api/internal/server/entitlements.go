@@ -84,6 +84,26 @@ func (h *handlers) entitlementsFor(user entitlements.User, trip *entitlements.Tr
 	case trip != nil && trip.Pass:
 		out.Plan = api.Pass
 	}
+	if sub := user.Sub; sub != nil {
+		info := api.SubscriptionInfo{State: api.Subscribed, WillRenew: sub.WillRenew, BillingIssue: sub.BillingIssue}
+		if sub.Trial {
+			info.State = api.Trial
+		}
+		if !sub.EndsAt.IsZero() {
+			info.EndsAt = &sub.EndsAt
+		}
+		if sub.ProductID != "" {
+			info.ProductId = &sub.ProductID
+		}
+		out.Subscription = &info
+	}
+	if trip != nil && trip.Pass {
+		info := api.PassInfo{BoughtBy: trip.PassBoughtBy}
+		if trip.PassEndsOn != "" {
+			info.EndsOn = &trip.PassEndsOn
+		}
+		out.Pass = &info
+	}
 	for _, f := range entitlements.All() {
 		d := h.plans.Check(user, trip, f)
 		out.Features[string(f)] = api.EntitlementDecision{Allowed: d.Allowed, Limit: d.Limit, Used: d.Used, NeedsPlus: d.NeedsPlus, ReadOnly: d.ReadOnly}
