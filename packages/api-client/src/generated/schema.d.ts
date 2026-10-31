@@ -1511,6 +1511,18 @@ export interface components {
             features: {
                 [key: string]: components["schemas"]["EntitlementDecision"];
             };
+            pass?: components["schemas"]["PassInfo"];
+        };
+        /**
+         * @description The trip's Trip Pass. Only on the trip's entitlements, and only while the
+         *     trip has a pass that was not refunded and has not ended. It covers the
+         *     whole crew, whoever bought it.
+         */
+        PassInfo: {
+            /** @description The id of the member who bought it. Look the name up in the crew. */
+            boughtBy: string;
+            /** @description The last day the pass works, YYYY-MM-DD. Left out when the trip has no end date, so the pass has no end yet. */
+            endsOn?: string;
         };
         StayLink: {
             partnerId: string;
