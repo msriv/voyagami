@@ -1,4 +1,5 @@
 import * as Linking from "expo-linking";
+import { track } from "@/analytics/track";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { ScrollView, Share, View } from "react-native";
@@ -110,6 +111,7 @@ export default function CrewScreen() {
         }),
       );
       // The token is shown only now, so it goes straight to the share sheet.
+      track("invite_sent");
       await Share.share({
         message: t("crew.shareMessage", {
           trip: trip.title,

@@ -2,6 +2,7 @@
 // (for example React Native rules in apps/mobile).
 import js from "@eslint/js";
 import prettier from "eslint-config-prettier";
+import a11y from "eslint-plugin-react-native-a11y";
 import react from "eslint-plugin-react";
 import tseslint from "typescript-eslint";
 
@@ -70,6 +71,26 @@ export default tseslint.config(
           },
         ]),
       ],
+    },
+  },
+  {
+    // Screen reader rules: every touchable has a role, a label and a state (docs/accessibility.md).
+    files: ["apps/mobile/**/*.tsx"],
+    ignores: ["**/__tests__/**"],
+    plugins: { "react-native-a11y": a11y },
+    rules: {
+      "react-native-a11y/has-accessibility-hint": "off",
+      "react-native-a11y/has-valid-accessibility-actions": "error",
+      "react-native-a11y/has-valid-accessibility-component-type": "error",
+      "react-native-a11y/has-valid-accessibility-descriptors": "error",
+      "react-native-a11y/has-valid-accessibility-ignores-invert-colors": "error",
+      "react-native-a11y/has-valid-accessibility-live-region": "error",
+      "react-native-a11y/has-valid-accessibility-role": "error",
+      "react-native-a11y/has-valid-accessibility-state": "error",
+      "react-native-a11y/has-valid-accessibility-states": "error",
+      "react-native-a11y/has-valid-accessibility-traits": "error",
+      "react-native-a11y/has-valid-accessibility-value": "error",
+      "react-native-a11y/no-nested-touchables": "error",
     },
   },
   {
