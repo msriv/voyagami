@@ -39,6 +39,8 @@ type entitlementsDoc struct {
 		ReminderFor *time.Time `firestore:"reminderFor"`
 	} `firestore:"trial"`
 	Usage accountUsage `firestore:"usage"`
+	// DevPlan marks a dev mock account: "free", "plus" or "pass". Never set elsewhere.
+	DevPlan string `firestore:"devPlan"`
 	// StampWeekGrantedAt is set once the extra week for all five stamps was given.
 	Rewards struct {
 		StampWeekGrantedAt *time.Time `firestore:"stampWeekGrantedAt"`
@@ -210,4 +212,30 @@ func (s *Entitlements) Claim(ctx context.Context, uid string, endsAt time.Time) 
 // paid is true when a paid subscription is running at t.
 func (d entitlementsDoc) paid(t time.Time) bool {
 	return d.Plus.Active && (d.Plus.ExpiresAt.IsZero() || d.Plus.ExpiresAt.After(t))
+}
+
+// DevPlan returns the mock plan marked on the account ("free", "plus" or
+// "pass"), or "" for an ordinary account. Dev only; see cmd/api/devplans.go.
+func (s *Entitlements) DevPlan(ctx context.Context, uid string) (string, error) {
+	snap, err := s.client.Collection(entitlementsCollection).Doc(uid).Get(ctx)
+	if isNotFound(err) {
+		return "", nil
+	}
+	if err != nil {
+		return "", mapErr("get dev plan", err)
+	}
+	var d entitlementsDoc
+	if err := snap.DataTo(&d); err != nil {
+		return "", mapErr("decode dev plan", err)
+	}
+	return d.DevPlan, nil
+}
+
+// SetDevPlan marks the account as a mock for a plan. "plus" also turns Plus on
+// with no end date. Any other plan turns it off, so a mock never keeps a stale Plus.
+func (s *Entitlements) SetDevPlan(ctx context.Context, uid, plan string) error {
+	plus := map[string]any{"active": plan == "plus"}
+	_, err := s.client.Collection(entitlementsCollection).Doc(uid).Set(ctx,
+		map[string]any{"devPlan": plan, "plus": plus}, firestore.MergeAll)
+	return mapErr("set dev plan", err)
 }

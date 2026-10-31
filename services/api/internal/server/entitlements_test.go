@@ -38,6 +38,22 @@ func TestEntitlementsRoutes(t *testing.T) {
 		t.Fatalf("free account: %+v", me)
 	}
 
+	// Free limits ignore the caller's own plan.
+	var free api.Entitlements
+	plusH := NewHandler(slog.New(slog.DiscardHandler), v, WithTrips(store),
+		WithEntitlements(entitlements.New(entitlements.Free()), fakePlans{user: entitlements.User{Plus: true}}))
+	rec = call(plusH, "GET", "/v1/plans/free", "owner", "")
+	if rec.Code != 200 {
+		t.Fatalf("free plan: %d %s", rec.Code, rec.Body)
+	}
+	_ = json.Unmarshal(rec.Body.Bytes(), &free)
+	if free.Plan != api.Free || free.Features[string(entitlements.UpcomingTrips)].Limit != entitlements.Free()[entitlements.UpcomingTrips] {
+		t.Fatalf("free plan: %+v", free)
+	}
+	if call(plusH, "GET", "/v1/plans/free", "", "").Code != 401 {
+		t.Fatal("free plan limits need sign-in")
+	}
+
 	var tr api.Entitlements
 	rec = call(h, "GET", "/v1/trips/"+trip.Id+"/entitlements", "owner", "")
 	if rec.Code != 200 {
