@@ -84,18 +84,129 @@ func (e CommentCreateTargetType) Valid() bool {
 	}
 }
 
+// Defines values for ConsentState.
+const (
+	ConsentStateDenied  ConsentState = "denied"
+	ConsentStateGranted ConsentState = "granted"
+	ConsentStateUnset   ConsentState = "unset"
+)
+
+// Valid indicates whether the value is a known member of the ConsentState enum.
+func (e ConsentState) Valid() bool {
+	switch e {
+	case ConsentStateDenied:
+		return true
+	case ConsentStateGranted:
+		return true
+	case ConsentStateUnset:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ConsentsUpdateAnalytics.
+const (
+	ConsentsUpdateAnalyticsDenied  ConsentsUpdateAnalytics = "denied"
+	ConsentsUpdateAnalyticsGranted ConsentsUpdateAnalytics = "granted"
+)
+
+// Valid indicates whether the value is a known member of the ConsentsUpdateAnalytics enum.
+func (e ConsentsUpdateAnalytics) Valid() bool {
+	switch e {
+	case ConsentsUpdateAnalyticsDenied:
+		return true
+	case ConsentsUpdateAnalyticsGranted:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ConsentsUpdateLocation.
+const (
+	ConsentsUpdateLocationDenied  ConsentsUpdateLocation = "denied"
+	ConsentsUpdateLocationGranted ConsentsUpdateLocation = "granted"
+)
+
+// Valid indicates whether the value is a known member of the ConsentsUpdateLocation enum.
+func (e ConsentsUpdateLocation) Valid() bool {
+	switch e {
+	case ConsentsUpdateLocationDenied:
+		return true
+	case ConsentsUpdateLocationGranted:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ConsentsUpdateNotifications.
+const (
+	ConsentsUpdateNotificationsDenied  ConsentsUpdateNotifications = "denied"
+	ConsentsUpdateNotificationsGranted ConsentsUpdateNotifications = "granted"
+)
+
+// Valid indicates whether the value is a known member of the ConsentsUpdateNotifications enum.
+func (e ConsentsUpdateNotifications) Valid() bool {
+	switch e {
+	case ConsentsUpdateNotificationsDenied:
+		return true
+	case ConsentsUpdateNotificationsGranted:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ConsentsUpdatePhotos.
+const (
+	ConsentsUpdatePhotosDenied  ConsentsUpdatePhotos = "denied"
+	ConsentsUpdatePhotosGranted ConsentsUpdatePhotos = "granted"
+)
+
+// Valid indicates whether the value is a known member of the ConsentsUpdatePhotos enum.
+func (e ConsentsUpdatePhotos) Valid() bool {
+	switch e {
+	case ConsentsUpdatePhotosDenied:
+		return true
+	case ConsentsUpdatePhotosGranted:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for DeviceRegistrationPlatform.
 const (
-	Android DeviceRegistrationPlatform = "android"
-	Ios     DeviceRegistrationPlatform = "ios"
+	DeviceRegistrationPlatformAndroid DeviceRegistrationPlatform = "android"
+	DeviceRegistrationPlatformIos     DeviceRegistrationPlatform = "ios"
 )
 
 // Valid indicates whether the value is a known member of the DeviceRegistrationPlatform enum.
 func (e DeviceRegistrationPlatform) Valid() bool {
 	switch e {
-	case Android:
+	case DeviceRegistrationPlatformAndroid:
 		return true
-	case Ios:
+	case DeviceRegistrationPlatformIos:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DiagnosticsOs.
+const (
+	DiagnosticsOsAndroid DiagnosticsOs = "android"
+	DiagnosticsOsIos     DiagnosticsOs = "ios"
+)
+
+// Valid indicates whether the value is a known member of the DiagnosticsOs enum.
+func (e DiagnosticsOs) Valid() bool {
+	switch e {
+	case DiagnosticsOsAndroid:
+		return true
+	case DiagnosticsOsIos:
 		return true
 	default:
 		return false
@@ -141,6 +252,36 @@ func (e ExpenseSplitMethod) Valid() bool {
 	case ExpenseSplitMethodPercent:
 		return true
 	case ExpenseSplitMethodShares:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for FlightStatusState.
+const (
+	Cancelled FlightStatusState = "cancelled"
+	Delayed   FlightStatusState = "delayed"
+	Departed  FlightStatusState = "departed"
+	Landed    FlightStatusState = "landed"
+	Scheduled FlightStatusState = "scheduled"
+	Unknown   FlightStatusState = "unknown"
+)
+
+// Valid indicates whether the value is a known member of the FlightStatusState enum.
+func (e FlightStatusState) Valid() bool {
+	switch e {
+	case Cancelled:
+		return true
+	case Delayed:
+		return true
+	case Departed:
+		return true
+	case Landed:
+		return true
+	case Scheduled:
+		return true
+	case Unknown:
 		return true
 	default:
 		return false
@@ -570,6 +711,30 @@ func (e StampKind) Valid() bool {
 	}
 }
 
+// Defines values for SupportMessageCategory.
+const (
+	SupportMessageCategoryAccount SupportMessageCategory = "account"
+	SupportMessageCategoryBilling SupportMessageCategory = "billing"
+	SupportMessageCategoryBug     SupportMessageCategory = "bug"
+	SupportMessageCategoryOther   SupportMessageCategory = "other"
+)
+
+// Valid indicates whether the value is a known member of the SupportMessageCategory enum.
+func (e SupportMessageCategory) Valid() bool {
+	switch e {
+	case SupportMessageCategoryAccount:
+		return true
+	case SupportMessageCategoryBilling:
+		return true
+	case SupportMessageCategoryBug:
+		return true
+	case SupportMessageCategoryOther:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for TravelStyleInterests.
 const (
 	TravelStyleInterestsBeaches        TravelStyleInterests = "beaches"
@@ -781,6 +946,41 @@ func (e ListCommentsParamsTargetType) Valid() bool {
 	default:
 		return false
 	}
+}
+
+// AskDraft defines model for AskDraft.
+type AskDraft struct {
+	Days []AskDraftDay `json:"days"`
+
+	// Remaining Drafts left this month, or -1 for no cap.
+	Remaining *int `json:"remaining,omitempty"`
+}
+
+// AskDraftDay defines model for AskDraftDay.
+type AskDraftDay struct {
+	// Day Day 1, 2, ... of the draft. The app maps it onto the trip's dates.
+	Day   int            `json:"day"`
+	Items []AskDraftItem `json:"items"`
+}
+
+// AskDraftItem defines model for AskDraftItem.
+type AskDraftItem struct {
+	Name string `json:"name"`
+
+	// Note Why it fits, one short line.
+	Note *string `json:"note,omitempty"`
+
+	// PlaceId A catalogue place id. Add it as a stop of kind catalog.
+	PlaceId string `json:"placeId"`
+}
+
+// AskRequest defines model for AskRequest.
+type AskRequest struct {
+	// Lang BCP 47 language for the notes. Defaults to the person's language.
+	Lang *string `json:"lang,omitempty"`
+
+	// Prompt What the person wants, in their own words.
+	Prompt string `json:"prompt"`
 }
 
 // Balances defines model for Balances.
@@ -1026,9 +1226,48 @@ type CommentList struct {
 	Comments []Comment `json:"comments"`
 }
 
+// ConsentState defines model for ConsentState.
+type ConsentState string
+
+// Consents defines model for Consents.
+type Consents struct {
+	Analytics     ConsentState `json:"analytics"`
+	Location      ConsentState `json:"location"`
+	Notifications ConsentState `json:"notifications"`
+	Photos        ConsentState `json:"photos"`
+	UpdatedAt     *time.Time   `json:"updatedAt,omitempty"`
+}
+
+// ConsentsUpdate Only the purposes that are sent change. `unset` cannot be sent.
+type ConsentsUpdate struct {
+	Analytics     *ConsentsUpdateAnalytics     `json:"analytics,omitempty"`
+	Location      *ConsentsUpdateLocation      `json:"location,omitempty"`
+	Notifications *ConsentsUpdateNotifications `json:"notifications,omitempty"`
+	Photos        *ConsentsUpdatePhotos        `json:"photos,omitempty"`
+}
+
+// ConsentsUpdateAnalytics defines model for ConsentsUpdate.Analytics.
+type ConsentsUpdateAnalytics string
+
+// ConsentsUpdateLocation defines model for ConsentsUpdate.Location.
+type ConsentsUpdateLocation string
+
+// ConsentsUpdateNotifications defines model for ConsentsUpdate.Notifications.
+type ConsentsUpdateNotifications string
+
+// ConsentsUpdatePhotos defines model for ConsentsUpdate.Photos.
+type ConsentsUpdatePhotos string
+
 // DayOrder defines model for DayOrder.
 type DayOrder struct {
 	StopIds []string `json:"stopIds"`
+}
+
+// Deletion defines model for Deletion.
+type Deletion struct {
+	// DeleteOn When the account and personal data are deleted. Only when scheduled.
+	DeleteOn  *time.Time `json:"deleteOn,omitempty"`
+	Scheduled bool       `json:"scheduled"`
 }
 
 // Destination defines model for Destination.
@@ -1054,6 +1293,21 @@ type DeviceRegistration struct {
 
 // DeviceRegistrationPlatform defines model for DeviceRegistration.Platform.
 type DeviceRegistrationPlatform string
+
+// Diagnostics What the phone adds to help support. Nothing here names the person or a place.
+type Diagnostics struct {
+	AppVersion  *string        `json:"appVersion,omitempty"`
+	DeviceModel *string        `json:"deviceModel,omitempty"`
+	Locale      *string        `json:"locale,omitempty"`
+	Os          *DiagnosticsOs `json:"os,omitempty"`
+	OsVersion   *string        `json:"osVersion,omitempty"`
+
+	// RequestId The request id of a failed call, if the person is reporting one.
+	RequestId *string `json:"requestId,omitempty"`
+}
+
+// DiagnosticsOs defines model for Diagnostics.Os.
+type DiagnosticsOs string
 
 // EntitlementDecision defines model for EntitlementDecision.
 type EntitlementDecision struct {
@@ -1101,6 +1355,40 @@ type Error struct {
 
 	// RequestId Same value as the `X-Request-Id` response header. Quote it in bug reports. Callers may send their own `X-Request-Id` (1 to 64 characters from letters, digits, `-`, `_`, `.`); otherwise the server makes one.
 	RequestId *string `json:"requestId,omitempty"`
+}
+
+// Event defines model for Event.
+type Event struct {
+	At   time.Time `json:"at"`
+	Name string    `json:"name"`
+
+	// Props Short strings (up to 64 characters), numbers and booleans only.
+	Props *map[string]Event_Props_AdditionalProperties `json:"props,omitempty"`
+}
+
+// EventProps0 defines model for Event.Props.0.
+type EventProps0 = string
+
+// EventProps1 defines model for Event.Props.1.
+type EventProps1 = float32
+
+// EventProps2 defines model for Event.Props.2.
+type EventProps2 = bool
+
+// Event_Props_AdditionalProperties defines model for Event.props.AdditionalProperties.
+type Event_Props_AdditionalProperties struct {
+	union json.RawMessage
+}
+
+// EventBatch defines model for EventBatch.
+type EventBatch struct {
+	Events []Event `json:"events"`
+}
+
+// EventReceipt defines model for EventReceipt.
+type EventReceipt struct {
+	Accepted int `json:"accepted"`
+	Dropped  int `json:"dropped"`
 }
 
 // Expense defines model for Expense.
@@ -1179,6 +1467,25 @@ type FieldError struct {
 	Field   string `json:"field"`
 	Message string `json:"message"`
 }
+
+// FlightLeg defines model for FlightLeg.
+type FlightLeg struct {
+	Estimated *time.Time `json:"estimated,omitempty"`
+	Gate      *string    `json:"gate,omitempty"`
+	Scheduled *time.Time `json:"scheduled,omitempty"`
+	Terminal  *string    `json:"terminal,omitempty"`
+}
+
+// FlightStatus defines model for FlightStatus.
+type FlightStatus struct {
+	Arrival   *FlightLeg        `json:"arrival,omitempty"`
+	Departure *FlightLeg        `json:"departure,omitempty"`
+	State     FlightStatusState `json:"state"`
+	UpdatedAt *time.Time        `json:"updatedAt,omitempty"`
+}
+
+// FlightStatusState defines model for FlightStatus.State.
+type FlightStatusState string
 
 // Health defines model for Health.
 type Health struct {
@@ -1737,6 +2044,28 @@ type SplitInput struct {
 // SplitInputMethod defines model for SplitInput.Method.
 type SplitInputMethod string
 
+// SponsoredCard defines model for SponsoredCard.
+type SponsoredCard struct {
+	Body     *string `json:"body,omitempty"`
+	Id       string  `json:"id"`
+	ImageUrl *string `json:"imageUrl,omitempty"`
+
+	// Sponsor Who pays for the card. Shown next to the "Sponsored" label, which the app always draws.
+	Sponsor string `json:"sponsor"`
+	Title   string `json:"title"`
+	Url     string `json:"url"`
+}
+
+// SponsoredHidden defines model for SponsoredHidden.
+type SponsoredHidden struct {
+	HiddenUntil time.Time `json:"hiddenUntil"`
+}
+
+// SponsoredResult defines model for SponsoredResult.
+type SponsoredResult struct {
+	Card *SponsoredCard `json:"card,omitempty"`
+}
+
 // Stamp defines model for Stamp.
 type Stamp struct {
 	Earned bool `json:"earned"`
@@ -1835,6 +2164,23 @@ type StopUpdate struct {
 
 	// StartLocal Start time as HH:mm, in the stop's time zone.
 	StartLocal *string `json:"startLocal,omitempty"`
+}
+
+// SupportMessage defines model for SupportMessage.
+type SupportMessage struct {
+	Category SupportMessageCategory `json:"category"`
+
+	// Diagnostics What the phone adds to help support. Nothing here names the person or a place.
+	Diagnostics *Diagnostics `json:"diagnostics,omitempty"`
+	Text        string       `json:"text"`
+}
+
+// SupportMessageCategory defines model for SupportMessage.Category.
+type SupportMessageCategory string
+
+// SupportReceipt defines model for SupportReceipt.
+type SupportReceipt struct {
+	Id string `json:"id"`
 }
 
 // Task defines model for Task.
@@ -2109,6 +2455,12 @@ type ListRecommendationsParams struct {
 	Lang *string `form:"lang,omitempty" json:"lang,omitempty"`
 }
 
+// GetSponsoredCardParams defines parameters for GetSponsoredCard.
+type GetSponsoredCardParams struct {
+	// Group The list the card would sit in. Left out for the trip-wide list.
+	Group *PlaceGroup `form:"group,omitempty" json:"group,omitempty"`
+}
+
 // ListStayLinksParams defines parameters for ListStayLinks.
 type ListStayLinksParams struct {
 	// Guests How many people are staying. Left out when missing.
@@ -2124,11 +2476,17 @@ type VerifyOtpJSONRequestBody = OtpVerifyRequest
 // RefreshSessionJSONRequestBody defines body for RefreshSession for application/json ContentType.
 type RefreshSessionJSONRequestBody = RefreshRequest
 
+// SendEventsJSONRequestBody defines body for SendEvents for application/json ContentType.
+type SendEventsJSONRequestBody = EventBatch
+
 // JoinTripJSONRequestBody defines body for JoinTrip for application/json ContentType.
 type JoinTripJSONRequestBody = InviteJoin
 
 // UpdateMeJSONRequestBody defines body for UpdateMe for application/json ContentType.
 type UpdateMeJSONRequestBody = MeUpdate
+
+// UpdateMyConsentsJSONRequestBody defines body for UpdateMyConsents for application/json ContentType.
+type UpdateMyConsentsJSONRequestBody = ConsentsUpdate
 
 // RegisterDeviceJSONRequestBody defines body for RegisterDevice for application/json ContentType.
 type RegisterDeviceJSONRequestBody = DeviceRegistration
@@ -2136,11 +2494,17 @@ type RegisterDeviceJSONRequestBody = DeviceRegistration
 // ResolvePlaceLinkJSONRequestBody defines body for ResolvePlaceLink for application/json ContentType.
 type ResolvePlaceLinkJSONRequestBody ResolvePlaceLinkJSONBody
 
+// SendSupportMessageJSONRequestBody defines body for SendSupportMessage for application/json ContentType.
+type SendSupportMessageJSONRequestBody = SupportMessage
+
 // CreateTripJSONRequestBody defines body for CreateTrip for application/json ContentType.
 type CreateTripJSONRequestBody = TripCreate
 
 // UpdateTripJSONRequestBody defines body for UpdateTrip for application/json ContentType.
 type UpdateTripJSONRequestBody = TripUpdate
+
+// CreateAskDraftJSONRequestBody defines body for CreateAskDraft for application/json ContentType.
+type CreateAskDraftJSONRequestBody = AskRequest
 
 // CreateBookingJSONRequestBody defines body for CreateBooking for application/json ContentType.
 type CreateBookingJSONRequestBody = BookingCreate
@@ -2211,6 +2575,94 @@ type CreateTaskJSONRequestBody = TaskCreate
 // UpdateTaskJSONRequestBody defines body for UpdateTask for application/json ContentType.
 type UpdateTaskJSONRequestBody = TaskUpdate
 
+// AsEventProps0 returns the union data inside the Event_Props_AdditionalProperties as a EventProps0
+func (t Event_Props_AdditionalProperties) AsEventProps0() (EventProps0, error) {
+	var body EventProps0
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromEventProps0 overwrites any union data inside the Event_Props_AdditionalProperties as the provided EventProps0
+func (t *Event_Props_AdditionalProperties) FromEventProps0(v EventProps0) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeEventProps0 performs a merge with any union data inside the Event_Props_AdditionalProperties, using the provided EventProps0
+func (t *Event_Props_AdditionalProperties) MergeEventProps0(v EventProps0) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsEventProps1 returns the union data inside the Event_Props_AdditionalProperties as a EventProps1
+func (t Event_Props_AdditionalProperties) AsEventProps1() (EventProps1, error) {
+	var body EventProps1
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromEventProps1 overwrites any union data inside the Event_Props_AdditionalProperties as the provided EventProps1
+func (t *Event_Props_AdditionalProperties) FromEventProps1(v EventProps1) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeEventProps1 performs a merge with any union data inside the Event_Props_AdditionalProperties, using the provided EventProps1
+func (t *Event_Props_AdditionalProperties) MergeEventProps1(v EventProps1) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsEventProps2 returns the union data inside the Event_Props_AdditionalProperties as a EventProps2
+func (t Event_Props_AdditionalProperties) AsEventProps2() (EventProps2, error) {
+	var body EventProps2
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromEventProps2 overwrites any union data inside the Event_Props_AdditionalProperties as the provided EventProps2
+func (t *Event_Props_AdditionalProperties) FromEventProps2(v EventProps2) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeEventProps2 performs a merge with any union data inside the Event_Props_AdditionalProperties, using the provided EventProps2
+func (t *Event_Props_AdditionalProperties) MergeEventProps2(v EventProps2) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t Event_Props_AdditionalProperties) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *Event_Props_AdditionalProperties) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// GetHealth Report that the process is up
@@ -2228,15 +2680,33 @@ type ServerInterface interface {
 	// SignOut End this device's session
 	// (POST /v1/auth/sign-out)
 	SignOut(w http.ResponseWriter, r *http.Request)
+	// SendEvents Send product events in a batch
+	// (POST /v1/events)
+	SendEvents(w http.ResponseWriter, r *http.Request)
 	// JoinTrip Join a trip with an invite token
 	// (POST /v1/invites/join)
 	JoinTrip(w http.ResponseWriter, r *http.Request)
+	// ScheduleMyDeletion Delete the account in 30 days
+	// (DELETE /v1/me)
+	ScheduleMyDeletion(w http.ResponseWriter, r *http.Request)
 	// GetMe Get the signed-in person
 	// (GET /v1/me)
 	GetMe(w http.ResponseWriter, r *http.Request)
 	// UpdateMe Change the signed-in person's profile
 	// (PATCH /v1/me)
 	UpdateMe(w http.ResponseWriter, r *http.Request)
+	// GetMyConsents The signed-in person's consent choices
+	// (GET /v1/me/consents)
+	GetMyConsents(w http.ResponseWriter, r *http.Request)
+	// UpdateMyConsents Change consent choices
+	// (PATCH /v1/me/consents)
+	UpdateMyConsents(w http.ResponseWriter, r *http.Request)
+	// CancelMyDeletion Keep the account after all
+	// (DELETE /v1/me/deletion)
+	CancelMyDeletion(w http.ResponseWriter, r *http.Request)
+	// GetMyDeletion Whether account deletion is scheduled
+	// (GET /v1/me/deletion)
+	GetMyDeletion(w http.ResponseWriter, r *http.Request)
 	// RemoveDevice Stop pushes to this phone
 	// (DELETE /v1/me/devices/{deviceId})
 	RemoveDevice(w http.ResponseWriter, r *http.Request, deviceId string)
@@ -2246,6 +2716,9 @@ type ServerInterface interface {
 	// GetMyEntitlements What the signed-in person's plan allows
 	// (GET /v1/me/entitlements)
 	GetMyEntitlements(w http.ResponseWriter, r *http.Request)
+	// ExportMyData Download the person's data
+	// (GET /v1/me/export)
+	ExportMyData(w http.ResponseWriter, r *http.Request)
 	// ListMyStamps The first five stamps and which ones the caller has earned
 	// (GET /v1/me/stamps)
 	ListMyStamps(w http.ResponseWriter, r *http.Request)
@@ -2267,6 +2740,18 @@ type ServerInterface interface {
 	// GetRate Suggested exchange rate for a pair of currencies
 	// (GET /v1/rates)
 	GetRate(w http.ResponseWriter, r *http.Request, params GetRateParams)
+	// RecordSponsoredClick The card was tapped
+	// (POST /v1/sponsored/{cardId}/clicks)
+	RecordSponsoredClick(w http.ResponseWriter, r *http.Request, cardId string)
+	// HideSponsoredCard Hide this card for 30 days
+	// (POST /v1/sponsored/{cardId}/hide)
+	HideSponsoredCard(w http.ResponseWriter, r *http.Request, cardId string)
+	// RecordSponsoredImpression The card was shown
+	// (POST /v1/sponsored/{cardId}/impressions)
+	RecordSponsoredImpression(w http.ResponseWriter, r *http.Request, cardId string)
+	// SendSupportMessage Send a message to support
+	// (POST /v1/support/messages)
+	SendSupportMessage(w http.ResponseWriter, r *http.Request)
 	// ListTrips List my trips
 	// (GET /v1/trips)
 	ListTrips(w http.ResponseWriter, r *http.Request)
@@ -2279,6 +2764,9 @@ type ServerInterface interface {
 	// UpdateTrip Change or archive a trip
 	// (PATCH /v1/trips/{tripId})
 	UpdateTrip(w http.ResponseWriter, r *http.Request, tripId string)
+	// CreateAskDraft Ask for a day-by-day draft
+	// (POST /v1/trips/{tripId}/ask/drafts)
+	CreateAskDraft(w http.ResponseWriter, r *http.Request, tripId string)
 	// GetBalances Who owes whom
 	// (GET /v1/trips/{tripId}/balances)
 	GetBalances(w http.ResponseWriter, r *http.Request, tripId string)
@@ -2297,6 +2785,9 @@ type ServerInterface interface {
 	// UpdateBooking Change a booking
 	// (PATCH /v1/trips/{tripId}/bookings/{bookingId})
 	UpdateBooking(w http.ResponseWriter, r *http.Request, tripId string, bookingId string)
+	// GetFlightStatus Live status of a flight booking
+	// (GET /v1/trips/{tripId}/bookings/{bookingId}/flight-status)
+	GetFlightStatus(w http.ResponseWriter, r *http.Request, tripId string, bookingId string)
 	// GetBudget Spend against the trip budget
 	// (GET /v1/trips/{tripId}/budget)
 	GetBudget(w http.ResponseWriter, r *http.Request, tripId string)
@@ -2417,6 +2908,9 @@ type ServerInterface interface {
 	// RecordSettlement Mark a payment as paid
 	// (POST /v1/trips/{tripId}/settlements)
 	RecordSettlement(w http.ResponseWriter, r *http.Request, tripId string)
+	// GetSponsoredCard The sponsored card for a list, if there is one
+	// (GET /v1/trips/{tripId}/sponsored)
+	GetSponsoredCard(w http.ResponseWriter, r *http.Request, tripId string, params GetSponsoredCardParams)
 	// RecordStayClick Count a tap on a stay link
 	// (POST /v1/trips/{tripId}/stays/clicks)
 	RecordStayClick(w http.ResponseWriter, r *http.Request, tripId string)
@@ -2528,11 +3022,39 @@ func (siw *ServerInterfaceWrapper) SignOut(w http.ResponseWriter, r *http.Reques
 	handler.ServeHTTP(w, r)
 }
 
+// SendEvents operation middleware
+func (siw *ServerInterfaceWrapper) SendEvents(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SendEvents(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // JoinTrip operation middleware
 func (siw *ServerInterfaceWrapper) JoinTrip(w http.ResponseWriter, r *http.Request) {
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.JoinTrip(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ScheduleMyDeletion operation middleware
+func (siw *ServerInterfaceWrapper) ScheduleMyDeletion(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ScheduleMyDeletion(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -2561,6 +3083,62 @@ func (siw *ServerInterfaceWrapper) UpdateMe(w http.ResponseWriter, r *http.Reque
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.UpdateMe(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetMyConsents operation middleware
+func (siw *ServerInterfaceWrapper) GetMyConsents(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetMyConsents(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateMyConsents operation middleware
+func (siw *ServerInterfaceWrapper) UpdateMyConsents(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateMyConsents(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CancelMyDeletion operation middleware
+func (siw *ServerInterfaceWrapper) CancelMyDeletion(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CancelMyDeletion(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetMyDeletion operation middleware
+func (siw *ServerInterfaceWrapper) GetMyDeletion(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetMyDeletion(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -2627,6 +3205,20 @@ func (siw *ServerInterfaceWrapper) GetMyEntitlements(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetMyEntitlements(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ExportMyData operation middleware
+func (siw *ServerInterfaceWrapper) ExportMyData(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ExportMyData(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -2936,6 +3528,98 @@ func (siw *ServerInterfaceWrapper) GetRate(w http.ResponseWriter, r *http.Reques
 	handler.ServeHTTP(w, r)
 }
 
+// RecordSponsoredClick operation middleware
+func (siw *ServerInterfaceWrapper) RecordSponsoredClick(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "cardId" -------------
+	var cardId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "cardId", r.PathValue("cardId"), &cardId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cardId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RecordSponsoredClick(w, r, cardId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// HideSponsoredCard operation middleware
+func (siw *ServerInterfaceWrapper) HideSponsoredCard(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "cardId" -------------
+	var cardId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "cardId", r.PathValue("cardId"), &cardId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cardId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.HideSponsoredCard(w, r, cardId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RecordSponsoredImpression operation middleware
+func (siw *ServerInterfaceWrapper) RecordSponsoredImpression(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "cardId" -------------
+	var cardId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "cardId", r.PathValue("cardId"), &cardId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cardId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RecordSponsoredImpression(w, r, cardId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SendSupportMessage operation middleware
+func (siw *ServerInterfaceWrapper) SendSupportMessage(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SendSupportMessage(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListTrips operation middleware
 func (siw *ServerInterfaceWrapper) ListTrips(w http.ResponseWriter, r *http.Request) {
 
@@ -3007,6 +3691,32 @@ func (siw *ServerInterfaceWrapper) UpdateTrip(w http.ResponseWriter, r *http.Req
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.UpdateTrip(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateAskDraft operation middleware
+func (siw *ServerInterfaceWrapper) CreateAskDraft(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateAskDraft(w, r, tripId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -3181,6 +3891,41 @@ func (siw *ServerInterfaceWrapper) UpdateBooking(w http.ResponseWriter, r *http.
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.UpdateBooking(w, r, tripId, bookingId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetFlightStatus operation middleware
+func (siw *ServerInterfaceWrapper) GetFlightStatus(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "bookingId" -------------
+	var bookingId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "bookingId", r.PathValue("bookingId"), &bookingId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "bookingId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetFlightStatus(w, r, tripId, bookingId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -4517,6 +5262,48 @@ func (siw *ServerInterfaceWrapper) RecordSettlement(w http.ResponseWriter, r *ht
 	handler.ServeHTTP(w, r)
 }
 
+// GetSponsoredCard operation middleware
+func (siw *ServerInterfaceWrapper) GetSponsoredCard(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetSponsoredCardParams
+
+	// ------------- Optional query parameter "group" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "group", r.URL.Query(), &params.Group, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "group"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "group", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetSponsoredCard(w, r, tripId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // RecordStayClick operation middleware
 func (siw *ServerInterfaceWrapper) RecordStayClick(w http.ResponseWriter, r *http.Request) {
 
@@ -4950,12 +5737,26 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	}
 
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/health", wrapper.GetHealth)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/me/consents", wrapper.GetMyConsents)
+	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/me/consents", wrapper.UpdateMyConsents)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/me/export", wrapper.ExportMyData)
+	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/me/deletion", wrapper.CancelMyDeletion)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/me/deletion", wrapper.GetMyDeletion)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/support/messages", wrapper.SendSupportMessage)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/events", wrapper.SendEvents)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/sponsored", wrapper.GetSponsoredCard)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/sponsored/{cardId}/impressions", wrapper.RecordSponsoredImpression)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/sponsored/{cardId}/clicks", wrapper.RecordSponsoredClick)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/sponsored/{cardId}/hide", wrapper.HideSponsoredCard)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/ask/drafts", wrapper.CreateAskDraft)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/bookings/{bookingId}/flight-status", wrapper.GetFlightStatus)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/me/entitlements", wrapper.GetMyEntitlements)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/plans/free", wrapper.GetFreePlanLimits)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/entitlements", wrapper.GetTripEntitlements)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/stays/links", wrapper.ListStayLinks)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/stays/clicks", wrapper.RecordStayClick)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/recommendations", wrapper.ListRecommendations)
+	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/me", wrapper.ScheduleMyDeletion)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/me", wrapper.GetMe)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/me", wrapper.UpdateMe)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/me/devices/{deviceId}", wrapper.RemoveDevice)
@@ -5267,6 +6068,70 @@ func (response SignOut401JSONResponse) VisitSignOutResponse(w http.ResponseWrite
 	return err
 }
 
+type SendEventsRequestObject struct {
+	Body *SendEventsJSONRequestBody
+}
+
+type SendEventsResponseObject interface {
+	VisitSendEventsResponse(w http.ResponseWriter) error
+}
+
+type SendEvents200JSONResponse EventReceipt
+
+func (response SendEvents200JSONResponse) VisitSendEventsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SendEvents400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response SendEvents400JSONResponse) VisitSendEventsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SendEvents401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response SendEvents401JSONResponse) VisitSendEventsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SendEvents503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response SendEvents503JSONResponse) VisitSendEventsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type JoinTripRequestObject struct {
 	Body *JoinTripJSONRequestBody
 }
@@ -5334,6 +6199,69 @@ func (response JoinTrip404JSONResponse) VisitJoinTripResponse(w http.ResponseWri
 type JoinTrip503JSONResponse struct{ UnavailableJSONResponse }
 
 func (response JoinTrip503JSONResponse) VisitJoinTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ScheduleMyDeletionRequestObject struct {
+}
+
+type ScheduleMyDeletionResponseObject interface {
+	VisitScheduleMyDeletionResponse(w http.ResponseWriter) error
+}
+
+type ScheduleMyDeletion200JSONResponse Deletion
+
+func (response ScheduleMyDeletion200JSONResponse) VisitScheduleMyDeletionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ScheduleMyDeletion401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ScheduleMyDeletion401JSONResponse) VisitScheduleMyDeletionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ScheduleMyDeletion409JSONResponse struct{ ConflictJSONResponse }
+
+func (response ScheduleMyDeletion409JSONResponse) VisitScheduleMyDeletionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ScheduleMyDeletion503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ScheduleMyDeletion503JSONResponse) VisitScheduleMyDeletionResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -5433,6 +6361,211 @@ func (response UpdateMe401JSONResponse) VisitUpdateMeResponse(w http.ResponseWri
 type UpdateMe503JSONResponse struct{ UnavailableJSONResponse }
 
 func (response UpdateMe503JSONResponse) VisitUpdateMeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMyConsentsRequestObject struct {
+}
+
+type GetMyConsentsResponseObject interface {
+	VisitGetMyConsentsResponse(w http.ResponseWriter) error
+}
+
+type GetMyConsents200JSONResponse Consents
+
+func (response GetMyConsents200JSONResponse) VisitGetMyConsentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMyConsents401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response GetMyConsents401JSONResponse) VisitGetMyConsentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMyConsents503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response GetMyConsents503JSONResponse) VisitGetMyConsentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateMyConsentsRequestObject struct {
+	Body *UpdateMyConsentsJSONRequestBody
+}
+
+type UpdateMyConsentsResponseObject interface {
+	VisitUpdateMyConsentsResponse(w http.ResponseWriter) error
+}
+
+type UpdateMyConsents200JSONResponse Consents
+
+func (response UpdateMyConsents200JSONResponse) VisitUpdateMyConsentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateMyConsents400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response UpdateMyConsents400JSONResponse) VisitUpdateMyConsentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateMyConsents401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response UpdateMyConsents401JSONResponse) VisitUpdateMyConsentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateMyConsents503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response UpdateMyConsents503JSONResponse) VisitUpdateMyConsentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CancelMyDeletionRequestObject struct {
+}
+
+type CancelMyDeletionResponseObject interface {
+	VisitCancelMyDeletionResponse(w http.ResponseWriter) error
+}
+
+type CancelMyDeletion204Response struct {
+}
+
+func (response CancelMyDeletion204Response) VisitCancelMyDeletionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type CancelMyDeletion401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CancelMyDeletion401JSONResponse) VisitCancelMyDeletionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CancelMyDeletion503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response CancelMyDeletion503JSONResponse) VisitCancelMyDeletionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMyDeletionRequestObject struct {
+}
+
+type GetMyDeletionResponseObject interface {
+	VisitGetMyDeletionResponse(w http.ResponseWriter) error
+}
+
+type GetMyDeletion200JSONResponse Deletion
+
+func (response GetMyDeletion200JSONResponse) VisitGetMyDeletionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMyDeletion401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response GetMyDeletion401JSONResponse) VisitGetMyDeletionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMyDeletion503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response GetMyDeletion503JSONResponse) VisitGetMyDeletionResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -5585,6 +6718,61 @@ func (response GetMyEntitlements401JSONResponse) VisitGetMyEntitlementsResponse(
 type GetMyEntitlements503JSONResponse struct{ UnavailableJSONResponse }
 
 func (response GetMyEntitlements503JSONResponse) VisitGetMyEntitlementsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExportMyDataRequestObject struct {
+}
+
+type ExportMyDataResponseObject interface {
+	VisitExportMyDataResponse(w http.ResponseWriter) error
+}
+
+type ExportMyData200ApplicationzipResponse struct {
+	Body          io.Reader
+	ContentLength int64
+}
+
+func (response ExportMyData200ApplicationzipResponse) VisitExportMyDataResponse(w http.ResponseWriter) error {
+
+	w.Header().Set("Content-Type", "application/zip")
+	if response.ContentLength != 0 {
+		w.Header().Set("Content-Length", fmt.Sprint(response.ContentLength))
+	}
+	w.WriteHeader(200)
+
+	if closer, ok := response.Body.(io.ReadCloser); ok {
+		defer closer.Close()
+	}
+	_, err := io.Copy(w, response.Body)
+	return err
+}
+
+type ExportMyData401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ExportMyData401JSONResponse) VisitExportMyDataResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExportMyData503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ExportMyData503JSONResponse) VisitExportMyDataResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -6029,6 +7217,264 @@ func (response GetRate503JSONResponse) VisitGetRateResponse(w http.ResponseWrite
 	return err
 }
 
+type RecordSponsoredClickRequestObject struct {
+	CardId string `json:"cardId"`
+}
+
+type RecordSponsoredClickResponseObject interface {
+	VisitRecordSponsoredClickResponse(w http.ResponseWriter) error
+}
+
+type RecordSponsoredClick204Response struct {
+}
+
+func (response RecordSponsoredClick204Response) VisitRecordSponsoredClickResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type RecordSponsoredClick401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response RecordSponsoredClick401JSONResponse) VisitRecordSponsoredClickResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RecordSponsoredClick404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response RecordSponsoredClick404JSONResponse) VisitRecordSponsoredClickResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RecordSponsoredClick503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response RecordSponsoredClick503JSONResponse) VisitRecordSponsoredClickResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type HideSponsoredCardRequestObject struct {
+	CardId string `json:"cardId"`
+}
+
+type HideSponsoredCardResponseObject interface {
+	VisitHideSponsoredCardResponse(w http.ResponseWriter) error
+}
+
+type HideSponsoredCard200JSONResponse SponsoredHidden
+
+func (response HideSponsoredCard200JSONResponse) VisitHideSponsoredCardResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type HideSponsoredCard401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response HideSponsoredCard401JSONResponse) VisitHideSponsoredCardResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type HideSponsoredCard404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response HideSponsoredCard404JSONResponse) VisitHideSponsoredCardResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type HideSponsoredCard503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response HideSponsoredCard503JSONResponse) VisitHideSponsoredCardResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RecordSponsoredImpressionRequestObject struct {
+	CardId string `json:"cardId"`
+}
+
+type RecordSponsoredImpressionResponseObject interface {
+	VisitRecordSponsoredImpressionResponse(w http.ResponseWriter) error
+}
+
+type RecordSponsoredImpression204Response struct {
+}
+
+func (response RecordSponsoredImpression204Response) VisitRecordSponsoredImpressionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type RecordSponsoredImpression401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response RecordSponsoredImpression401JSONResponse) VisitRecordSponsoredImpressionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RecordSponsoredImpression404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response RecordSponsoredImpression404JSONResponse) VisitRecordSponsoredImpressionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RecordSponsoredImpression503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response RecordSponsoredImpression503JSONResponse) VisitRecordSponsoredImpressionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SendSupportMessageRequestObject struct {
+	Body *SendSupportMessageJSONRequestBody
+}
+
+type SendSupportMessageResponseObject interface {
+	VisitSendSupportMessageResponse(w http.ResponseWriter) error
+}
+
+type SendSupportMessage202JSONResponse SupportReceipt
+
+func (response SendSupportMessage202JSONResponse) VisitSendSupportMessageResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(202)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SendSupportMessage400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response SendSupportMessage400JSONResponse) VisitSendSupportMessageResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SendSupportMessage401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response SendSupportMessage401JSONResponse) VisitSendSupportMessageResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SendSupportMessage429JSONResponse struct{ TooManyRequestsJSONResponse }
+
+func (response SendSupportMessage429JSONResponse) VisitSendSupportMessageResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(429)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SendSupportMessage503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response SendSupportMessage503JSONResponse) VisitSendSupportMessageResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListTripsRequestObject struct {
 }
 
@@ -6302,6 +7748,99 @@ func (response UpdateTrip404JSONResponse) VisitUpdateTripResponse(w http.Respons
 type UpdateTrip503JSONResponse struct{ UnavailableJSONResponse }
 
 func (response UpdateTrip503JSONResponse) VisitUpdateTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateAskDraftRequestObject struct {
+	TripId string `json:"tripId"`
+	Body   *CreateAskDraftJSONRequestBody
+}
+
+type CreateAskDraftResponseObject interface {
+	VisitCreateAskDraftResponse(w http.ResponseWriter) error
+}
+
+type CreateAskDraft200JSONResponse AskDraft
+
+func (response CreateAskDraft200JSONResponse) VisitCreateAskDraftResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateAskDraft400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CreateAskDraft400JSONResponse) VisitCreateAskDraftResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateAskDraft401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CreateAskDraft401JSONResponse) VisitCreateAskDraftResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateAskDraft403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response CreateAskDraft403JSONResponse) VisitCreateAskDraftResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateAskDraft404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CreateAskDraft404JSONResponse) VisitCreateAskDraftResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateAskDraft503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response CreateAskDraft503JSONResponse) VisitCreateAskDraftResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -6783,6 +8322,71 @@ func (response UpdateBooking404JSONResponse) VisitUpdateBookingResponse(w http.R
 type UpdateBooking503JSONResponse struct{ UnavailableJSONResponse }
 
 func (response UpdateBooking503JSONResponse) VisitUpdateBookingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetFlightStatusRequestObject struct {
+	TripId    string `json:"tripId"`
+	BookingId string `json:"bookingId"`
+}
+
+type GetFlightStatusResponseObject interface {
+	VisitGetFlightStatusResponse(w http.ResponseWriter) error
+}
+
+type GetFlightStatus200JSONResponse FlightStatus
+
+func (response GetFlightStatus200JSONResponse) VisitGetFlightStatusResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetFlightStatus401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response GetFlightStatus401JSONResponse) VisitGetFlightStatusResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetFlightStatus404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response GetFlightStatus404JSONResponse) VisitGetFlightStatusResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetFlightStatus503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response GetFlightStatus503JSONResponse) VisitGetFlightStatusResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -9978,6 +11582,71 @@ func (response RecordSettlement503JSONResponse) VisitRecordSettlementResponse(w 
 	return err
 }
 
+type GetSponsoredCardRequestObject struct {
+	TripId string `json:"tripId"`
+	Params GetSponsoredCardParams
+}
+
+type GetSponsoredCardResponseObject interface {
+	VisitGetSponsoredCardResponse(w http.ResponseWriter) error
+}
+
+type GetSponsoredCard200JSONResponse SponsoredResult
+
+func (response GetSponsoredCard200JSONResponse) VisitGetSponsoredCardResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetSponsoredCard401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response GetSponsoredCard401JSONResponse) VisitGetSponsoredCardResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetSponsoredCard404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response GetSponsoredCard404JSONResponse) VisitGetSponsoredCardResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetSponsoredCard503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response GetSponsoredCard503JSONResponse) VisitGetSponsoredCardResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type RecordStayClickRequestObject struct {
 	TripId string `json:"tripId"`
 	Body   *RecordStayClickJSONRequestBody
@@ -10795,15 +12464,33 @@ type StrictServerInterface interface {
 	// SignOut End this device's session
 	// (POST /v1/auth/sign-out)
 	SignOut(ctx context.Context, request SignOutRequestObject) (SignOutResponseObject, error)
+	// SendEvents Send product events in a batch
+	// (POST /v1/events)
+	SendEvents(ctx context.Context, request SendEventsRequestObject) (SendEventsResponseObject, error)
 	// JoinTrip Join a trip with an invite token
 	// (POST /v1/invites/join)
 	JoinTrip(ctx context.Context, request JoinTripRequestObject) (JoinTripResponseObject, error)
+	// ScheduleMyDeletion Delete the account in 30 days
+	// (DELETE /v1/me)
+	ScheduleMyDeletion(ctx context.Context, request ScheduleMyDeletionRequestObject) (ScheduleMyDeletionResponseObject, error)
 	// GetMe Get the signed-in person
 	// (GET /v1/me)
 	GetMe(ctx context.Context, request GetMeRequestObject) (GetMeResponseObject, error)
 	// UpdateMe Change the signed-in person's profile
 	// (PATCH /v1/me)
 	UpdateMe(ctx context.Context, request UpdateMeRequestObject) (UpdateMeResponseObject, error)
+	// GetMyConsents The signed-in person's consent choices
+	// (GET /v1/me/consents)
+	GetMyConsents(ctx context.Context, request GetMyConsentsRequestObject) (GetMyConsentsResponseObject, error)
+	// UpdateMyConsents Change consent choices
+	// (PATCH /v1/me/consents)
+	UpdateMyConsents(ctx context.Context, request UpdateMyConsentsRequestObject) (UpdateMyConsentsResponseObject, error)
+	// CancelMyDeletion Keep the account after all
+	// (DELETE /v1/me/deletion)
+	CancelMyDeletion(ctx context.Context, request CancelMyDeletionRequestObject) (CancelMyDeletionResponseObject, error)
+	// GetMyDeletion Whether account deletion is scheduled
+	// (GET /v1/me/deletion)
+	GetMyDeletion(ctx context.Context, request GetMyDeletionRequestObject) (GetMyDeletionResponseObject, error)
 	// RemoveDevice Stop pushes to this phone
 	// (DELETE /v1/me/devices/{deviceId})
 	RemoveDevice(ctx context.Context, request RemoveDeviceRequestObject) (RemoveDeviceResponseObject, error)
@@ -10813,6 +12500,9 @@ type StrictServerInterface interface {
 	// GetMyEntitlements What the signed-in person's plan allows
 	// (GET /v1/me/entitlements)
 	GetMyEntitlements(ctx context.Context, request GetMyEntitlementsRequestObject) (GetMyEntitlementsResponseObject, error)
+	// ExportMyData Download the person's data
+	// (GET /v1/me/export)
+	ExportMyData(ctx context.Context, request ExportMyDataRequestObject) (ExportMyDataResponseObject, error)
 	// ListMyStamps The first five stamps and which ones the caller has earned
 	// (GET /v1/me/stamps)
 	ListMyStamps(ctx context.Context, request ListMyStampsRequestObject) (ListMyStampsResponseObject, error)
@@ -10834,6 +12524,18 @@ type StrictServerInterface interface {
 	// GetRate Suggested exchange rate for a pair of currencies
 	// (GET /v1/rates)
 	GetRate(ctx context.Context, request GetRateRequestObject) (GetRateResponseObject, error)
+	// RecordSponsoredClick The card was tapped
+	// (POST /v1/sponsored/{cardId}/clicks)
+	RecordSponsoredClick(ctx context.Context, request RecordSponsoredClickRequestObject) (RecordSponsoredClickResponseObject, error)
+	// HideSponsoredCard Hide this card for 30 days
+	// (POST /v1/sponsored/{cardId}/hide)
+	HideSponsoredCard(ctx context.Context, request HideSponsoredCardRequestObject) (HideSponsoredCardResponseObject, error)
+	// RecordSponsoredImpression The card was shown
+	// (POST /v1/sponsored/{cardId}/impressions)
+	RecordSponsoredImpression(ctx context.Context, request RecordSponsoredImpressionRequestObject) (RecordSponsoredImpressionResponseObject, error)
+	// SendSupportMessage Send a message to support
+	// (POST /v1/support/messages)
+	SendSupportMessage(ctx context.Context, request SendSupportMessageRequestObject) (SendSupportMessageResponseObject, error)
 	// ListTrips List my trips
 	// (GET /v1/trips)
 	ListTrips(ctx context.Context, request ListTripsRequestObject) (ListTripsResponseObject, error)
@@ -10846,6 +12548,9 @@ type StrictServerInterface interface {
 	// UpdateTrip Change or archive a trip
 	// (PATCH /v1/trips/{tripId})
 	UpdateTrip(ctx context.Context, request UpdateTripRequestObject) (UpdateTripResponseObject, error)
+	// CreateAskDraft Ask for a day-by-day draft
+	// (POST /v1/trips/{tripId}/ask/drafts)
+	CreateAskDraft(ctx context.Context, request CreateAskDraftRequestObject) (CreateAskDraftResponseObject, error)
 	// GetBalances Who owes whom
 	// (GET /v1/trips/{tripId}/balances)
 	GetBalances(ctx context.Context, request GetBalancesRequestObject) (GetBalancesResponseObject, error)
@@ -10864,6 +12569,9 @@ type StrictServerInterface interface {
 	// UpdateBooking Change a booking
 	// (PATCH /v1/trips/{tripId}/bookings/{bookingId})
 	UpdateBooking(ctx context.Context, request UpdateBookingRequestObject) (UpdateBookingResponseObject, error)
+	// GetFlightStatus Live status of a flight booking
+	// (GET /v1/trips/{tripId}/bookings/{bookingId}/flight-status)
+	GetFlightStatus(ctx context.Context, request GetFlightStatusRequestObject) (GetFlightStatusResponseObject, error)
 	// GetBudget Spend against the trip budget
 	// (GET /v1/trips/{tripId}/budget)
 	GetBudget(ctx context.Context, request GetBudgetRequestObject) (GetBudgetResponseObject, error)
@@ -10984,6 +12692,9 @@ type StrictServerInterface interface {
 	// RecordSettlement Mark a payment as paid
 	// (POST /v1/trips/{tripId}/settlements)
 	RecordSettlement(ctx context.Context, request RecordSettlementRequestObject) (RecordSettlementResponseObject, error)
+	// GetSponsoredCard The sponsored card for a list, if there is one
+	// (GET /v1/trips/{tripId}/sponsored)
+	GetSponsoredCard(ctx context.Context, request GetSponsoredCardRequestObject) (GetSponsoredCardResponseObject, error)
 	// RecordStayClick Count a tap on a stay link
 	// (POST /v1/trips/{tripId}/stays/clicks)
 	RecordStayClick(ctx context.Context, request RecordStayClickRequestObject) (RecordStayClickResponseObject, error)
@@ -11196,6 +12907,37 @@ func (sh *strictHandler) SignOut(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// SendEvents operation middleware
+func (sh *strictHandler) SendEvents(w http.ResponseWriter, r *http.Request) {
+	var request SendEventsRequestObject
+
+	var body SendEventsJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SendEvents(ctx, request.(SendEventsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SendEvents")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SendEventsResponseObject); ok {
+		if err := validResponse.VisitSendEventsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // JoinTrip operation middleware
 func (sh *strictHandler) JoinTrip(w http.ResponseWriter, r *http.Request) {
 	var request JoinTripRequestObject
@@ -11220,6 +12962,30 @@ func (sh *strictHandler) JoinTrip(w http.ResponseWriter, r *http.Request) {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(JoinTripResponseObject); ok {
 		if err := validResponse.VisitJoinTripResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ScheduleMyDeletion operation middleware
+func (sh *strictHandler) ScheduleMyDeletion(w http.ResponseWriter, r *http.Request) {
+	var request ScheduleMyDeletionRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ScheduleMyDeletion(ctx, request.(ScheduleMyDeletionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ScheduleMyDeletion")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ScheduleMyDeletionResponseObject); ok {
+		if err := validResponse.VisitScheduleMyDeletionResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -11275,6 +13041,109 @@ func (sh *strictHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(UpdateMeResponseObject); ok {
 		if err := validResponse.VisitUpdateMeResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetMyConsents operation middleware
+func (sh *strictHandler) GetMyConsents(w http.ResponseWriter, r *http.Request) {
+	var request GetMyConsentsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetMyConsents(ctx, request.(GetMyConsentsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetMyConsents")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetMyConsentsResponseObject); ok {
+		if err := validResponse.VisitGetMyConsentsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateMyConsents operation middleware
+func (sh *strictHandler) UpdateMyConsents(w http.ResponseWriter, r *http.Request) {
+	var request UpdateMyConsentsRequestObject
+
+	var body UpdateMyConsentsJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateMyConsents(ctx, request.(UpdateMyConsentsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateMyConsents")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdateMyConsentsResponseObject); ok {
+		if err := validResponse.VisitUpdateMyConsentsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CancelMyDeletion operation middleware
+func (sh *strictHandler) CancelMyDeletion(w http.ResponseWriter, r *http.Request) {
+	var request CancelMyDeletionRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CancelMyDeletion(ctx, request.(CancelMyDeletionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CancelMyDeletion")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CancelMyDeletionResponseObject); ok {
+		if err := validResponse.VisitCancelMyDeletionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetMyDeletion operation middleware
+func (sh *strictHandler) GetMyDeletion(w http.ResponseWriter, r *http.Request) {
+	var request GetMyDeletionRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetMyDeletion(ctx, request.(GetMyDeletionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetMyDeletion")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetMyDeletionResponseObject); ok {
+		if err := validResponse.VisitGetMyDeletionResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -11358,6 +13227,30 @@ func (sh *strictHandler) GetMyEntitlements(w http.ResponseWriter, r *http.Reques
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetMyEntitlementsResponseObject); ok {
 		if err := validResponse.VisitGetMyEntitlementsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ExportMyData operation middleware
+func (sh *strictHandler) ExportMyData(w http.ResponseWriter, r *http.Request) {
+	var request ExportMyDataRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ExportMyData(ctx, request.(ExportMyDataRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ExportMyData")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ExportMyDataResponseObject); ok {
+		if err := validResponse.VisitExportMyDataResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -11549,6 +13442,115 @@ func (sh *strictHandler) GetRate(w http.ResponseWriter, r *http.Request, params 
 	}
 }
 
+// RecordSponsoredClick operation middleware
+func (sh *strictHandler) RecordSponsoredClick(w http.ResponseWriter, r *http.Request, cardId string) {
+	var request RecordSponsoredClickRequestObject
+
+	request.CardId = cardId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.RecordSponsoredClick(ctx, request.(RecordSponsoredClickRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RecordSponsoredClick")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(RecordSponsoredClickResponseObject); ok {
+		if err := validResponse.VisitRecordSponsoredClickResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// HideSponsoredCard operation middleware
+func (sh *strictHandler) HideSponsoredCard(w http.ResponseWriter, r *http.Request, cardId string) {
+	var request HideSponsoredCardRequestObject
+
+	request.CardId = cardId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.HideSponsoredCard(ctx, request.(HideSponsoredCardRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "HideSponsoredCard")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(HideSponsoredCardResponseObject); ok {
+		if err := validResponse.VisitHideSponsoredCardResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RecordSponsoredImpression operation middleware
+func (sh *strictHandler) RecordSponsoredImpression(w http.ResponseWriter, r *http.Request, cardId string) {
+	var request RecordSponsoredImpressionRequestObject
+
+	request.CardId = cardId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.RecordSponsoredImpression(ctx, request.(RecordSponsoredImpressionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RecordSponsoredImpression")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(RecordSponsoredImpressionResponseObject); ok {
+		if err := validResponse.VisitRecordSponsoredImpressionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SendSupportMessage operation middleware
+func (sh *strictHandler) SendSupportMessage(w http.ResponseWriter, r *http.Request) {
+	var request SendSupportMessageRequestObject
+
+	var body SendSupportMessageJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SendSupportMessage(ctx, request.(SendSupportMessageRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SendSupportMessage")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SendSupportMessageResponseObject); ok {
+		if err := validResponse.VisitSendSupportMessageResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListTrips operation middleware
 func (sh *strictHandler) ListTrips(w http.ResponseWriter, r *http.Request) {
 	var request ListTripsRequestObject
@@ -11656,6 +13658,39 @@ func (sh *strictHandler) UpdateTrip(w http.ResponseWriter, r *http.Request, trip
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(UpdateTripResponseObject); ok {
 		if err := validResponse.VisitUpdateTripResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAskDraft operation middleware
+func (sh *strictHandler) CreateAskDraft(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request CreateAskDraftRequestObject
+
+	request.TripId = tripId
+
+	var body CreateAskDraftJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAskDraft(ctx, request.(CreateAskDraftRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAskDraft")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateAskDraftResponseObject); ok {
+		if err := validResponse.VisitCreateAskDraftResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -11835,6 +13870,33 @@ func (sh *strictHandler) UpdateBooking(w http.ResponseWriter, r *http.Request, t
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(UpdateBookingResponseObject); ok {
 		if err := validResponse.VisitUpdateBookingResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetFlightStatus operation middleware
+func (sh *strictHandler) GetFlightStatus(w http.ResponseWriter, r *http.Request, tripId string, bookingId string) {
+	var request GetFlightStatusRequestObject
+
+	request.TripId = tripId
+	request.BookingId = bookingId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetFlightStatus(ctx, request.(GetFlightStatusRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetFlightStatus")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetFlightStatusResponseObject); ok {
+		if err := validResponse.VisitGetFlightStatusResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -13000,6 +15062,33 @@ func (sh *strictHandler) RecordSettlement(w http.ResponseWriter, r *http.Request
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(RecordSettlementResponseObject); ok {
 		if err := validResponse.VisitRecordSettlementResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetSponsoredCard operation middleware
+func (sh *strictHandler) GetSponsoredCard(w http.ResponseWriter, r *http.Request, tripId string, params GetSponsoredCardParams) {
+	var request GetSponsoredCardRequestObject
+
+	request.TripId = tripId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetSponsoredCard(ctx, request.(GetSponsoredCardRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetSponsoredCard")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetSponsoredCardResponseObject); ok {
+		if err := validResponse.VisitGetSponsoredCardResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

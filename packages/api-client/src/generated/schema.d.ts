@@ -26,6 +26,264 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me/consents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The signed-in person's consent choices
+         * @description One answer per purpose: `unset` (never asked), `granted` or `denied`.
+         *     Each can be changed later. Needs a bearer token.
+         */
+        get: operations["getMyConsents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Change consent choices
+         * @description Changes only the purposes that are sent. Needs a bearer token.
+         */
+        patch: operations["updateMyConsents"];
+        trace?: never;
+    };
+    "/v1/me/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download the person's data
+         * @description A ZIP with JSON and CSV files of the person's trips, stops, expenses and
+         *     journal. Free for everyone. Needs a bearer token.
+         */
+        get: operations["exportMyData"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/deletion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Whether account deletion is scheduled */
+        get: operations["getMyDeletion"];
+        put?: never;
+        post?: never;
+        /**
+         * Keep the account after all
+         * @description Cancels a scheduled deletion. Succeeds when none is scheduled.
+         */
+        delete: operations["cancelMyDeletion"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/support/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send a message to support
+         * @description From the in-app Help screen. The diagnostics come from the phone; they
+         *     carry no phone number, location or trip content. Needs a bearer token.
+         */
+        post: operations["sendSupportMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send product events in a batch
+         * @description Funnel and paywall events. No phone numbers, locations or free text:
+         *     the server drops any event whose name is not on the list in
+         *     `docs/analytics.md`, and any property that is not a short string, a
+         *     number or a boolean. Events from a person who has not granted the
+         *     `analytics` consent are dropped. Needs a bearer token.
+         */
+        post: operations["sendEvents"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/sponsored": {
+        parameters: {
+            query?: {
+                /** @description The list the card would sit in. Left out for the trip-wide list. */
+                group?: components["schemas"]["PlaceGroup"];
+            };
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * The sponsored card for a list, if there is one
+         * @description At most one card, on every plan including Plus. Chosen by the trip's
+         *     destination and the list's group only. A card the person hid is not
+         *     returned for 30 days. Needs a bearer token and membership.
+         */
+        get: operations["getSponsoredCard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sponsored/{cardId}/impressions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cardId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * The card was shown
+         * @description Counted once per person per card per day. Needs a bearer token.
+         */
+        post: operations["recordSponsoredImpression"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sponsored/{cardId}/clicks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cardId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * The card was tapped
+         * @description Counted once per person per card per day. Needs a bearer token.
+         */
+        post: operations["recordSponsoredClick"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sponsored/{cardId}/hide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cardId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hide this card for 30 days
+         * @description Needs a bearer token.
+         */
+        post: operations["hideSponsoredCard"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/ask/drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ask for a day-by-day draft
+         * @description The person describes what they want. The draft is built only from places
+         *     in our own catalogue near the trip, so nothing is invented. It is a
+         *     preview: nothing is added to the trip until the person picks items and
+         *     adds them as stops. The text is treated as data, never as instructions.
+         *     Counts against the monthly Ask limit (Free 3, Plus fair use); answers 403
+         *     with code `limit_reached` and feature `askDrafts` when it is used up.
+         *     Needs a bearer token and an editor or owner role.
+         */
+        post: operations["createAskDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/bookings/{bookingId}/flight-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                bookingId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Live status of a flight booking
+         * @description Matches the booking's airline and flight number to the status provider.
+         *     Answers 503 until a provider is set up. Needs a bearer token and
+         *     membership.
+         */
+        get: operations["getFlightStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me/entitlements": {
         parameters: {
             query?: never;
@@ -188,7 +446,15 @@ export interface paths {
         get: operations["getMe"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Delete the account in 30 days
+         * @description Schedules deletion 30 days from now. The person stays signed in and can cancel with `DELETE /v1/me/deletion` until then.
+         *     Personal data is deleted then; other people's shared records stay with
+         *     the name removed. Answers 409 with code `subscription_active` while a
+         *     subscription is running, so the person cancels it in the store first.
+         *     Needs a bearer token.
+         */
+        delete: operations["scheduleMyDeletion"];
         options?: never;
         head?: never;
         /**
@@ -1512,6 +1778,128 @@ export interface components {
                 [key: string]: components["schemas"]["EntitlementDecision"];
             };
         };
+        /** @enum {string} */
+        ConsentState: "unset" | "granted" | "denied";
+        Consents: {
+            location: components["schemas"]["ConsentState"];
+            notifications: components["schemas"]["ConsentState"];
+            photos: components["schemas"]["ConsentState"];
+            analytics: components["schemas"]["ConsentState"];
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        /** @description Only the purposes that are sent change. `unset` cannot be sent. */
+        ConsentsUpdate: {
+            /** @enum {string} */
+            location?: "granted" | "denied";
+            /** @enum {string} */
+            notifications?: "granted" | "denied";
+            /** @enum {string} */
+            photos?: "granted" | "denied";
+            /** @enum {string} */
+            analytics?: "granted" | "denied";
+        };
+        Deletion: {
+            scheduled: boolean;
+            /**
+             * Format: date-time
+             * @description When the account and personal data are deleted. Only when scheduled.
+             */
+            deleteOn?: string;
+        };
+        SupportMessage: {
+            /** @enum {string} */
+            category: "billing" | "account" | "bug" | "other";
+            text: string;
+            diagnostics?: components["schemas"]["Diagnostics"];
+        };
+        /** @description What the phone adds to help support. Nothing here names the person or a place. */
+        Diagnostics: {
+            appVersion?: string;
+            /** @enum {string} */
+            os?: "ios" | "android";
+            osVersion?: string;
+            deviceModel?: string;
+            locale?: string;
+            /** @description The request id of a failed call, if the person is reporting one. */
+            requestId?: string;
+        };
+        SupportReceipt: {
+            id: string;
+        };
+        Event: {
+            name: string;
+            /** Format: date-time */
+            at: string;
+            /** @description Short strings (up to 64 characters), numbers and booleans only. */
+            props?: {
+                [key: string]: string | number | boolean;
+            };
+        };
+        EventBatch: {
+            events: components["schemas"]["Event"][];
+        };
+        EventReceipt: {
+            accepted: number;
+            dropped: number;
+        };
+        SponsoredCard: {
+            id: string;
+            /** @description Who pays for the card. Shown next to the "Sponsored" label, which the app always draws. */
+            sponsor: string;
+            title: string;
+            body?: string;
+            /** Format: uri */
+            imageUrl?: string;
+            /** Format: uri */
+            url: string;
+        };
+        SponsoredResult: {
+            card?: components["schemas"]["SponsoredCard"];
+        };
+        SponsoredHidden: {
+            /** Format: date-time */
+            hiddenUntil: string;
+        };
+        AskRequest: {
+            /** @description What the person wants, in their own words. */
+            prompt: string;
+            /** @description BCP 47 language for the notes. Defaults to the person's language. */
+            lang?: string;
+        };
+        AskDraftItem: {
+            /** @description A catalogue place id. Add it as a stop of kind catalog. */
+            placeId: string;
+            name: string;
+            /** @description Why it fits, one short line. */
+            note?: string;
+        };
+        AskDraftDay: {
+            /** @description Day 1, 2, ... of the draft. The app maps it onto the trip's dates. */
+            day: number;
+            items: components["schemas"]["AskDraftItem"][];
+        };
+        AskDraft: {
+            days: components["schemas"]["AskDraftDay"][];
+            /** @description Drafts left this month, or -1 for no cap. */
+            remaining?: number;
+        };
+        FlightStatus: {
+            /** @enum {string} */
+            state: "scheduled" | "delayed" | "cancelled" | "departed" | "landed" | "unknown";
+            departure?: components["schemas"]["FlightLeg"];
+            arrival?: components["schemas"]["FlightLeg"];
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        FlightLeg: {
+            /** Format: date-time */
+            scheduled?: string;
+            /** Format: date-time */
+            estimated?: string;
+            terminal?: string;
+            gate?: string;
+        };
         StayLink: {
             partnerId: string;
             /** @description The partner's name, shown on the button. */
@@ -2392,6 +2780,330 @@ export interface operations {
             };
         };
     };
+    getMyConsents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The choices. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Consents"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    updateMyConsents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsentsUpdate"];
+            };
+        };
+        responses: {
+            /** @description The choices after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Consents"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    exportMyData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The ZIP file. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": string;
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    getMyDeletion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The deletion state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deletion"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    cancelMyDeletion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cancelled. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    sendSupportMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SupportMessage"];
+            };
+        };
+        responses: {
+            /** @description Received. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupportReceipt"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    sendEvents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventBatch"];
+            };
+        };
+        responses: {
+            /** @description How many events were kept. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventReceipt"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    getSponsoredCard: {
+        parameters: {
+            query?: {
+                /** @description The list the card would sit in. Left out for the trip-wide list. */
+                group?: components["schemas"]["PlaceGroup"];
+            };
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The card, or none. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SponsoredResult"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    recordSponsoredImpression: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cardId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Recorded. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    recordSponsoredClick: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cardId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Recorded. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    hideSponsoredCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cardId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description When the card may come back. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SponsoredHidden"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    createAskDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AskRequest"];
+            };
+        };
+        responses: {
+            /** @description The draft. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AskDraft"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    getFlightStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+                bookingId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The status. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FlightStatus"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
     getMyEntitlements: {
         parameters: {
             query?: never;
@@ -2573,6 +3285,29 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+        };
+    };
+    scheduleMyDeletion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deletion is scheduled (or already was). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deletion"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            409: components["responses"]["Conflict"];
+            503: components["responses"]["Unavailable"];
         };
     };
     updateMe: {
