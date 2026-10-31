@@ -34,3 +34,14 @@ Not done yet: quiet hours (users have no timezone field) and a Pub/Sub queue. Th
 `GET /v1/me` returns `notifications` and `PATCH /v1/me` replaces it. Keys are `all` and the five event kinds; a missing key means on; unknown keys answer 400. The app has a Notifications screen under Profile with one switch per kind.
 
 Not done: asking for the push permission at a useful moment and registering the device token. The onboarding screen asks for permission already, but registering a token needs Firebase config files from Mihir. Quiet hours and per-trip mute are not built (quiet hours need a user timezone).
+
+## Trial ending reminder
+
+Two days before a free trial ends, the person gets "Your free trial ends soon". The code is `internal/notify/trial.go`; a scheduler calls `POST /v1/jobs/trial-reminders` (setup in `infra/README.md`, "Scheduled jobs").
+
+- Who: trials that end within the next 48 hours, for people with no paid Plus. Turning `all` or `trialEnding` off in settings skips the push.
+- Once: `entitlements/{uid}.trial.reminderFor` holds the end date already reminded. A trial extended later (for example the stamp week) has a new end date and is reminded again.
+- The text names no date or price. Those come from the store and are shown on the plans screen; the push route is `/plans`.
+- The reminder is claimed before sending, so a failed send is not retried. Fine for a reminder.
+
+Not done: the trial-ended screen and the win-back offer (mobile), and the `trialEnding` switch on the notifications screen.

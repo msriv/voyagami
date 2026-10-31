@@ -33,3 +33,15 @@ func newCrewEvents(cfg config.Config, logger *slog.Logger, trips *firestorerepo.
 		Push: &notify.Service{Devices: devices, Sender: sender, Logger: logger},
 	}
 }
+
+// newTrialReminders builds the trial-ending push job.
+func newTrialReminders(cfg config.Config, logger *slog.Logger, users repo.Users, devices repo.Devices, trials notify.TrialSource) *notify.TrialReminders {
+	var sender notify.Notifier = notify.Log{Logger: logger}
+	if cfg.Env != "dev" && cfg.GCPProject != "" {
+		sender = &notify.FCM{Project: cfg.GCPProject}
+	}
+	return &notify.TrialReminders{
+		Trials: trials, Prefs: userPrefs{users}, Logger: logger,
+		Push: &notify.Service{Devices: devices, Sender: sender, Logger: logger},
+	}
+}

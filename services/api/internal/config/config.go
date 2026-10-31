@@ -35,6 +35,8 @@ type Config struct {
 	// RevenueCatWebhookSecret is the Authorization value RevenueCat sends with
 	// each webhook. Empty turns the webhook off.
 	RevenueCatWebhookSecret string
+	// JobsSecret is the bearer secret the scheduler sends to /v1/jobs/*. Empty turns the jobs off.
+	JobsSecret string
 }
 
 // minAuthSecret is the shortest AUTH_SECRET accepted.
@@ -91,6 +93,7 @@ func Load(getenv func(string) string) (Config, error) {
 	cfg.VertexModel = getenv("VERTEX_MODEL")
 	cfg.PlacesAPIKey = getenv("PLACES_API_KEY")
 	cfg.RevenueCatWebhookSecret = getenv("REVENUECAT_WEBHOOK_SECRET")
+	cfg.JobsSecret = getenv("JOBS_SECRET")
 	switch cfg.DevPlan = getenv("DEV_PLAN"); {
 	case cfg.DevPlan == "":
 	case cfg.Env != "dev":

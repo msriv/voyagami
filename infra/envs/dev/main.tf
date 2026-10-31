@@ -141,8 +141,8 @@ module "secrets" {
   #   printf '%s' "$KEY" | gcloud secrets versions add google-maps-server-key --data-file=-
   # auth-secret gets a random value from infra/scripts/seed-auth-secret.sh.
   # revenuecat-webhook-secret stays out of secret_env above until it has a value
-  # (see "RevenueCat webhook" in infra/README.md).
-  secret_ids = ["google-maps-server-key", "auth-secret", "revenuecat-webhook-secret"]
+  # (see "RevenueCat webhook" in infra/README.md). Same for jobs-secret ("Scheduled jobs").
+  secret_ids = ["google-maps-server-key", "auth-secret", "revenuecat-webhook-secret", "jobs-secret"]
 
   depends_on = [module.apis]
 }
