@@ -58,3 +58,14 @@ export function formatTemperature(
     maximumFractionDigits: 0,
   }).format(value);
 }
+
+/** A size in bytes, shown in kilobytes below a megabyte and megabytes above, with the platform's unit name. */
+export function formatBytes(bytes: number, locale: string): string {
+  const mega = bytes >= 1_000_000;
+  return new Intl.NumberFormat(locale, {
+    style: "unit",
+    unit: mega ? "megabyte" : "kilobyte",
+    unitDisplay: "short",
+    maximumFractionDigits: mega ? 1 : 0,
+  }).format(mega ? bytes / 1_000_000 : Math.max(1, bytes / 1000));
+}

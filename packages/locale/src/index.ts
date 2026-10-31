@@ -15,6 +15,7 @@ export {
   unitOptions,
   formatDistance,
   formatTemperature,
+  formatBytes,
   type DistanceUnit,
   type TemperatureUnit,
   type Units,
