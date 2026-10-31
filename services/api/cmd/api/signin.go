@@ -90,6 +90,11 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 	} else {
 		logger.Warn("REVENUECAT_WEBHOOK_SECRET is not set, so purchases do not reach plans")
 	}
+	if cfg.JobsSecret != "" {
+		deps.options = append(deps.options, server.WithJobs(newTrialReminders(cfg, logger, users, devices, firestorerepo.NewEntitlements(client)), cfg.JobsSecret))
+	} else {
+		logger.Warn("JOBS_SECRET is not set, so trial reminders do not run")
+	}
 	if cfg.Env == "dev" {
 		deps.options = append(deps.options, server.WithDevLogs(firestorerepo.NewDevLogs(client)))
 	}

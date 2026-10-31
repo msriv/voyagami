@@ -125,3 +125,53 @@ func TestGrantStampWeek(t *testing.T) {
 		}
 	})
 }
+
+func TestTrialReminderQueue(t *testing.T) {
+	c := testClient(t)
+	ctx := testCtx(t)
+	s := NewEntitlements(c)
+	now := time.Now().Truncate(time.Second)
+	put := func(doc map[string]any) string {
+		uid := model.NewID()
+		if _, err := c.Collection(entitlementsCollection).Doc(uid).Set(ctx, doc); err != nil {
+			t.Fatal(err)
+		}
+		return uid
+	}
+	soon := now.Add(24 * time.Hour)
+	due := put(map[string]any{"trial": map[string]any{"endsAt": soon}})
+	skipped := map[string]bool{
+		put(map[string]any{"trial": map[string]any{"endsAt": now.Add(10 * 24 * time.Hour)}}):                 true,
+		put(map[string]any{"trial": map[string]any{"endsAt": soon}, "plus": map[string]any{"active": true}}): true,
+		put(map[string]any{"trial": map[string]any{"endsAt": soon, "reminderFor": soon}}):                    true,
+	}
+
+	got, err := s.EndingBetween(ctx, now, now.Add(48*time.Hour))
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, g := range got {
+		found = found || g.UID == due
+		if skipped[g.UID] {
+			t.Errorf("trial %v must not be listed", g)
+		}
+	}
+	if !found {
+		t.Fatalf("due trial missing from %v", got)
+	}
+	if ok, err := s.Claim(ctx, due, soon); err != nil || !ok {
+		t.Fatalf("first claim: %v %v", ok, err)
+	}
+	if ok, err := s.Claim(ctx, due, soon); err != nil || ok {
+		t.Fatalf("second claim: %v %v", ok, err)
+	}
+	// An extended trial has a new end date and is reminded again.
+	later := soon.Add(StampWeek)
+	if _, err := c.Collection(entitlementsCollection).Doc(due).Set(ctx, map[string]any{"trial": map[string]any{"endsAt": later}}, firestore.MergeAll); err != nil {
+		t.Fatal(err)
+	}
+	if ok, err := s.Claim(ctx, due, later); err != nil || !ok {
+		t.Fatalf("claim after extension: %v %v", ok, err)
+	}
+}

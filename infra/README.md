@@ -87,6 +87,27 @@ echo "Bearer $SECRET"                           # paste this as the webhook Auth
 
 Then add `REVENUECAT_WEBHOOK_SECRET = "revenuecat-webhook-secret"` to `secret_env` in `envs/dev/main.tf`, run `terraform apply`, and point the RevenueCat webhook at `<api url>/v1/billing/revenuecat`. The app must set the RevenueCat user ID to the account ID, and set a `tripId` attribute before a Trip Pass purchase.
 
+## Scheduled jobs
+
+`POST /v1/jobs/trial-reminders` sends the "your trial ends in 2 days" push. Cloud Scheduler calls it every 3 hours with `Authorization: Bearer <secret>`; the API reads the secret from `JOBS_SECRET`. Until that is set the route is off. Running it twice is harmless: each end date is reminded once. In Cloud Shell:
+
+```sh
+cd infra/envs/dev
+terraform apply -target=module.secrets          # creates the empty secret
+SECRET="$(openssl rand -hex 32)"
+printf '%s' "$SECRET" | gcloud secrets versions add jobs-secret --data-file=-
+```
+
+Then add `JOBS_SECRET = "jobs-secret"` to `secret_env` in `envs/dev/main.tf`, run `terraform apply`, and create the job:
+
+```sh
+gcloud services enable cloudscheduler.googleapis.com
+gcloud scheduler jobs create http trial-reminders --location=asia-south1 \
+  --schedule="0 */3 * * *" --http-method=POST \
+  --uri="$(terraform output -raw api_url)/v1/jobs/trial-reminders" \
+  --headers="Authorization=Bearer $SECRET"
+```
+
 ## Deploying the API (dev)
 
 `make deploy-dev` builds `services/api/Dockerfile` for linux/amd64, pushes it to Artifact Registry (`voyagami`) tagged with the git commit, rolls `voyagami-api` to it and checks `/health`. It needs `docker` and a signed-in `gcloud` (`gcloud auth login`, project `voyagami-dev-512208`). The same script runs from GitHub: Actions, "Deploy API (dev)", Run workflow, on `main` only. It signs in through workload identity, so no key is stored.
