@@ -149,7 +149,6 @@ export function AuthProvider({
         },
         onSignedOut: () => setStatus("signedOut"),
         fetch: withBreadcrumbs(fetchImpl),
-        offline: offlineHook,
       }),
     [fetchImpl],
   );
