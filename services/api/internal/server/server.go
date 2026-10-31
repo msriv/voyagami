@@ -15,6 +15,7 @@ import (
 	"github.com/msriv/voyagami/services/api/internal/devlog"
 	"github.com/msriv/voyagami/services/api/internal/entitlements"
 	"github.com/msriv/voyagami/services/api/internal/export"
+	"github.com/msriv/voyagami/services/api/internal/flightstatus"
 	"github.com/msriv/voyagami/services/api/internal/importer"
 	"github.com/msriv/voyagami/services/api/internal/places"
 	"github.com/msriv/voyagami/services/api/internal/rates"
@@ -69,6 +70,7 @@ type handlers struct {
 	expenses      ExpenseStore
 	settlements   SettlementStore
 	bookings      BookingStore
+	flights       flightstatus.Provider
 	journal       JournalStore
 	invites       repo.Invites
 	polls         repo.Polls
