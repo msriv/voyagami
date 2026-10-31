@@ -29,9 +29,14 @@ type entitlementsDoc struct {
 		LastEventAt time.Time `firestore:"lastEventAt"`
 	} `firestore:"billing"`
 	Trial *struct {
-		EndsAt time.Time `firestore:"endsAt"`
+		StartedAt time.Time `firestore:"startedAt"`
+		EndsAt    time.Time `firestore:"endsAt"`
 	} `firestore:"trial"`
 	Usage accountUsage `firestore:"usage"`
+	// StampWeekGrantedAt is set once the extra week for all five stamps was given.
+	Rewards struct {
+		StampWeekGrantedAt *time.Time `firestore:"stampWeekGrantedAt"`
+	} `firestore:"rewards"`
 }
 
 type accountUsage struct {
@@ -99,4 +104,48 @@ func (s *Entitlements) AddAskDraft(ctx context.Context, uid string, now time.Tim
 		}, firestore.MergeAll)
 	})
 	return total, mapErr("add ask draft", err)
+}
+
+// StampWeek is the Plus time given for earning all five starter stamps.
+const StampWeek = 7 * 24 * time.Hour
+
+// GrantStampWeek adds a week of Plus, once per account. A running trial is
+// extended by a week; an ended or missing one becomes a week from now. Someone
+// with a paid subscription gets nothing, and the grant is not kept for later.
+func (s *Entitlements) GrantStampWeek(ctx context.Context, uid string, now time.Time) (bool, error) {
+	ref := s.client.Collection(entitlementsCollection).Doc(uid)
+	granted := false
+	err := s.client.RunTransaction(ctx, func(_ context.Context, tx *firestore.Transaction) error {
+		granted = false
+		var d entitlementsDoc
+		snap, err := tx.Get(ref)
+		switch {
+		case isNotFound(err):
+		case err != nil:
+			return err
+		default:
+			if err := snap.DataTo(&d); err != nil {
+				return err
+			}
+		}
+		if d.Rewards.StampWeekGrantedAt != nil {
+			return nil
+		}
+		if d.Plus.Active && (d.Plus.ExpiresAt.IsZero() || d.Plus.ExpiresAt.After(now)) {
+			return nil
+		}
+		started, from := now, now
+		if d.Trial != nil && !d.Trial.StartedAt.IsZero() {
+			started = d.Trial.StartedAt
+		}
+		if d.Trial != nil && d.Trial.EndsAt.After(now) {
+			from = d.Trial.EndsAt
+		}
+		granted = true
+		return tx.Set(ref, map[string]any{
+			"trial":   map[string]any{"startedAt": started.UTC(), "endsAt": from.Add(StampWeek).UTC()},
+			"rewards": map[string]any{"stampWeekGrantedAt": now.UTC()},
+		}, firestore.MergeAll)
+	})
+	return granted && err == nil, mapErr("grant stamp week", err)
 }

@@ -14,14 +14,28 @@ import (
 // the stamps route answers 503.
 func WithStamps(s repo.Stamps) Option { return func(h *handlers) { h.stamps = s } }
 
+// StampRewarder gives the reward for earning all five stamps.
+type StampRewarder interface {
+	// GrantStampWeek adds a week of Plus once per account. It reports whether this call granted it.
+	GrantStampWeek(ctx context.Context, uid string, now time.Time) (bool, error)
+}
+
+// WithStampReward turns on the extra week of Plus for all five stamps. It needs WithStamps.
+func WithStampReward(r StampRewarder) Option { return func(h *handlers) { h.stampReward = r } }
+
 // award gives a starter stamp. It never fails the request that earned it: a
 // stamp is a nicety, so an error is logged and the stamp is missed.
 func (h *handlers) award(ctx context.Context, uid string, kind model.StampKind) {
 	if h.stamps == nil {
 		return
 	}
-	if _, err := h.stamps.Award(ctx, uid, kind, time.Now()); err != nil {
+	won, err := h.stamps.Award(ctx, uid, kind, time.Now())
+	if err != nil {
 		slog.Default().Warn("award stamp failed", "requestId", requestIDFrom(ctx), "stamp", kind, "error", err)
+		return
+	}
+	if won {
+		h.rewardIfComplete(ctx, uid)
 	}
 }
 
@@ -30,8 +44,30 @@ func (h *handlers) countPlace(ctx context.Context, uid string) {
 	if h.stamps == nil {
 		return
 	}
-	if err := h.stamps.AddPlace(ctx, uid, time.Now()); err != nil {
+	won, err := h.stamps.AddPlace(ctx, uid, time.Now())
+	if err != nil {
 		slog.Default().Warn("count place failed", "requestId", requestIDFrom(ctx), "error", err)
+		return
+	}
+	if won {
+		h.rewardIfComplete(ctx, uid)
+	}
+}
+
+// rewardIfComplete grants the Plus week when the stamp just earned was the fifth.
+func (h *handlers) rewardIfComplete(ctx context.Context, uid string) {
+	if h.stampReward == nil {
+		return
+	}
+	earned, err := h.stamps.List(ctx, uid)
+	if err != nil || len(earned) < len(model.StampKinds) {
+		if err != nil {
+			slog.Default().Warn("check stamps failed", "requestId", requestIDFrom(ctx), "error", err)
+		}
+		return
+	}
+	if _, err := h.stampReward.GrantStampWeek(ctx, uid, time.Now()); err != nil {
+		slog.Default().Warn("grant stamp week failed", "requestId", requestIDFrom(ctx), "error", err)
 	}
 }
 

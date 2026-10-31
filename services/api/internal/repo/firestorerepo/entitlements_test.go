@@ -80,3 +80,48 @@ func TestAskDraftsResetEachMonth(t *testing.T) {
 		t.Fatalf("plus lost: %v %v", plus, err)
 	}
 }
+
+func TestGrantStampWeek(t *testing.T) {
+	c := testClient(t)
+	ctx := testCtx(t)
+	s := NewEntitlements(c)
+	now := time.Now().Truncate(time.Second)
+
+	t.Run("a new account gets a week once", func(t *testing.T) {
+		uid := model.NewID()
+		if ok, err := s.GrantStampWeek(ctx, uid, now); err != nil || !ok {
+			t.Fatalf("first grant: %v %v", ok, err)
+		}
+		if plus, _, _ := s.Account(ctx, uid); !plus {
+			t.Fatal("must have Plus during the week")
+		}
+		if ok, err := s.GrantStampWeek(ctx, uid, now); err != nil || ok {
+			t.Fatalf("second grant: %v %v", ok, err)
+		}
+	})
+	t.Run("a running trial is extended", func(t *testing.T) {
+		uid := model.NewID()
+		ends := now.Add(2 * 24 * time.Hour)
+		if _, err := c.Collection(entitlementsCollection).Doc(uid).Set(ctx, map[string]any{"trial": map[string]any{"startedAt": now.Add(-5 * 24 * time.Hour), "endsAt": ends}}); err != nil {
+			t.Fatal(err)
+		}
+		if ok, err := s.GrantStampWeek(ctx, uid, now); err != nil || !ok {
+			t.Fatalf("grant: %v %v", ok, err)
+		}
+		snap, _ := c.Collection(entitlementsCollection).Doc(uid).Get(ctx)
+		var d entitlementsDoc
+		_ = snap.DataTo(&d)
+		if want := ends.Add(StampWeek); !d.Trial.EndsAt.Equal(want) {
+			t.Fatalf("trial ends %v, want %v", d.Trial.EndsAt, want)
+		}
+	})
+	t.Run("a paid subscriber gets nothing", func(t *testing.T) {
+		uid := model.NewID()
+		if _, err := c.Collection(entitlementsCollection).Doc(uid).Set(ctx, map[string]any{"plus": map[string]any{"active": true}}); err != nil {
+			t.Fatal(err)
+		}
+		if ok, err := s.GrantStampWeek(ctx, uid, now); err != nil || ok {
+			t.Fatalf("grant: %v %v", ok, err)
+		}
+	})
+}
