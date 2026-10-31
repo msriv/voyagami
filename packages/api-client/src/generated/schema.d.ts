@@ -97,6 +97,34 @@ export interface paths {
         patch: operations["updateMe"];
         trace?: never;
     };
+    "/v1/me/devices/{deviceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A stable id the app makes once per install. */
+                deviceId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Register or refresh this phone for push
+         * @description Call after sign-in and whenever the push token changes. One record per
+         *     device id, so calling again replaces the token.
+         */
+        put: operations["registerDevice"];
+        post?: never;
+        /**
+         * Stop pushes to this phone
+         * @description Call on sign-out. Removing a device that is not there succeeds.
+         */
+        delete: operations["removeDevice"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/trips": {
         parameters: {
             query?: never;
@@ -1260,6 +1288,12 @@ export interface components {
                 [key: string]: components["schemas"]["EntitlementDecision"];
             };
         };
+        DeviceRegistration: {
+            /** @enum {string} */
+            platform: "ios" | "android";
+            /** @description The FCM token (iOS goes through FCM as well). */
+            pushToken: string;
+        };
         /** @description Fields to change. Leave a field out to keep it. */
         MeUpdate: {
             displayName?: string;
@@ -2109,6 +2143,57 @@ export interface operations {
                 };
             };
             400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    registerDevice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A stable id the app makes once per install. */
+                deviceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeviceRegistration"];
+            };
+        };
+        responses: {
+            /** @description Stored. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    removeDevice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A stable id the app makes once per install. */
+                deviceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             401: components["responses"]["Unauthorized"];
             503: components["responses"]["Unavailable"];
         };

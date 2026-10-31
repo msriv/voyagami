@@ -69,6 +69,7 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 			server.WithMeetPoints(firestorerepo.NewMeetPoints(client), firestorerepo.NewPresence(client)),
 			server.WithPolls(firestorerepo.NewPolls(client)),
 			server.WithInvites(firestorerepo.NewInvites(client)),
+			server.WithDevices(firestorerepo.NewDevices(client)),
 			server.WithJournal(firestorerepo.NewJournal(client)),
 			server.WithBookings(firestorerepo.NewBookings(client)),
 			server.WithSettleUp(firestorerepo.NewSettlements(client)),
