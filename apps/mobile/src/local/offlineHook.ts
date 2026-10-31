@@ -20,7 +20,8 @@ export function newId(): string {
  * created (201 with what was sent), marked as queued. Every other call fails as before.
  */
 export const offlineHook: OfflineHook = {
-  async onNetworkError(request) {
+  async onNetworkError(request, e) {
+    console.log("OFFLINE-HOOK", request.method, request.url, String(e));
     const m = /^\/v1\/trips\/([^/]+)\/expenses$/.exec(new URL(request.url).pathname);
     if (request.method !== "POST" || !m) return undefined;
     const body = (await request.json().catch(() => undefined)) as { id?: unknown } | undefined;
