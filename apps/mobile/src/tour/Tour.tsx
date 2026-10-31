@@ -16,7 +16,7 @@ import { useTheme } from "@/theme";
 import { Button, Text } from "@/ui";
 
 /** Keys under `tour.steps` in the strings. One card per step, in order. */
-export const TOUR_STEPS = ["trip", "days", "crew"] as const;
+export const TOUR_STEPS = ["trip", "days", "crew", "money", "journal"] as const;
 
 interface TourApi {
   /** Starts the tour again from the first step. */
