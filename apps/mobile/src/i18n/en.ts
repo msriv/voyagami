@@ -51,6 +51,28 @@ export const en = {
       generic: "Something went wrong. Try again.",
     },
   },
+  tour: {
+    progress: "Step {{n}} of {{total}}",
+    skip: "Skip tour",
+    back: "Back",
+    next: "Next",
+    finish: "Finish tour",
+    replay: "Replay the tour",
+    steps: {
+      trip: {
+        title: "Your trip lives here",
+        body: "Tap the card to open the plan. The countdown and days planned update as your crew adds stops.",
+      },
+      days: {
+        title: "Let the day sort itself",
+        body: "Drag stops to reorder, or tap Best order and we will find the quickest route. Add drops in a new place.",
+      },
+      crew: {
+        title: "Plan it together",
+        body: "Tap Invite to send a link on any chat app. Everyone edits the same plan and sees changes live.",
+      },
+    },
+  },
   manageSub: {
     title: "Your subscription",
     current: "Your plan",

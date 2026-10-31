@@ -39,7 +39,20 @@ export async function saveOnboarded(done: boolean): Promise<void> {
   else await SecureStore.deleteItemAsync(onboardedKey);
 }
 
+const tourKey = "voyagami.tour";
+
+/** Where the person is in the tour: the step to show next, or "done" once finished or skipped. */
+export async function loadTour(): Promise<number | "done" | null> {
+  const v = await SecureStore.getItemAsync(tourKey);
+  return v === null ? null : v === "done" ? "done" : Number(v);
+}
+
+export async function saveTour(v: number | "done" | null): Promise<void> {
+  if (v === null) await SecureStore.deleteItemAsync(tourKey);
+  else await SecureStore.setItemAsync(tourKey, String(v));
+}
+
 /** Forgets everything kept on this device, so the next launch starts at Welcome. */
 export async function clearDevice(): Promise<void> {
-  await Promise.all([saveTokens(null), saveOnboarded(false)]);
+  await Promise.all([saveTokens(null), saveOnboarded(false), saveTour(null)]);
 }
