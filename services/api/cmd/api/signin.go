@@ -84,6 +84,8 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 				Users: users, Consents: consents, Trips: trips, Stops: firestorerepo.NewStops(client),
 				Expenses: firestorerepo.NewExpenses(client), Bookings: firestorerepo.NewBookings(client), Journal: firestorerepo.NewJournal(client),
 			}),
+			server.WithConsents(firestorerepo.NewConsents(client)),
+			server.WithSupport(firestorerepo.NewSupport(client)),
 			server.WithCatalog(firestorerepo.NewCatalog(client)),
 			server.WithStamps(firestorerepo.NewStamps(client)),
 			server.WithStampReward(firestorerepo.NewEntitlements(client)),

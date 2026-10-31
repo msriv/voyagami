@@ -7,12 +7,18 @@ export interface TripPlan {
   plan: "free" | "plus" | "pass" | undefined;
   /** True when anything on the trip is over its Free limit (after a downgrade). Kept, readable, not changeable. */
   readOnly: boolean;
+  /** Who bought the pass and its last day, when the trip has one. */
+  pass: { boughtBy: string; endsOn?: string } | undefined;
 }
 
 /** The server decides; this only reflects its answer for the trip. */
 export function useTripPlan(tripId: string): TripPlan {
   const { api } = useAuth();
-  const [state, setState] = useState<TripPlan>({ plan: undefined, readOnly: false });
+  const [state, setState] = useState<TripPlan>({
+    plan: undefined,
+    readOnly: false,
+    pass: undefined,
+  });
 
   useEffect(() => {
     api
@@ -21,9 +27,10 @@ export function useTripPlan(tripId: string): TripPlan {
         setState({
           plan: e.plan,
           readOnly: Object.values(e.features).some((f) => f.readOnly),
+          pass: e.pass,
         }),
       )
-      .catch(() => setState({ plan: undefined, readOnly: false }));
+      .catch(() => setState({ plan: undefined, readOnly: false, pass: undefined }));
   }, [api, tripId]);
 
   return state;

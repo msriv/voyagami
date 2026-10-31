@@ -87,6 +87,10 @@ type Deletions interface {
 	// Purge deletes the person's personal data and anonymises what they leave
 	// on other people's trips. Running it again finishes whatever is left.
 	Purge(ctx context.Context, uid string, now time.Time) error
+// Support stores messages from the Help screen.
+type Support interface {
+	// Add stores a message and returns its ID.
+	Add(ctx context.Context, m model.SupportMessage) (string, error)
 }
 
 // Trips stores trips and who is on them. Membership changes keep the trip's

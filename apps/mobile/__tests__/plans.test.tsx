@@ -93,6 +93,25 @@ describe("Plans", () => {
 });
 
 describe("Manage subscription", () => {
+  it("says when Plus renews or ends, and flags a payment problem", async () => {
+    mockApi({
+      "GET /v1/me/entitlements": () =>
+        json(200, {
+          plan: "plus",
+          features: {},
+          subscription: {
+            state: "subscribed",
+            willRenew: false,
+            billingIssue: true,
+            endsAt: "2099-03-05T12:00:00Z",
+          },
+        }),
+    });
+    await renderRouter(routes, { initialUrl: "/manage-subscription" });
+    expect(await screen.findByText(/Plus ends on .*2099/)).toBeTruthy();
+    expect(screen.getByText(/could not take your payment/)).toBeTruthy();
+  });
+
   it("shows the plan, how to cancel, and opens the store page", async () => {
     mockApi(entitlements("plus"));
     await renderRouter(routes, { initialUrl: "/manage-subscription" });
