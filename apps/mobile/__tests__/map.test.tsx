@@ -1,3 +1,4 @@
+import { Linking } from "react-native";
 import { fireEvent, renderRouter, screen } from "expo-router/testing-library";
 
 import { json, mockApi, routes } from "../test-utils/api";
@@ -21,7 +22,8 @@ beforeEach(() => {
   mockStore.set("voyagami.onboarded", "1");
 });
 
-const stop = (id: string, date: string, order: string, name: string) => ({
+const stop = (id: string, date: string, order: string, name: string, extra = {}) => ({
+  ...extra,
   id,
   tripId: "t1",
   date,
@@ -37,7 +39,7 @@ describe("Trip map", () => {
       "GET /v1/trips/t1/stops": () =>
         json(200, {
           stops: [
-            stop("a", "2099-11-19", "a", "Pho Thin"),
+            stop("a", "2099-11-19", "a", "Pho Thin", { startLocal: "08:30", note: "Cash only" }),
             stop("b", "2099-11-19", "b", "Hoan Kiem Lake"),
             stop("c", "2099-11-20", "a", "Temple of Literature"),
           ],
@@ -50,6 +52,26 @@ describe("Trip map", () => {
     await fireEvent.press(screen.getAllByRole("button", { name: /20/ })[0] as never);
     expect(screen.queryByText("1. Pho Thin")).toBeNull();
     expect(screen.getByText("1. Temple of Literature")).toBeTruthy();
+  });
+
+  it("shows a callout with time and notes, and opens directions", async () => {
+    const open = jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
+    mockApi({
+      "GET /v1/me": () => json(200, { id: "u1" }),
+      "GET /v1/trips/t1/stops": () =>
+        json(200, {
+          stops: [
+            stop("a", "2099-11-19", "a", "Pho Thin", { startLocal: "08:30", note: "Cash only" }),
+          ],
+        }),
+    });
+    await renderRouter(routes, { initialUrl: "/trips/t1/map" });
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "pin 1. Pho Thin", hidden: true }),
+    );
+    expect(screen.getByText("Cash only")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Directions" }));
+    expect(open.mock.calls[0]?.[0]).toContain("21,105");
   });
 
   it("explains an empty plan", async () => {

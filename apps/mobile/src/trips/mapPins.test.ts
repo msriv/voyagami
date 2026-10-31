@@ -1,4 +1,4 @@
-import { daysWithStops, mapPins } from "./mapPins";
+import { daysWithStops, directionsUrl, mapPins } from "./mapPins";
 import type { Stop } from "./stops";
 
 const stop = (id: string, date: string, order: string, lat?: number, lng?: number): Stop => ({
@@ -29,5 +29,13 @@ describe("mapPins", () => {
   });
   it("lists days that have stops", () => {
     expect(daysWithStops(stops)).toEqual(["2099-01-01", "2099-01-02"]);
+  });
+});
+
+describe("directionsUrl", () => {
+  it("uses the maps app of the platform", () => {
+    expect(directionsUrl("ios", 1, 2, "A b")).toBe("https://maps.apple.com/?daddr=1,2&q=A%20b");
+    expect(directionsUrl("android", 1, 2, "A")).toBe("geo:0,0?q=1,2(A)");
+    expect(directionsUrl("web", 1, 2, "A")).toContain("destination=1,2");
   });
 });
