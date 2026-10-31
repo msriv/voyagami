@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/msriv/voyagami/services/api/internal/api"
+	"github.com/msriv/voyagami/services/api/internal/entitlements"
 	"github.com/msriv/voyagami/services/api/internal/model"
 	"github.com/msriv/voyagami/services/api/internal/ranking"
 	"github.com/msriv/voyagami/services/api/internal/repo"
@@ -90,6 +91,11 @@ func (h *handlers) ListRecommendations(ctx context.Context, req api.ListRecommen
 	}
 	ranked := ranking.Rank(cands, ranking.Context{Style: style, AnchorLat: anchorLat, AnchorLng: anchorLng, HasAnchor: true, MinuteOfDay: -1})
 
+	if maxPicks, err := h.pickCap(ctx, id.UserID, req.TripId); err != nil {
+		return nil, err
+	} else if maxPicks != entitlements.Unlimited && maxPicks < limit {
+		limit = maxPicks
+	}
 	out := api.RecommendationList{Category: p.Category, Items: []api.Recommendation{}, HasMore: len(ranked) > limit}
 	for _, r := range ranked {
 		if len(out.Items) == limit {
@@ -103,6 +109,23 @@ func (h *handlers) ListRecommendations(ctx context.Context, req api.ListRecommen
 		out.Items = append(out.Items, item)
 	}
 	return api.ListRecommendations200JSONResponse(out), nil
+}
+
+// pickCap is how many picks the caller's plan shows per category, or Unlimited
+// when limits are off.
+func (h *handlers) pickCap(ctx context.Context, uid, tripID string) (int, error) {
+	if h.plans == nil || h.planSource == nil {
+		return entitlements.Unlimited, nil
+	}
+	user, err := h.planSource.User(ctx, uid)
+	if err != nil {
+		return 0, err
+	}
+	trip, err := h.planSource.Trip(ctx, tripID)
+	if err != nil {
+		return 0, err
+	}
+	return h.plans.PickLimit(user, &trip), nil
 }
 
 // tripCentre is the middle of the trip's stops that have a position. ok is

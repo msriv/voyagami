@@ -3,10 +3,12 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"testing"
 
 	"github.com/msriv/voyagami/services/api/internal/api"
+	"github.com/msriv/voyagami/services/api/internal/entitlements"
 	"github.com/msriv/voyagami/services/api/internal/model"
 )
 
@@ -97,5 +99,38 @@ func TestCrewStyleMergesMembers(t *testing.T) {
 	}
 	if len(st.Interests) != 2 || st.Interests[0] != "beaches" || st.Spend != 3 {
 		t.Errorf("style %+v", st)
+	}
+}
+
+func TestFreePlanSeesTopFivePicks(t *testing.T) {
+	var places []model.NearbyPlace
+	for i := 0; i < 8; i++ {
+		places = append(places, model.NearbyPlace{CatalogPlace: model.CatalogPlace{
+			ID: fmt.Sprintf("p%d", i), Name: map[string]string{"en": "Place"}, Lat: 21.03, Lng: 105.85, Group: model.GroupSee,
+		}, Distance: float64(i)})
+	}
+	for _, tc := range []struct {
+		name     string
+		plans    fakePlans
+		wantN    int
+		wantMore bool
+	}{
+		{"free", fakePlans{}, 5, true},
+		{"plus", fakePlans{user: entitlements.User{Plus: true}}, 8, false},
+		{"trip pass", fakePlans{trip: entitlements.Trip{Pass: true}}, 8, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := NewHandler(slog.New(slog.DiscardHandler), tokenVerifier{"owner": "u-owner"},
+				WithTrips(newFakeTrips()), WithStops(&fakeStops{stops: map[string]model.Stop{}}), WithCatalog(&fakeCatalog{places: places}),
+				WithEntitlements(entitlements.New(entitlements.Free()), tc.plans))
+			var trip api.Trip
+			_ = json.Unmarshal(call(h, "POST", "/v1/trips", "owner", newTripBody).Body.Bytes(), &trip)
+			rec := call(h, "GET", "/v1/trips/"+trip.Id+"/recommendations?category=see&lat=21.03&lng=105.85", "owner", "")
+			var list api.RecommendationList
+			_ = json.Unmarshal(rec.Body.Bytes(), &list)
+			if rec.Code != 200 || len(list.Items) != tc.wantN || list.HasMore != tc.wantMore {
+				t.Fatalf("code %d items %d hasMore %v, want %d / %v", rec.Code, len(list.Items), list.HasMore, tc.wantN, tc.wantMore)
+			}
+		})
 	}
 }
