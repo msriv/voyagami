@@ -7,9 +7,10 @@ import (
 
 	"crypto/subtle"
 	"encoding/json"
-	"github.com/msriv/voyagami/services/api/internal/analytics"
 	"log/slog"
 	"net/http"
+
+	"github.com/msriv/voyagami/services/api/internal/analytics"
 )
 
 // TrialReminderJob is work a scheduler triggers: it returns how many things it did.
