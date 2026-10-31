@@ -40,6 +40,17 @@ func (h *handlers) GetMyEntitlements(ctx context.Context, _ api.GetMyEntitlement
 	return api.GetMyEntitlements200JSONResponse(h.entitlementsFor(user, nil)), nil
 }
 
+// GetFreePlanLimits answers every feature as a person without Plus would see it.
+func (h *handlers) GetFreePlanLimits(ctx context.Context, _ api.GetFreePlanLimitsRequestObject) (api.GetFreePlanLimitsResponseObject, error) {
+	if _, err := identity(ctx, "GetFreePlanLimits"); err != nil {
+		return nil, err
+	}
+	if h.plans == nil {
+		return api.GetFreePlanLimits503JSONResponse{UnavailableJSONResponse: api.UnavailableJSONResponse(errBody(ctx, codeUnavailable, msgNoPlans))}, nil
+	}
+	return api.GetFreePlanLimits200JSONResponse(h.entitlementsFor(entitlements.User{}, nil)), nil
+}
+
 // GetTripEntitlements answers every feature for the caller on one trip.
 func (h *handlers) GetTripEntitlements(ctx context.Context, req api.GetTripEntitlementsRequestObject) (api.GetTripEntitlementsResponseObject, error) {
 	id, err := identity(ctx, "GetTripEntitlements")
