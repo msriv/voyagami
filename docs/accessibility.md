@@ -16,6 +16,22 @@
 - Motifs (`Seal`, `WavePattern`, `BrushCircle`, `WashiTape`, `Postmark`) are decoration: hidden from screen readers unless given a label. `Postmark` reads as one phrase, "city, date".
 - Tests for these props live in `apps/mobile/src/ui/__tests__`. They cannot show 200% text or screen reader order; check those on a device.
 
+## Automatic checks
+
+- ESLint (`eslint-plugin-react-native-a11y`) fails the build on invalid roles, states, live regions, nested touchables and touchables with no role or label. Run by `make lint`.
+- `apps/mobile/__tests__/a11ySweep.test.tsx` renders the main screens and fails if any touchable has no role or no name (`test-utils/a11y.ts`). Add a screen to its list when you add one.
+- These cannot judge reading order, 200% text or contrast. Do the checklist below on a device before each release.
+
+## Release checklist
+
+Run this on one iPhone and one Android phone before each release and tick it in the release PR.
+
+1. VoiceOver / TalkBack: walk Home, a trip, Money, Journal, Plans and Profile. Order is logical; each control reads name, role and state.
+2. Largest system text size on a 320px-wide device: nothing clips or overlaps, on every screen above and the paywall sheet.
+3. Contrast: body text 4.5:1, large text 3:1; vermilion only on ink-on-light accents.
+4. Reduce motion on: the recap, tour and sheets do not animate.
+5. Tap targets: every control is at least 44x44.
+
 ## Rules
 
 - Every tappable thing has at least a 44x44 hit area (use `hitSlop`), an accessibility role, a label and a state.

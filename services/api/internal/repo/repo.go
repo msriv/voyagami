@@ -66,6 +66,14 @@ type Devices interface {
 	List(ctx context.Context, uid string) ([]model.Device, error)
 }
 
+// Consents stores a person's consent choices.
+type Consents interface {
+	// Get returns the choices, all unset for a person who never chose.
+	Get(ctx context.Context, uid string) (model.Consents, error)
+	// Update applies the patch in one transaction and returns the result.
+	Update(ctx context.Context, uid string, p model.ConsentsPatch, now time.Time) (model.Consents, error)
+}
+
 // Support stores messages from the Help screen.
 type Support interface {
 	// Add stores a message and returns its ID.

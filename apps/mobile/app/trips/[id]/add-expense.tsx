@@ -1,4 +1,5 @@
 import { defaultCurrency, formatMoney, minorDigits } from "@voyagami/locale";
+import { track } from "@/analytics/track";
 import { getLocales } from "expo-localization";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -155,6 +156,7 @@ export default function AddExpenseScreen() {
       await api.unwrap(
         api.POST("/v1/trips/{tripId}/expenses", { params: { path: { tripId: id } }, body }),
       );
+      track("expense_added");
       router.back();
     } catch (e) {
       if (e instanceof NetworkError) {

@@ -1,4 +1,5 @@
 import * as Linking from "expo-linking";
+import { track } from "@/analytics/track";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { ScrollView, Share, View } from "react-native";
@@ -8,6 +9,7 @@ import { ApiError, NetworkError, type components } from "@voyagami/api-client";
 
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
+import { useTripPlan } from "@/plans/useTripPlan";
 import { useTheme } from "@/theme";
 import type { Trip } from "@/trips/summary";
 import { Button, Card, Chip, IconButton, Sheet, Text } from "@/ui";
@@ -29,6 +31,7 @@ export default function CrewScreen() {
   const { api } = useAuth();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { plan } = useTripPlan(id);
   const [state, setState] = useState<State>({ kind: "loading" });
   const [open, setOpen] = useState<Member | undefined>();
   const [role, setRole] = useState<"editor" | "viewer">("editor");
@@ -108,6 +111,7 @@ export default function CrewScreen() {
         }),
       );
       // The token is shown only now, so it goes straight to the share sheet.
+      track("invite_sent");
       await Share.share({
         message: t("crew.shareMessage", {
           trip: trip.title,
@@ -188,6 +192,7 @@ export default function CrewScreen() {
           </Text>
         </View>
         <Text color="muted">{trip.title}</Text>
+        {plan === "pass" ? <Text>{t("crew.passNote")}</Text> : null}
         <Button
           label={t("crew.chat")}
           variant="secondary"

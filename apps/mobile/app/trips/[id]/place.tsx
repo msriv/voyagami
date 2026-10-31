@@ -1,3 +1,5 @@
+import { formatTime } from "@voyagami/locale";
+import { getLocales } from "expo-localization";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Image, Linking, ScrollView, Share, View } from "react-native";
@@ -7,6 +9,7 @@ import { ApiError } from "@voyagami/api-client";
 
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
+import { useProfile } from "@/profile";
 import { useTheme } from "@/theme";
 import { addCatalogPlace, type CatalogPlaceLike } from "@/trips/addCatalogPlace";
 import { Button, Card, IconButton, Text } from "@/ui";
@@ -16,7 +19,10 @@ interface Place extends CatalogPlaceLike {
   id: string;
   photos: { url: string; attribution: string }[];
   sources: { source: string }[];
+  openingHours?: { day: (typeof DAYS)[number]; open: string; close: string }[];
 }
+
+const DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 
 type State =
   { kind: "loading" } | { kind: "ready"; place: Place } | { kind: "notFound" } | { kind: "error" };
@@ -26,6 +32,8 @@ export default function PlaceScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { api } = useAuth();
+  const { units } = useProfile();
+  const locale = getLocales()[0]?.languageTag ?? "en";
   const router = useRouter();
   const { id, placeId, date } = useLocalSearchParams<{
     id: string;
@@ -59,6 +67,9 @@ export default function PlaceScreen() {
       setNote(t("place.addError"));
     }
   }
+
+  const clock = (hhmm: string) =>
+    formatTime(new Date(`1970-01-01T${hhmm}:00Z`), locale, { timeZone: "UTC", clock: units.clock });
 
   const place = state.kind === "ready" ? state.place : undefined;
   const sourceNames = place ? [...new Set(place.sources.map((s) => s.source))].join(", ") : "";
@@ -103,6 +114,30 @@ export default function PlaceScreen() {
               </View>
             ))}
             {place.address ? <Text>{place.address}</Text> : null}
+            {place.openingHours ? (
+              <Card style={{ gap: 4 }}>
+                <Text variant="bodyStrong" heading>
+                  {t("place.hours")}
+                </Text>
+                {DAYS.map((day) => {
+                  const spans = place.openingHours?.filter((p) => p.day === day) ?? [];
+                  return (
+                    <Text key={day}>
+                      {t("place.dayHours", {
+                        day: t(`place.days.${day}`),
+                        hours: spans.length
+                          ? spans
+                              .map((p) =>
+                                t("place.span", { open: clock(p.open), close: clock(p.close) }),
+                              )
+                              .join(", ")
+                          : t("place.closed"),
+                      })}
+                    </Text>
+                  );
+                })}
+              </Card>
+            ) : null}
             {sourceNames ? (
               <Text variant="caption" color="muted">
                 {t("place.sources", { names: sourceNames })}

@@ -1,7 +1,11 @@
+import { formatDate } from "@voyagami/locale";
+import { getLocales } from "expo-localization";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Linking, Platform, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import type { components } from "@voyagami/api-client";
 
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
@@ -24,14 +28,28 @@ export default function ManageSubscriptionScreen() {
   const router = useRouter();
   const prices = usePlanPrices();
   const [plan, setPlan] = useState<string | undefined>();
+  const [sub, setSub] = useState<components["schemas"]["SubscriptionInfo"] | undefined>();
   const [notice, setNotice] = useState<string | undefined>();
 
   useEffect(() => {
     api
       .unwrap(api.GET("/v1/me/entitlements"))
-      .then((e) => setPlan(e.plan))
+      .then((e) => {
+        setPlan(e.plan);
+        setSub(e.subscription);
+      })
       .catch(() => setPlan(undefined));
   }, [api]);
+
+  const subLine = (s: components["schemas"]["SubscriptionInfo"]): string => {
+    const date = s.endsAt
+      ? formatDate(new Date(s.endsAt), getLocales()[0]?.languageTag ?? "en", { withYear: true })
+      : undefined;
+    if (s.state === "trial")
+      return date ? t("manageSub.trialEnds", { date }) : t("manageSub.trial");
+    if (!date) return t("manageSub.subscribed");
+    return t(s.willRenew ? "manageSub.renews" : "manageSub.endsOn", { date });
+  };
 
   const restore = () =>
     prices.restore
@@ -63,6 +81,12 @@ export default function ManageSubscriptionScreen() {
             {plan === "plus" ? t("plans.plus") : t("plans.free")}
           </Text>
           <Text>{plan === "plus" ? t("manageSub.plusNote") : t("manageSub.freeNote")}</Text>
+          {sub ? <Text accessibilityLiveRegion="polite">{subLine(sub)}</Text> : null}
+          {sub?.billingIssue ? (
+            <Text color="vermilion" accessibilityLiveRegion="polite">
+              {t("manageSub.billingIssue")}
+            </Text>
+          ) : null}
         </Card>
 
         <Card style={{ gap: 8 }}>
