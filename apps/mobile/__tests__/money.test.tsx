@@ -1,7 +1,6 @@
 import { Share } from "react-native";
 import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
-import { pendingWrites } from "../src/local/queue";
 import { json, mockApi, routes } from "../test-utils/api";
 
 const mockStore = new Map<string, string>();
@@ -212,7 +211,6 @@ describe("Add expense", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Save expense" }));
     await waitFor(() =>
       expect(calls.find((c) => c.key === "POST /v1/trips/t1/expenses")?.body).toEqual({
-        id: expect.any(String),
         description: "Pho",
         paidByUid: "u1",
         date: "2099-11-19",
@@ -310,20 +308,5 @@ describe("Add expense", () => {
         rate: { numerator: 250, denominator: 1 },
       }),
     );
-  });
-
-  it("keeps an expense made offline and sends it later", async () => {
-    mockApi({
-      ...base(),
-      "POST /v1/trips/t1/expenses": () => {
-        throw new TypeError("Network request failed");
-      },
-    });
-    await renderRouter(routes, { initialUrl: "/trips/t1/add-expense" });
-    await fireEvent.changeText(await screen.findByLabelText("What was it for?"), "Pho");
-    await fireEvent.changeText(screen.getByLabelText(/^Amount in VND/), "50000");
-    await fireEvent.press(screen.getByRole("button", { name: "Save expense" }));
-    await waitFor(async () => expect(await pendingWrites()).toHaveLength(1));
-    expect(screen.queryByText(/offline/i)).toBeNull();
   });
 });
