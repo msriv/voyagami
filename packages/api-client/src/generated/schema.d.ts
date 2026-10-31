@@ -72,6 +72,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/trips/{tripId}/stays/links": {
+        parameters: {
+            query?: {
+                /** @description How many people are staying. Left out when missing. */
+                guests?: number;
+            };
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Hand-off links to stay partners for this trip
+         * @description One link per configured partner, searching the trip's first
+         *     destination and its dates. Opening a link leaves the app; nothing is
+         *     booked or paid here. The list is empty when no partner is set up.
+         *     Needs a bearer token and membership.
+         */
+        get: operations["listStayLinks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/stays/clicks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Count a tap on a stay link
+         * @description Call when the person opens a link. Only a count per partner and day
+         *     is kept, with no person, trip or place. Needs a bearer token and
+         *     membership.
+         */
+        post: operations["recordStayClick"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me": {
         parameters: {
             query?: never;
@@ -1361,6 +1413,19 @@ export interface components {
                 [key: string]: components["schemas"]["EntitlementDecision"];
             };
         };
+        StayLink: {
+            partnerId: string;
+            /** @description The partner's name, shown on the button. */
+            name: string;
+            /** Format: uri */
+            url: string;
+        };
+        StayLinkList: {
+            links: components["schemas"]["StayLink"][];
+        };
+        StayClick: {
+            partnerId: string;
+        };
         /** @enum {string} */
         StampKind: "createTrip" | "inviteCrew" | "addPlaces" | "logExpense" | "writeJournal";
         Stamp: {
@@ -2207,6 +2272,63 @@ export interface operations {
                     "application/json": components["schemas"]["Entitlements"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    listStayLinks: {
+        parameters: {
+            query?: {
+                /** @description How many people are staying. Left out when missing. */
+                guests?: number;
+            };
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The links. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StayLinkList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    recordStayClick: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StayClick"];
+            };
+        };
+        responses: {
+            /** @description Counted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
             503: components["responses"]["Unavailable"];

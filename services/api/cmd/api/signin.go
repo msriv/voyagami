@@ -19,6 +19,7 @@ import (
 	"github.com/msriv/voyagami/services/api/internal/repo/firestorerepo"
 	"github.com/msriv/voyagami/services/api/internal/server"
 	"github.com/msriv/voyagami/services/api/internal/signin"
+	"github.com/msriv/voyagami/services/api/internal/stays"
 )
 
 // signInDeps are the pieces that turn phone sign-in on.
@@ -90,6 +91,11 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 	} else {
 		logger.Warn("REVENUECAT_WEBHOOK_SECRET is not set, so purchases do not reach plans")
 	}
+	partners, err := stays.Load(cfg.StayPartners)
+	if err != nil {
+		return signInDeps{}, err
+	}
+	deps.options = append(deps.options, server.WithStays(partners, firestorerepo.NewStayClicks(client)))
 	if cfg.JobsSecret != "" {
 		deps.options = append(deps.options, server.WithJobs(newTrialReminders(cfg, logger, users, devices, firestorerepo.NewEntitlements(client)), cfg.JobsSecret))
 	} else {

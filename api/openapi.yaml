@@ -84,6 +84,77 @@ paths:
           $ref: "#/components/responses/NotFound"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/stays/links:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: guests
+        in: query
+        required: false
+        description: How many people are staying. Left out when missing.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 30
+    get:
+      operationId: listStayLinks
+      tags: [stays]
+      summary: Hand-off links to stay partners for this trip
+      description: |
+        One link per configured partner, searching the trip's first
+        destination and its dates. Opening a link leaves the app; nothing is
+        booked or paid here. The list is empty when no partner is set up.
+        Needs a bearer token and membership.
+      responses:
+        "200":
+          description: The links.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StayLinkList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/stays/clicks:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      operationId: recordStayClick
+      tags: [stays]
+      summary: Count a tap on a stay link
+      description: |
+        Call when the person opens a link. Only a count per partner and day
+        is kept, with no person, trip or place. Needs a bearer token and
+        membership.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StayClick"
+      responses:
+        "204":
+          description: Counted.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/me:
     get:
       operationId: getMe
@@ -2279,6 +2350,32 @@ components:
           description: One decision per feature, keyed by feature name.
           additionalProperties:
             $ref: "#/components/schemas/EntitlementDecision"
+    StayLink:
+      type: object
+      required: [partnerId, name, url]
+      properties:
+        partnerId:
+          type: string
+        name:
+          type: string
+          description: The partner's name, shown on the button.
+        url:
+          type: string
+          format: uri
+    StayLinkList:
+      type: object
+      required: [links]
+      properties:
+        links:
+          type: array
+          items:
+            $ref: "#/components/schemas/StayLink"
+    StayClick:
+      type: object
+      required: [partnerId]
+      properties:
+        partnerId:
+          type: string
     StampKind:
       type: string
       enum: [createTrip, inviteCrew, addPlaces, logExpense, writeJournal]
