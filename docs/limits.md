@@ -11,6 +11,12 @@ Every limit is checked on the server by the entitlements service. The app only r
 | `forwardedBookings` | import bookings                               | `usage.forwardedBookings` on the trip, raised by the number of bookings found                    |
 | `multiCurrency`     | add or change an expense in a second currency | a flag, no counter                                                                               |
 
+## Monthly counters and flags (answers ready, features come later)
+
+- **Ask drafts**: 3 a month on Free. `entitlements/{uid}.usage` holds `periodStart` (the first instant of the month, UTC) and `askDrafts`. A counter from an earlier month reads as zero, and the first draft of a new month starts it again, so nothing has to run at midnight. `AddAskDraft` counts one in a transaction. Ask itself ships in P2.
+- **Recap length** (`recapSeconds`): Free recaps are capped at 30 seconds and carry the watermark. Plus on anyone in the crew, or a Trip Pass, gives full length with no watermark. The recap renderer asks `Service.Recap(user, trip)` for `{ MaxSeconds, Watermark }`. In `GET .../entitlements` the feature's `limit` is the seconds (`-1` for no cap) and `used` is always 0.
+- **Offline maps**: closed on Free, open with the person's own Plus (a crew member's Plus does not open them). The check already existed; the feature ships in P2.
+
 Files, journal photos and top picks are limited when their endpoints arrive (signed uploads, photo pipeline, recommendations).
 
 Plus for any member, or a Trip Pass, lifts the whole-trip limits for everyone on the trip. Plus on the person lifts the person limits.

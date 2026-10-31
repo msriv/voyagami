@@ -24,6 +24,10 @@ const (
 	JournalPhotos Feature = "journalPhotos"
 	// AskDrafts counts a person's Ask drafts in the current month.
 	AskDrafts Feature = "askDrafts"
+	// RecapSeconds is the longest recap video a trip may make. Free is capped and
+	// watermarked; Plus, a Trip Pass or a Plus crew member lifts both. It is a
+	// length, not a counter, so Used is always 0. Use Recap for the full answer.
+	RecapSeconds Feature = "recapSeconds"
 
 	// MultiCurrency lets a trip hold expenses in more than one currency.
 	MultiCurrency Feature = "multiCurrency"
@@ -70,6 +74,7 @@ var scopes = map[Feature]scope{
 	GmailImport:       scopeUser,
 	DarkMode:          scopeUser,
 	BestOrder:         scopeTrip,
+	RecapSeconds:      scopeTrip,
 	ForwardedBookings: scopeTrip,
 	Files:             scopeTrip,
 	JournalPhotos:     scopeUser,
@@ -94,6 +99,7 @@ func Free() Limits {
 		Files:             3,
 		JournalPhotos:     30,
 		AskDrafts:         3,
+		RecapSeconds:      30,
 		MultiCurrency:     0,
 		LiveCrewMap:       0,
 		ReceiptScans:      0,
@@ -241,4 +247,19 @@ func All() []Feature {
 	}
 	sort.Slice(all, func(i, j int) bool { return all[i] < all[j] })
 	return all
+}
+
+// RecapPolicy is what a trip's recap video may be.
+type RecapPolicy struct {
+	// MaxSeconds is the longest recap, or Unlimited.
+	MaxSeconds int
+	// Watermark is true when the video carries the Voyagami watermark.
+	Watermark bool
+}
+
+// Recap says how long a recap video may be and whether it is watermarked. The
+// whole crew gets the Plus answer when any member has Plus or the trip has a pass.
+func (s *Service) Recap(user User, trip *Trip) RecapPolicy {
+	d := s.Check(user, trip, RecapSeconds)
+	return RecapPolicy{MaxSeconds: d.Limit, Watermark: d.Limit != Unlimited}
 }

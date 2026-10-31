@@ -38,6 +38,7 @@ func TestCheck(t *testing.T) {
 		{"free: offline maps are closed", free, User{}, nil, OfflineMaps, false, 0, true, 0},
 		{"offline maps are for the person with plus, not the crew", free, User{}, &Trip{MemberPlus: true}, OfflineMaps, false, 0, true, 0},
 		{"plus: offline maps", free, User{Plus: true}, nil, OfflineMaps, true, Unlimited, false, 0},
+		{"free: recap is capped at 30 seconds", free, User{}, &Trip{}, RecapSeconds, true, 30, false, 0},
 		{"unknown feature is refused", free, User{Plus: true}, nil, Feature("teleport"), false, 0, false, 0},
 		{"dev: everything is open", New(NoLimits()), User{Used: counts(UpcomingTrips, 99)}, nil, UpcomingTrips, true, Unlimited, false, 99},
 		{"dev: closed flags are open too", New(NoLimits()), User{}, &Trip{}, MultiCurrency, true, Unlimited, false, 0},
@@ -125,5 +126,29 @@ func TestAlwaysFreeIsNeverReadOnly(t *testing.T) {
 	d := New(Free()).Check(User{}, &Trip{}, SettleUp)
 	if !d.Allowed || d.ReadOnly {
 		t.Errorf("got %+v", d)
+	}
+}
+
+func TestRecapPolicy(t *testing.T) {
+	free := New(Free())
+	tests := []struct {
+		name string
+		svc  *Service
+		user User
+		trip *Trip
+		want RecapPolicy
+	}{
+		{"free: 30 seconds with watermark", free, User{}, &Trip{}, RecapPolicy{30, true}},
+		{"plus: full length, no watermark", free, User{Plus: true}, &Trip{}, RecapPolicy{Unlimited, false}},
+		{"one plus member lifts it for the crew", free, User{}, &Trip{MemberPlus: true}, RecapPolicy{Unlimited, false}},
+		{"a trip pass lifts it", free, User{}, &Trip{Pass: true}, RecapPolicy{Unlimited, false}},
+		{"dev has no limits", New(NoLimits()), User{}, &Trip{}, RecapPolicy{Unlimited, false}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.svc.Recap(tt.user, tt.trip); got != tt.want {
+				t.Errorf("got %+v, want %+v", got, tt.want)
+			}
+		})
 	}
 }

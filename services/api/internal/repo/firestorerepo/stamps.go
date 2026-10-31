@@ -47,10 +47,12 @@ func (s *Stamps) Award(ctx context.Context, uid string, kind model.StampKind, at
 }
 
 // AddPlace counts a place and awards the stamp when the count reaches the target.
-func (s *Stamps) AddPlace(ctx context.Context, uid string, at time.Time) error {
+func (s *Stamps) AddPlace(ctx context.Context, uid string, at time.Time) (bool, error) {
 	ref := s.client.Collection(usersCollection).Doc(uid).Collection(progressCollection).Doc(placesProgressDoc)
 	stamp := s.stamps(uid).Doc(string(model.StampAddPlaces))
+	earned := false
 	err := s.client.RunTransaction(ctx, func(_ context.Context, tx *firestore.Transaction) error {
+		earned = false
 		count := 0
 		snap, err := tx.Get(ref)
 		switch {
@@ -68,11 +70,12 @@ func (s *Stamps) AddPlace(ctx context.Context, uid string, at time.Time) error {
 			return err
 		}
 		if count == model.PlacesForStamp {
+			earned = true
 			return tx.Set(stamp, stampDoc{at.UTC().Truncate(time.Microsecond)})
 		}
 		return nil
 	})
-	return mapErr("count place", err)
+	return earned && err == nil, mapErr("count place", err)
 }
 
 // List returns the stamps earned.
