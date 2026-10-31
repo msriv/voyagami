@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/msriv/voyagami/services/api/internal/api"
+	"github.com/msriv/voyagami/services/api/internal/ask"
 	"github.com/msriv/voyagami/services/api/internal/auth"
 	"github.com/msriv/voyagami/services/api/internal/billing"
 	"github.com/msriv/voyagami/services/api/internal/devlog"
@@ -89,6 +90,8 @@ type handlers struct {
 	stayClicks    StayClicks
 	staysOn       bool
 	catalog       repo.PlaceCatalog
+	asker         ask.Drafter
+	askCount      AskCounter
 	jobsSecret    string
 	feed          repo.Feed
 	presence      repo.Presence
