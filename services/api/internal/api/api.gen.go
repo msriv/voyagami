@@ -2261,6 +2261,9 @@ type ServerInterface interface {
 	// GetCatalogPlace One catalogue place with photos and sources
 	// (GET /v1/places/{placeId})
 	GetCatalogPlace(w http.ResponseWriter, r *http.Request, placeId string, params GetCatalogPlaceParams)
+	// GetFreePlanLimits What the Free plan allows
+	// (GET /v1/plans/free)
+	GetFreePlanLimits(w http.ResponseWriter, r *http.Request)
 	// GetRate Suggested exchange rate for a pair of currencies
 	// (GET /v1/rates)
 	GetRate(w http.ResponseWriter, r *http.Request, params GetRateParams)
@@ -2864,6 +2867,20 @@ func (siw *ServerInterfaceWrapper) GetCatalogPlace(w http.ResponseWriter, r *htt
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetCatalogPlace(w, r, placeId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetFreePlanLimits operation middleware
+func (siw *ServerInterfaceWrapper) GetFreePlanLimits(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetFreePlanLimits(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -4934,6 +4951,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/health", wrapper.GetHealth)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/me/entitlements", wrapper.GetMyEntitlements)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/plans/free", wrapper.GetFreePlanLimits)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/entitlements", wrapper.GetTripEntitlements)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/stays/links", wrapper.ListStayLinks)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/stays/clicks", wrapper.RecordStayClick)
@@ -5873,6 +5891,55 @@ func (response GetCatalogPlace404JSONResponse) VisitGetCatalogPlaceResponse(w ht
 type GetCatalogPlace503JSONResponse struct{ UnavailableJSONResponse }
 
 func (response GetCatalogPlace503JSONResponse) VisitGetCatalogPlaceResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetFreePlanLimitsRequestObject struct {
+}
+
+type GetFreePlanLimitsResponseObject interface {
+	VisitGetFreePlanLimitsResponse(w http.ResponseWriter) error
+}
+
+type GetFreePlanLimits200JSONResponse Entitlements
+
+func (response GetFreePlanLimits200JSONResponse) VisitGetFreePlanLimitsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetFreePlanLimits401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response GetFreePlanLimits401JSONResponse) VisitGetFreePlanLimitsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetFreePlanLimits503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response GetFreePlanLimits503JSONResponse) VisitGetFreePlanLimitsResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -10761,6 +10828,9 @@ type StrictServerInterface interface {
 	// GetCatalogPlace One catalogue place with photos and sources
 	// (GET /v1/places/{placeId})
 	GetCatalogPlace(ctx context.Context, request GetCatalogPlaceRequestObject) (GetCatalogPlaceResponseObject, error)
+	// GetFreePlanLimits What the Free plan allows
+	// (GET /v1/plans/free)
+	GetFreePlanLimits(ctx context.Context, request GetFreePlanLimitsRequestObject) (GetFreePlanLimitsResponseObject, error)
 	// GetRate Suggested exchange rate for a pair of currencies
 	// (GET /v1/rates)
 	GetRate(ctx context.Context, request GetRateRequestObject) (GetRateResponseObject, error)
@@ -11422,6 +11492,30 @@ func (sh *strictHandler) GetCatalogPlace(w http.ResponseWriter, r *http.Request,
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetCatalogPlaceResponseObject); ok {
 		if err := validResponse.VisitGetCatalogPlaceResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetFreePlanLimits operation middleware
+func (sh *strictHandler) GetFreePlanLimits(w http.ResponseWriter, r *http.Request) {
+	var request GetFreePlanLimitsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetFreePlanLimits(ctx, request.(GetFreePlanLimitsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetFreePlanLimits")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetFreePlanLimitsResponseObject); ok {
+		if err := validResponse.VisitGetFreePlanLimitsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

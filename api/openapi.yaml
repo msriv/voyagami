@@ -56,6 +56,26 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/plans/free:
+    get:
+      operationId: getFreePlanLimits
+      tags: [plans]
+      summary: What the Free plan allows
+      description: |
+        The Free plan's answer for every feature, read from the same table the
+        server checks against. The Plans screen shows it next to Plus. In dev
+        every limit is off, so it reads as no cap. Needs a bearer token.
+      responses:
+        "200":
+          description: The Free plan and one decision per feature.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Entitlements"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/trips/{tripId}/entitlements:
     parameters:
       - name: tripId

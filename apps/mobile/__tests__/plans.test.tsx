@@ -62,4 +62,23 @@ describe("Plans", () => {
     await waitFor(() => expect(screen.getByText(/purchases are back/)).toBeTruthy());
     expect(restore).toHaveBeenCalledTimes(1);
   });
+
+  it("compares Free and Plus from the server's table", async () => {
+    mockApi({
+      ...entitlements("free"),
+      "GET /v1/plans/free": () =>
+        json(200, {
+          plan: "free",
+          features: {
+            upcomingTrips: { allowed: true, limit: 2, used: 0, needsPlus: false, readOnly: false },
+            recapSeconds: { allowed: true, limit: 30, used: 0, needsPlus: false, readOnly: false },
+            darkMode: { allowed: false, limit: 0, used: 0, needsPlus: true, readOnly: false },
+          },
+        }),
+    });
+    await renderRouter(routes, { initialUrl: "/plans" });
+    expect(await screen.findByLabelText("Upcoming trips: Free, 2. Plus, No limit.")).toBeTruthy();
+    expect(screen.getByLabelText("Recap length: Free, 30 seconds. Plus, No limit.")).toBeTruthy();
+    expect(screen.getByLabelText("Dark mode: Free, Not included. Plus, Included.")).toBeTruthy();
+  });
 });

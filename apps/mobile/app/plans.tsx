@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
+import { CompareTable } from "@/plans/CompareTable";
 import { usePlanPrices } from "@/plans/prices";
 import { useTheme } from "@/theme";
 import { Button, Card, IconButton, Text } from "@/ui";
@@ -115,6 +116,8 @@ export default function PlansScreen() {
           ))}
           <Text variant="caption">{t("plans.passCredit")}</Text>
         </Card>
+
+        <CompareTable />
 
         <Text variant="caption">{t("plans.alwaysFree")}</Text>
         <Button label={t("plans.restore")} variant="ghost" onPress={restore} />
