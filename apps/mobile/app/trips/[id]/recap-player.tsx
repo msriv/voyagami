@@ -258,12 +258,14 @@ export default function RecapPlayerScreen() {
               importantForAccessibility="no-hide-descendants"
             >
               <Pressable
+                accessibilityRole="none"
                 style={{ flex: 1 }}
                 onPress={() => go(-1)}
                 onPressIn={() => setHeld(true)}
                 onPressOut={() => setHeld(false)}
               />
               <Pressable
+                accessibilityRole="none"
                 style={{ flex: 1 }}
                 onPress={() => go(1)}
                 onPressIn={() => setHeld(true)}
