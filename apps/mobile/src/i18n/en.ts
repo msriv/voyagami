@@ -51,6 +51,27 @@ export const en = {
       generic: "Something went wrong. Try again.",
     },
   },
+  paywall: {
+    notNow: "Not now",
+    tryPlus: "Try Plus free for 7 days",
+    passFrom: "Or a week Trip Pass for {{price}}",
+    crewNote: "If anyone on this trip gets Plus, it works for the whole crew.",
+    stillFree: "Your plan, tickets and settling up stay free.",
+    moments: {
+      bestOrder: {
+        title: "Find the best order again",
+        body: "Free trips get one best order each. Plus finds the quickest route for every day, as often as you like.",
+      },
+      multiCurrency: {
+        title: "Add a second currency?",
+        body: "Free trips use one currency. Plus converts every expense at live rates and settles everyone up in the trip's currency.",
+      },
+      default: {
+        title: "This is a Plus feature",
+        body: "You have reached the limit on the Free plan. Plus lifts it.",
+      },
+    },
+  },
   plans: {
     title: "Travel lighter with Plus",
     back: "Back",
