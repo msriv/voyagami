@@ -76,6 +76,8 @@ type handlers struct {
 	devLogs       devlog.Store
 	usage         repo.TripUsage
 	devices       repo.Devices
+	support       repo.Support
+	supportLimit  *userLimiter
 	events        Publisher
 	stamps        repo.Stamps
 	stampReward   StampRewarder

@@ -66,6 +66,12 @@ type Devices interface {
 	List(ctx context.Context, uid string) ([]model.Device, error)
 }
 
+// Support stores messages from the Help screen.
+type Support interface {
+	// Add stores a message and returns its ID.
+	Add(ctx context.Context, m model.SupportMessage) (string, error)
+}
+
 // Trips stores trips and who is on them. Membership changes keep the trip's
 // memberUids mirror in step inside one transaction.
 type Trips interface {
