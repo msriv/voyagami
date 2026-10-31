@@ -82,14 +82,17 @@ func TestPlansSpecValues(t *testing.T) {
 	}
 }
 
-func TestForEnv(t *testing.T) {
-	if ForEnv("dev")[UpcomingTrips] != Unlimited {
-		t.Error("dev should have no limits")
+func TestUnlimitedUserSkipsEveryLimit(t *testing.T) {
+	svc := New(Free())
+	u := User{Unlimited: true, Used: counts(UpcomingTrips, 99)}
+	if d := svc.Check(u, nil, UpcomingTrips); !d.Allowed || d.Limit != Unlimited || d.ReadOnly {
+		t.Errorf("unlimited user over the cap: %+v", d)
 	}
-	for _, env := range []string{"staging", "prod"} {
-		if ForEnv(env)[UpcomingTrips] != 2 {
-			t.Errorf("%s should use the Free values", env)
-		}
+	if d := svc.Check(u, &Trip{}, MultiCurrency); !d.Allowed {
+		t.Errorf("unlimited user, closed flag: %+v", d)
+	}
+	if d := svc.Check(User{Used: counts(UpcomingTrips, 99)}, nil, UpcomingTrips); d.Allowed {
+		t.Error("a normal Free user must still be capped")
 	}
 }
 

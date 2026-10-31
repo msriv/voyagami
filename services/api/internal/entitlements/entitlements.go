@@ -1,8 +1,8 @@
 // Package entitlements decides what a person may do on their plan.
 //
 // Every limit is checked here, on the server. The app only reflects the answer.
-// The numbers come from the Plans Spec board. Dev runs with every limit off
-// (see ForEnv); Free holds the real values.
+// The numbers come from the Plans Spec board. Dev accounts that are not
+// plan mock accounts skip every limit (see User.Unlimited); Free holds the real values.
 package entitlements
 
 import "sort"
@@ -124,18 +124,13 @@ func NoLimits() Limits {
 	return l
 }
 
-// ForEnv returns the limits for an APP_ENV value: none in dev, Free elsewhere.
-func ForEnv(env string) Limits {
-	if env == "dev" {
-		return NoLimits()
-	}
-	return Free()
-}
-
 // User is what the service needs to know about the person asking.
 type User struct {
 	// Plus is true while the person has an active Plus subscription or trial.
 	Plus bool
+	// Unlimited lifts every limit for the person. Only dev accounts that are not
+	// one of the plan mock accounts get it, so the owner can test without caps.
+	Unlimited bool
 	// Used holds the person's own counters: UpcomingTrips and AskDrafts.
 	Used map[Feature]int
 }
@@ -187,6 +182,9 @@ func (s *Service) Check(user User, trip *Trip, f Feature) Decision {
 	used := user.Used[f]
 	if trip != nil && countedPerTrip(f) {
 		used = trip.Used[f]
+	}
+	if user.Unlimited {
+		return Decision{Allowed: true, Limit: Unlimited, Used: used}
 	}
 	if unlocked(f, sc, user, trip) {
 		return Decision{Allowed: true, Limit: Unlimited, Used: used}

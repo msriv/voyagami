@@ -30,4 +30,12 @@ A refused request answers `403` with `code: "limit_reached"` and `feature` set t
 
 ## Dev
 
-Dev runs with no limits. Set `DEV_PLAN=free` on the API to try the Free limits with real counters, or `DEV_PLAN=plus` to force Plus.
+Dev gives each account its own plan. An ordinary dev account has no limits, so the owner can test freely. Three mock accounts stand for one plan each. Sign in with the number and the dev code `123456`:
+
+| Number          | Plan                                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------ |
+| +1 555 555 0101 | Free, with the real Free limits and counters                                                                 |
+| +1 555 555 0102 | Plus                                                                                                         |
+| +1 555 555 0103 | Trip Pass: this account is Free, but every trip it is a member of has a Pass, so the crew sees the Pass plan |
+
+The mark is stored on the account (`entitlements/{uid}.devPlan`) and set again at every sign-in. These numbers are in the fictional 555-01xx range and only work when `APP_ENV` is dev. `DEV_PLAN=free` or `DEV_PLAN=plus` still forces every account onto one plan.
