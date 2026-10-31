@@ -2631,6 +2631,13 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/CatalogPlacePhoto"
+        openingHours:
+          type: array
+          description: |
+            When the place is open, in its own time zone (`timeZone`). Left out when
+            we do not know. A weekday with no entry is closed that day.
+          items:
+            $ref: "#/components/schemas/OpeningPeriod"
         sources:
           type: array
           items:
@@ -2639,6 +2646,21 @@ components:
           type: number
           format: double
           description: From the search point. Only in the nearby list.
+    OpeningPeriod:
+      type: object
+      required: [day, open, close]
+      properties:
+        day:
+          type: string
+          enum: [mon, tue, wed, thu, fri, sat, sun]
+        open:
+          type: string
+          pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+          description: Opening time, 24-hour HH:MM. The app formats it for the person's clock setting.
+        close:
+          type: string
+          pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+          description: Closing time. Earlier than `open` means it closes after midnight, on the next day.
     CatalogPlaceList:
       type: object
       required: [places]

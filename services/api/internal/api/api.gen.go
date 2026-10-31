@@ -363,6 +363,39 @@ func (e MemberRoleChangeRole) Valid() bool {
 	}
 }
 
+// Defines values for OpeningPeriodDay.
+const (
+	Fri OpeningPeriodDay = "fri"
+	Mon OpeningPeriodDay = "mon"
+	Sat OpeningPeriodDay = "sat"
+	Sun OpeningPeriodDay = "sun"
+	Thu OpeningPeriodDay = "thu"
+	Tue OpeningPeriodDay = "tue"
+	Wed OpeningPeriodDay = "wed"
+)
+
+// Valid indicates whether the value is a known member of the OpeningPeriodDay enum.
+func (e OpeningPeriodDay) Valid() bool {
+	switch e {
+	case Fri:
+		return true
+	case Mon:
+		return true
+	case Sat:
+		return true
+	case Sun:
+		return true
+	case Thu:
+		return true
+	case Tue:
+		return true
+	case Wed:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PlaceGroup.
 const (
 	PlaceGroupDo        PlaceGroup = "do"
@@ -957,10 +990,14 @@ type CatalogPlace struct {
 	Lng            float64    `json:"lng"`
 
 	// Name In the requested language when we have it.
-	Name     string               `json:"name"`
-	Photos   []CatalogPlacePhoto  `json:"photos"`
-	Sources  []CatalogPlaceSource `json:"sources"`
-	TimeZone *string              `json:"timeZone,omitempty"`
+	Name string `json:"name"`
+
+	// OpeningHours When the place is open, in its own time zone (`timeZone`). Left out when
+	// we do not know. A weekday with no entry is closed that day.
+	OpeningHours *[]OpeningPeriod     `json:"openingHours,omitempty"`
+	Photos       []CatalogPlacePhoto  `json:"photos"`
+	Sources      []CatalogPlaceSource `json:"sources"`
+	TimeZone     *string              `json:"timeZone,omitempty"`
 }
 
 // CatalogPlaceList defines model for CatalogPlaceList.
@@ -1409,6 +1446,19 @@ type Money struct {
 	// Currency ISO 4217 code.
 	Currency string `json:"currency"`
 }
+
+// OpeningPeriod defines model for OpeningPeriod.
+type OpeningPeriod struct {
+	// Close Closing time. Earlier than `open` means it closes after midnight, on the next day.
+	Close string           `json:"close"`
+	Day   OpeningPeriodDay `json:"day"`
+
+	// Open Opening time, 24-hour HH:MM. The app formats it for the person's clock setting.
+	Open string `json:"open"`
+}
+
+// OpeningPeriodDay defines model for OpeningPeriod.Day.
+type OpeningPeriodDay string
 
 // OtpRequest defines model for OtpRequest.
 type OtpRequest struct {

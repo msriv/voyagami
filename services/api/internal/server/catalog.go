@@ -125,6 +125,13 @@ func toAPIPlace(p model.CatalogPlace, lang string, distance *float64) api.Catalo
 	for _, ph := range p.Photos {
 		out.Photos = append(out.Photos, api.CatalogPlacePhoto{Url: ph.URL, Attribution: ph.Attribution, Source: ph.Source, Licence: ph.Licence})
 	}
+	if len(p.Hours) > 0 {
+		hours := make([]api.OpeningPeriod, 0, len(p.Hours))
+		for _, h := range p.Hours {
+			hours = append(hours, api.OpeningPeriod{Day: api.OpeningPeriodDay(h.Day), Open: h.Open, Close: h.Close})
+		}
+		out.OpeningHours = &hours
+	}
 	fields := make([]string, 0, len(p.Provenance))
 	for f := range p.Provenance {
 		fields = append(fields, f)
