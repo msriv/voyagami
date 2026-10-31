@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { track } from "@/analytics/track";
 import { useState } from "react";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -34,6 +35,7 @@ export default function JoinScreen() {
       const trip = await api.unwrap(
         api.POST("/v1/invites/join", { body: { token: token.trim() } }),
       );
+      track("crew_joined");
       router.replace(`/trips/${trip.id}`);
     } catch (e) {
       setError(

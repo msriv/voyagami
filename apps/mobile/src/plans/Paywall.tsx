@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 
+import { track } from "@/analytics/track";
 import { useTranslation } from "@/i18n";
 import { onLimitReached } from "@/plans/limitEvents";
 import { usePlanPrices } from "@/plans/prices";
@@ -55,18 +56,25 @@ export function PaywallProvider({ children }: { children: ReactNode }) {
   const prices = usePlanPrices();
   const [feature, setFeature] = useState<string | undefined>();
 
-  const show = useCallback((f: string) => setFeature(f), []);
+  const show = useCallback((f: string) => {
+    setFeature(f);
+    track("paywall_shown", { moment: momentFor(f) });
+  }, []);
   useEffect(() => onLimitReached(show), [show]);
   const api = useMemo(() => ({ show }), [show]);
-  const close = () => setFeature(undefined);
   const moment = feature ? momentFor(feature) : "default";
+  const close = () => setFeature(undefined);
+  const dismiss = () => {
+    track("paywall_dismissed", { moment });
+    close();
+  };
 
   return (
     <Paywall.Provider value={api}>
       {children}
       <Sheet
         visible={feature !== undefined}
-        onClose={close}
+        onClose={dismiss}
         title={t(`paywall.moments.${moment}.title`)}
         closeLabel={t("paywall.notNow")}
         closeIcon={<Icon name="close" color={colors.ink} />}
@@ -76,6 +84,7 @@ export function PaywallProvider({ children }: { children: ReactNode }) {
         <Button
           label={t("paywall.tryPlus")}
           onPress={() => {
+            track("paywall_converted", { moment });
             close();
             router.push("/plans");
           }}
@@ -83,7 +92,7 @@ export function PaywallProvider({ children }: { children: ReactNode }) {
         {prices.pass?.week ? (
           <Text variant="caption">{t("paywall.passFrom", { price: prices.pass.week })}</Text>
         ) : null}
-        <Button label={t("paywall.notNow")} variant="ghost" onPress={close} />
+        <Button label={t("paywall.notNow")} variant="ghost" onPress={dismiss} />
         <Text variant="caption">
           {t(moment === "offlineMaps" ? "paywall.offlineStillFree" : "paywall.stillFree")}
         </Text>
