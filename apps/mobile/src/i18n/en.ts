@@ -104,6 +104,12 @@ export const en = {
       "Plus is on. The whole crew gets best order, currencies and the live map on your trips.",
     freeNote:
       "You are on the Free plan. Joining trips, settling up and meet points are always free.",
+    renews: "Renews on {{date}}.",
+    endsOn: "Plus ends on {{date}}. It works until then.",
+    trial: "You are on the free trial.",
+    trialEnds: "Your free trial ends on {{date}}.",
+    subscribed: "Your subscription is active.",
+    billingIssue: "The store could not take your payment. Update your payment method in the store.",
     cancelTitle: "Change or cancel",
     cancelBody:
       "The App Store or Google Play looks after your subscription, so you change or cancel it there. Open the page below, pick Voyagami and choose what you want.",
