@@ -68,6 +68,18 @@ describe("Place detail", () => {
     expect(await screen.findByText("Added to the trip.")).toBeTruthy();
   });
 
+  it("shows opening hours in the person's clock and Closed on days with none", async () => {
+    mockApi({
+      "GET /v1/me": () => json(200, { id: "u1" }),
+      "GET /v1/places/p1": () =>
+        json(200, { ...place, openingHours: [{ day: "mon", open: "09:00", close: "17:30" }] }),
+    });
+    await renderRouter(routes, { initialUrl: "/trips/t1/place?placeId=p1" });
+    expect(await screen.findByText("Opening hours")).toBeTruthy();
+    expect(screen.getByText(/Monday: 9:00.* to 5:30/)).toBeTruthy();
+    expect(screen.getByText("Tuesday: Closed")).toBeTruthy();
+  });
+
   it("says when the place is gone", async () => {
     mockApi({
       "GET /v1/me": () => json(200, { id: "u1" }),
