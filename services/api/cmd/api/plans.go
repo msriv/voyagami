@@ -19,6 +19,9 @@ type planSource struct {
 	// devPlan is "free" or "plus" to force every account's plan (dev only), else "".
 	// The counters are still real, so a forced Free plan hits its limits.
 	devPlan string
+	// dev is true when APP_ENV is dev. Accounts without a mock plan then skip every
+	// limit, and the mock accounts (see devplans.go) get the plan they stand for.
+	dev bool
 }
 
 func (p planSource) User(ctx context.Context, uid string) (entitlements.User, error) {
@@ -30,10 +33,18 @@ func (p planSource) User(ctx context.Context, uid string) (entitlements.User, er
 	if err != nil {
 		return entitlements.User{}, err
 	}
-	if p.devPlan != "" {
+	unlimited := false
+	switch {
+	case p.devPlan != "":
 		plus = p.devPlan == "plus"
+	case p.dev:
+		dp, err := p.accounts.DevPlan(ctx, uid)
+		if err != nil {
+			return entitlements.User{}, err
+		}
+		unlimited = dp == ""
 	}
-	return entitlements.User{Plus: plus, Used: map[entitlements.Feature]int{
+	return entitlements.User{Plus: plus, Unlimited: unlimited, Used: map[entitlements.Feature]int{
 		entitlements.AskDrafts: drafts, entitlements.UpcomingTrips: upcoming,
 	}}, nil
 }
@@ -61,6 +72,13 @@ func (p planSource) Trip(ctx context.Context, tripID string) (entitlements.Trip,
 		if m.Status != model.MemberActive {
 			continue
 		}
+		if p.dev {
+			dp, err := p.accounts.DevPlan(ctx, m.UID)
+			if err != nil {
+				return entitlements.Trip{}, err
+			}
+			t.Pass = t.Pass || dp == devPlanPass
+		}
 		plus, _, err := p.accounts.Account(ctx, m.UID)
 		if err != nil {
 			return entitlements.Trip{}, err
@@ -74,7 +92,7 @@ func (p planSource) Trip(ctx context.Context, tripID string) (entitlements.Trip,
 	if err != nil {
 		return entitlements.Trip{}, err
 	}
-	t.Pass = has && passCovers(trip.Dates.End, time.Now())
+	t.Pass = t.Pass || has && passCovers(trip.Dates.End, time.Now())
 	return t, nil
 }
 
@@ -111,9 +129,6 @@ func (p planSource) upcomingOwned(ctx context.Context, uid string) (int, error) 
 	return n, nil
 }
 
-func limitsFor(cfg config.Config) entitlements.Limits {
-	if cfg.DevPlan != "" {
-		return entitlements.Free()
-	}
-	return entitlements.ForEnv(cfg.Env)
-}
+// limitsFor is the Free table in every environment. Dev opens it per account
+// (see planSource.User), not for everyone.
+func limitsFor(config.Config) entitlements.Limits { return entitlements.Free() }

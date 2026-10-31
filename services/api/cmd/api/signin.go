@@ -83,7 +83,7 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 			server.WithJournal(firestorerepo.NewJournal(client)),
 			server.WithBookings(firestorerepo.NewBookings(client)),
 			server.WithSettleUp(firestorerepo.NewSettlements(client)),
-			server.WithEntitlements(entitlements.New(limitsFor(cfg)), planSource{firestorerepo.NewEntitlements(client), trips, bill, cfg.DevPlan}),
+			server.WithEntitlements(entitlements.New(limitsFor(cfg)), planSource{firestorerepo.NewEntitlements(client), trips, bill, cfg.DevPlan, cfg.Env == "dev"}),
 		},
 		close: func() { _ = client.Close() },
 	}
@@ -131,6 +131,6 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 	}
 	sms := otp.NewLimited(stub, otp.DefaultLimits)
 	svc := signin.NewService(sms, firestorerepo.NewAccounts(client), firestorerepo.NewSessions(client), keys)
-	deps.options = append(deps.options, server.WithSignIn(svc))
+	deps.options = append(deps.options, server.WithSignIn(devPlanSignIn{svc, firestorerepo.NewEntitlements(client)}))
 	return deps, nil
 }

@@ -5,7 +5,7 @@ Every plan limit is decided on the server by `services/api/internal/entitlements
 ## Using it
 
 ```go
-svc := entitlements.New(entitlements.ForEnv(cfg.Env))
+svc := entitlements.New(entitlements.Free())
 d := svc.Check(user, trip, entitlements.BestOrder)
 // d.Allowed, d.Limit (-1 is unlimited), d.Used, d.NeedsPlus
 ```
@@ -21,7 +21,7 @@ d := svc.Check(user, trip, entitlements.BestOrder)
 - Whole-trip features (best order, bookings, files, multi-currency, live crew map) unlock for everyone on a trip when any member has Plus or the trip has a Trip Pass.
 - A Trip Pass opens trip features for the crew but never the account ones: upcoming-trip count, Ask drafts, dark mode.
 - Always free, whatever the table says: joining trips, settle-up, meet points, data export, offline plan and tickets.
-- Dev has no limits (`ForEnv("dev")`). Staging and prod use the Free values.
+- Every environment uses the Free table. In dev, an account with no mock plan gets `User.Unlimited` and skips it; the three mock accounts get Free, Plus and Trip Pass (see `limits.md`).
 - Downgrading never deletes data. When a person or trip is over a cap (for example after Plus ends), `Decision.ReadOnly` is true: the content stays and can be read, but it cannot be changed until the count is back under the cap or Plus returns. Being exactly at the cap is full, not read-only.
 
 ## Endpoints and app hook
@@ -30,7 +30,7 @@ d := svc.Check(user, trip, entitlements.BestOrder)
 - `GET /v1/trips/{tripId}/entitlements` answers for one trip, so a Trip Pass or a crew member's Plus counts. Non-members get 404.
 - Both return `{plan, features}` where each feature is `{allowed, limit, used, needsPlus}`. They answer 503 if plans are not wired.
 - Plan facts come from the server-owned `entitlements/{uid}` Firestore document (`plus.active`, a future `trial.endsAt`, `usage.askDrafts`). No document means Free.
-- Trip Passes and per-trip counters have no storage yet, so they read as none and zero. Dev has no limits anyway.
+- Trip Passes and per-trip counters have no storage yet, so they read as none and zero. Dev accounts without a mock plan have no limits anyway.
 - In the app, `useEntitlement(feature, tripId?)` reflects the answer. It allows nothing until the server answers or if the request fails.
 
-`DEV_PLAN=free` or `DEV_PLAN=plus` (dev only) forces every account onto that plan and, for `free`, turns the Free caps on, so plan gates can be tried.
+`DEV_PLAN=free` or `DEV_PLAN=plus` (dev only) forces every account onto that plan, mock accounts included.

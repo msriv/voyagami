@@ -175,3 +175,32 @@ func TestTrialReminderQueue(t *testing.T) {
 		t.Fatalf("claim after extension: %v %v", ok, err)
 	}
 }
+
+func TestDevPlanMarks(t *testing.T) {
+	c := testClient(t)
+	ctx := testCtx(t)
+	s := NewEntitlements(c)
+
+	if got, err := s.DevPlan(ctx, model.NewID()); err != nil || got != "" {
+		t.Fatalf("ordinary account: %q, %v", got, err)
+	}
+	for _, tt := range []struct {
+		plan     string
+		wantPlus bool
+	}{{"free", false}, {"plus", true}, {"pass", false}, {"free", false}} {
+		uid := model.NewID()
+		// A mock that was Plus before must not keep it when re-marked.
+		if err := s.SetDevPlan(ctx, uid, "plus"); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.SetDevPlan(ctx, uid, tt.plan); err != nil {
+			t.Fatal(err)
+		}
+		if got, err := s.DevPlan(ctx, uid); err != nil || got != tt.plan {
+			t.Errorf("DevPlan after %q = %q, %v", tt.plan, got, err)
+		}
+		if plus, _, err := s.Account(ctx, uid); err != nil || plus != tt.wantPlus {
+			t.Errorf("plan %q: plus = %v, %v, want %v", tt.plan, plus, err, tt.wantPlus)
+		}
+	}
+}
