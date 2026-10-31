@@ -52,7 +52,19 @@ export async function saveTour(v: number | "done" | null): Promise<void> {
   else await SecureStore.setItemAsync(tourKey, String(v));
 }
 
+const consentsKey = "voyagami.consents";
+
+/** Privacy choices kept on this phone as JSON. Missing means no choice yet. */
+export async function loadConsents(): Promise<string | null> {
+  return SecureStore.getItemAsync(consentsKey);
+}
+
+export async function saveConsents(json: string | null): Promise<void> {
+  if (json === null) await SecureStore.deleteItemAsync(consentsKey);
+  else await SecureStore.setItemAsync(consentsKey, json);
+}
+
 /** Forgets everything kept on this device, so the next launch starts at Welcome. */
 export async function clearDevice(): Promise<void> {
-  await Promise.all([saveTokens(null), saveOnboarded(false), saveTour(null)]);
+  await Promise.all([saveTokens(null), saveOnboarded(false), saveTour(null), saveConsents(null)]);
 }

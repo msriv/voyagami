@@ -60,6 +60,7 @@ export const hi: Partial_<typeof en> = {
   },
   profile: {
     notifications: "सूचनाएँ",
+    privacy: "डेटा और गोपनीयता",
     help: "मदद",
     plan: "प्लान",
     homeRegion: "आपका देश",
