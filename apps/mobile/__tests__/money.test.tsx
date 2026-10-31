@@ -85,7 +85,7 @@ describe("Money", () => {
     expect(await screen.findByText("Pho")).toBeTruthy();
     expect(screen.getByText("Taxi")).toBeTruthy();
     expect(screen.getByText("Paid by you")).toBeTruthy();
-    expect(screen.getByText("Paid by someone else")).toBeTruthy();
+    expect(screen.getByText("Paid by Former member")).toBeTruthy();
     expect(screen.getByText(/170,000/)).toBeTruthy();
   });
 

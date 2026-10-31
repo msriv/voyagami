@@ -8,6 +8,7 @@ import { ApiError, type components } from "@voyagami/api-client";
 
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
+import { RecapVideo } from "@/recap/RecapVideo";
 import { useProfile } from "@/profile";
 import { useTheme } from "@/theme";
 import { isoToDate } from "@/trips/dates";
@@ -197,7 +198,7 @@ export default function RecapScreen() {
                   <Card key={`${h.date}-${h.authorUid}`}>
                     <Text variant="caption">
                       {day(h.date)}
-                      {names[h.authorUid] ? ` · ${names[h.authorUid]}` : ""}
+                      {` · ${names[h.authorUid] || t("members.former")}`}
                     </Text>
                     <Text>{h.text}</Text>
                   </Card>
@@ -207,6 +208,7 @@ export default function RecapScreen() {
           </>
         )}
 
+        <RecapVideo tripId={id} canEdit={trip.role !== "viewer"} />
         <Button
           label={t("recap.play")}
           variant="secondary"

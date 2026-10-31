@@ -1,4 +1,4 @@
-import { renderRouter, screen } from "expo-router/testing-library";
+import { fireEvent, renderRouter, screen } from "expo-router/testing-library";
 
 import { json, mockApi, routes } from "../test-utils/api";
 
@@ -86,5 +86,45 @@ describe("Trip recap", () => {
     });
     await renderRouter(routes, { initialUrl: "/trips/t1/recap" });
     expect(await screen.findByRole("button", { name: "Try again" })).toBeTruthy();
+  });
+});
+
+describe("Recap video", () => {
+  const job = (o: object) => ({
+    id: "j1",
+    state: "queued",
+    progress: 0,
+    maxSeconds: 30,
+    watermark: true,
+    createdAt: "2026-11-01T00:00:00Z",
+    ...o,
+  });
+
+  it("starts a video, shows progress, and says what the plan gives", async () => {
+    let posted = false;
+    mockApi({
+      ...api(recap),
+      "GET /v1/trips/t1/recap/video": () =>
+        posted
+          ? json(200, job({ state: "rendering", progress: 40 }))
+          : json(404, { code: "not_found", message: "x" }),
+      "POST /v1/trips/t1/recap/video": () => {
+        posted = true;
+        return json(202, job({}));
+      },
+    });
+    await renderRouter(routes, { initialUrl: "/trips/t1/recap" });
+    await fireEvent.press(await screen.findByRole("button", { name: "Make a video" }));
+    expect(await screen.findByText(/Making your video/)).toBeTruthy();
+  });
+
+  it("is hidden while the server has no renderer", async () => {
+    mockApi({
+      ...api(recap),
+      "GET /v1/trips/t1/recap/video": () => json(503, { code: "unavailable", message: "x" }),
+    });
+    await renderRouter(routes, { initialUrl: "/trips/t1/recap" });
+    await screen.findByText("Trip recap");
+    expect(screen.queryByText("Recap video")).toBeNull();
   });
 });
