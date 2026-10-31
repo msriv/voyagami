@@ -112,7 +112,8 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 	deps.options = append(deps.options, server.WithStays(partners, firestorerepo.NewStayClicks(client)))
 	if cfg.JobsSecret != "" {
 		deps.options = append(deps.options, server.WithJobs(newTrialReminders(cfg, logger, users, devices, firestorerepo.NewEntitlements(client)), cfg.JobsSecret),
-			server.WithDeletionJob(accountPurge{deletions: deletions, logger: logger}, cfg.JobsSecret))
+			server.WithDeletionJob(accountPurge{deletions: deletions, logger: logger}, cfg.JobsSecret),
+			server.WithAnalyticsReport(firestorerepo.NewEvents(client), cfg.JobsSecret))
 	} else {
 		logger.Warn("JOBS_SECRET is not set, so trial reminders and account deletions do not run")
 	}
