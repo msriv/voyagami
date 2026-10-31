@@ -895,6 +895,89 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/trips/{tripId}/experiences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Things to do near the trip, with partner hand-off links
+         * @description Catalogue places in the "do" group near the trip's centre, nearest
+         *     first, each with one hand-off link per configured experience partner.
+         *     Opening a link leaves the app; nothing is booked or paid here. To put
+         *     one in the itinerary, add it as a stop of kind catalog with the
+         *     `placeId` and the time the person picks. The list is empty when the
+         *     trip has no stop with a position. Links are empty when no partner is
+         *     set up. Needs a bearer token and membership.
+         */
+        get: operations["listExperiences"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/experiences/clicks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Count a tap on an experience link
+         * @description Same as the stay clicks: only a count per partner and day is kept.
+         *     Needs a bearer token and membership.
+         */
+        post: operations["recordExperienceClick"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/trips/{tripId}/recap/video": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * The latest recap video job
+         * @description Poll for progress. Answers 404 when no video was ever requested.
+         *     Needs a bearer token and membership.
+         */
+        get: operations["getRecapVideo"];
+        put?: never;
+        /**
+         * Start making the recap video
+         * @description Queues a 9:16 MP4 render. Free trips get at most 30 seconds with the
+         *     Voyagami watermark; a trip with Plus or a Trip Pass (anyone in the
+         *     crew) gets the full length with no watermark. If a render is already
+         *     queued or running for the trip, that job is returned instead of a new
+         *     one. A push notification is sent when the video is ready. Needs a
+         *     bearer token and an editor or owner role.
+         */
+        post: operations["createRecapVideo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/trips/{tripId}/journal": {
         parameters: {
             query?: never;
@@ -1946,6 +2029,42 @@ export interface components {
         };
         StayLinkList: {
             links: components["schemas"]["StayLink"][];
+        };
+        ExperienceLink: {
+            partnerId: string;
+            /** @description The partner's name, shown on the button. */
+            name: string;
+            /** Format: uri */
+            url: string;
+        };
+        Experience: {
+            /** @description A catalogue place id. Add it as a stop of kind catalog. */
+            placeId: string;
+            name: string;
+            distanceMeters: number;
+            photo?: components["schemas"]["CatalogPlacePhoto"];
+            links: components["schemas"]["ExperienceLink"][];
+        };
+        ExperienceList: {
+            items: components["schemas"]["Experience"][];
+        };
+        RecapVideo: {
+            id: string;
+            /** @enum {string} */
+            state: "queued" | "rendering" | "ready" | "failed";
+            progress: number;
+            /** @description Longest the video may be, or -1 for no cap. */
+            maxSeconds: number;
+            watermark: boolean;
+            /**
+             * Format: uri
+             * @description Short-lived download link. Set when the state is ready.
+             */
+            url?: string;
+            /** @description Plain-English reason. Set when the state is failed. */
+            error?: string;
+            /** Format: date-time */
+            createdAt: string;
         };
         StayClick: {
             partnerId: string;
@@ -4089,6 +4208,110 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    listExperiences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The experiences. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperienceList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    recordExperienceClick: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StayClick"];
+            };
+        };
+        responses: {
+            /** @description Counted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    getRecapVideo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The latest job. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecapVideo"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    createRecapVideo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The job. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecapVideo"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             503: components["responses"]["Unavailable"];
         };

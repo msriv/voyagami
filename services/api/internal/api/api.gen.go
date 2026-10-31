@@ -669,6 +669,30 @@ func (e PollResultDecidedBy) Valid() bool {
 	}
 }
 
+// Defines values for RecapVideoState.
+const (
+	Failed    RecapVideoState = "failed"
+	Queued    RecapVideoState = "queued"
+	Ready     RecapVideoState = "ready"
+	Rendering RecapVideoState = "rendering"
+)
+
+// Valid indicates whether the value is a known member of the RecapVideoState enum.
+func (e RecapVideoState) Valid() bool {
+	switch e {
+	case Failed:
+		return true
+	case Queued:
+		return true
+	case Ready:
+		return true
+	case Rendering:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for RecommendationReason.
 const (
 	Distance   RecommendationReason = "distance"
@@ -1515,6 +1539,30 @@ type ExpenseUpdate struct {
 	Split *SplitInput `json:"split,omitempty"`
 }
 
+// Experience defines model for Experience.
+type Experience struct {
+	DistanceMeters int                `json:"distanceMeters"`
+	Links          []ExperienceLink   `json:"links"`
+	Name           string             `json:"name"`
+	Photo          *CatalogPlacePhoto `json:"photo,omitempty"`
+
+	// PlaceId A catalogue place id. Add it as a stop of kind catalog.
+	PlaceId string `json:"placeId"`
+}
+
+// ExperienceLink defines model for ExperienceLink.
+type ExperienceLink struct {
+	// Name The partner's name, shown on the button.
+	Name      string `json:"name"`
+	PartnerId string `json:"partnerId"`
+	Url       string `json:"url"`
+}
+
+// ExperienceList defines model for ExperienceList.
+type ExperienceList struct {
+	Items []Experience `json:"items"`
+}
+
 // FieldError defines model for FieldError.
 type FieldError struct {
 	Field   string `json:"field"`
@@ -2007,6 +2055,27 @@ type RecapHighlight struct {
 	Date      string `json:"date"`
 	Text      string `json:"text"`
 }
+
+// RecapVideo defines model for RecapVideo.
+type RecapVideo struct {
+	CreatedAt time.Time `json:"createdAt"`
+
+	// Error Plain-English reason. Set when the state is failed.
+	Error *string `json:"error,omitempty"`
+	Id    string  `json:"id"`
+
+	// MaxSeconds Longest the video may be, or -1 for no cap.
+	MaxSeconds int             `json:"maxSeconds"`
+	Progress   int             `json:"progress"`
+	State      RecapVideoState `json:"state"`
+
+	// Url Short-lived download link. Set when the state is ready.
+	Url       *string `json:"url,omitempty"`
+	Watermark bool    `json:"watermark"`
+}
+
+// RecapVideoState defines model for RecapVideo.State.
+type RecapVideoState string
 
 // Recommendation defines model for Recommendation.
 type Recommendation struct {
@@ -2628,6 +2697,9 @@ type CreateExpenseJSONRequestBody = ExpenseCreate
 // UpdateExpenseJSONRequestBody defines body for UpdateExpense for application/json ContentType.
 type UpdateExpenseJSONRequestBody = ExpenseUpdate
 
+// RecordExperienceClickJSONRequestBody defines body for RecordExperienceClick for application/json ContentType.
+type RecordExperienceClickJSONRequestBody = StayClick
+
 // CreateInviteJSONRequestBody defines body for CreateInvite for application/json ContentType.
 type CreateInviteJSONRequestBody = InviteCreate
 
@@ -2840,6 +2912,12 @@ type ServerInterface interface {
 	// UpdateExpense Change an expense
 	// (PATCH /v1/trips/{tripId}/expenses/{expenseId})
 	UpdateExpense(w http.ResponseWriter, r *http.Request, tripId string, expenseId string)
+	// ListExperiences Things to do near the trip, with partner hand-off links
+	// (GET /v1/trips/{tripId}/experiences)
+	ListExperiences(w http.ResponseWriter, r *http.Request, tripId string)
+	// RecordExperienceClick Count a tap on an experience link
+	// (POST /v1/trips/{tripId}/experiences/clicks)
+	RecordExperienceClick(w http.ResponseWriter, r *http.Request, tripId string)
 	// ListInvites List invite links
 	// (GET /v1/trips/{tripId}/invites)
 	ListInvites(w http.ResponseWriter, r *http.Request, tripId string)
@@ -2909,6 +2987,12 @@ type ServerInterface interface {
 	// GetRecap The facts for the trip recap
 	// (GET /v1/trips/{tripId}/recap)
 	GetRecap(w http.ResponseWriter, r *http.Request, tripId string)
+	// GetRecapVideo The latest recap video job
+	// (GET /v1/trips/{tripId}/recap/video)
+	GetRecapVideo(w http.ResponseWriter, r *http.Request, tripId string)
+	// CreateRecapVideo Start making the recap video
+	// (POST /v1/trips/{tripId}/recap/video)
+	CreateRecapVideo(w http.ResponseWriter, r *http.Request, tripId string)
 	// ListRecommendations Picks for you in one category
 	// (GET /v1/trips/{tripId}/recommendations)
 	ListRecommendations(w http.ResponseWriter, r *http.Request, tripId string, params ListRecommendationsParams)
@@ -4416,6 +4500,58 @@ func (siw *ServerInterfaceWrapper) UpdateExpense(w http.ResponseWriter, r *http.
 	handler.ServeHTTP(w, r)
 }
 
+// ListExperiences operation middleware
+func (siw *ServerInterfaceWrapper) ListExperiences(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListExperiences(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RecordExperienceClick operation middleware
+func (siw *ServerInterfaceWrapper) RecordExperienceClick(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RecordExperienceClick(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListInvites operation middleware
 func (siw *ServerInterfaceWrapper) ListInvites(w http.ResponseWriter, r *http.Request) {
 
@@ -5113,6 +5249,58 @@ func (siw *ServerInterfaceWrapper) GetRecap(w http.ResponseWriter, r *http.Reque
 	handler.ServeHTTP(w, r)
 }
 
+// GetRecapVideo operation middleware
+func (siw *ServerInterfaceWrapper) GetRecapVideo(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetRecapVideo(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateRecapVideo operation middleware
+func (siw *ServerInterfaceWrapper) CreateRecapVideo(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "tripId" -------------
+	var tripId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tripId", r.PathValue("tripId"), &tripId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tripId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateRecapVideo(w, r, tripId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListRecommendations operation middleware
 func (siw *ServerInterfaceWrapper) ListRecommendations(w http.ResponseWriter, r *http.Request) {
 
@@ -5795,6 +5983,10 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/trips/{tripId}/bookings/{bookingId}", wrapper.UpdateBooking)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/budget", wrapper.GetBudget)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/recap", wrapper.GetRecap)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/experiences", wrapper.ListExperiences)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/experiences/clicks", wrapper.RecordExperienceClick)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/recap/video", wrapper.GetRecapVideo)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/recap/video", wrapper.CreateRecapVideo)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/journal", wrapper.ListJournal)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/journal/{date}", wrapper.DeleteJournalEntry)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/v1/trips/{tripId}/journal/{date}", wrapper.PutJournalEntry)
@@ -9544,6 +9736,143 @@ func (response UpdateExpense503JSONResponse) VisitUpdateExpenseResponse(w http.R
 	return err
 }
 
+type ListExperiencesRequestObject struct {
+	TripId string `json:"tripId"`
+}
+
+type ListExperiencesResponseObject interface {
+	VisitListExperiencesResponse(w http.ResponseWriter) error
+}
+
+type ListExperiences200JSONResponse ExperienceList
+
+func (response ListExperiences200JSONResponse) VisitListExperiencesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListExperiences401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ListExperiences401JSONResponse) VisitListExperiencesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListExperiences404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ListExperiences404JSONResponse) VisitListExperiencesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListExperiences503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ListExperiences503JSONResponse) VisitListExperiencesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RecordExperienceClickRequestObject struct {
+	TripId string `json:"tripId"`
+	Body   *RecordExperienceClickJSONRequestBody
+}
+
+type RecordExperienceClickResponseObject interface {
+	VisitRecordExperienceClickResponse(w http.ResponseWriter) error
+}
+
+type RecordExperienceClick204Response struct {
+}
+
+func (response RecordExperienceClick204Response) VisitRecordExperienceClickResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type RecordExperienceClick400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response RecordExperienceClick400JSONResponse) VisitRecordExperienceClickResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RecordExperienceClick401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response RecordExperienceClick401JSONResponse) VisitRecordExperienceClickResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RecordExperienceClick404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response RecordExperienceClick404JSONResponse) VisitRecordExperienceClickResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RecordExperienceClick503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response RecordExperienceClick503JSONResponse) VisitRecordExperienceClickResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListInvitesRequestObject struct {
 	TripId string `json:"tripId"`
 }
@@ -11356,6 +11685,148 @@ func (response GetRecap503JSONResponse) VisitGetRecapResponse(w http.ResponseWri
 	return err
 }
 
+type GetRecapVideoRequestObject struct {
+	TripId string `json:"tripId"`
+}
+
+type GetRecapVideoResponseObject interface {
+	VisitGetRecapVideoResponse(w http.ResponseWriter) error
+}
+
+type GetRecapVideo200JSONResponse RecapVideo
+
+func (response GetRecapVideo200JSONResponse) VisitGetRecapVideoResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRecapVideo401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response GetRecapVideo401JSONResponse) VisitGetRecapVideoResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRecapVideo404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response GetRecapVideo404JSONResponse) VisitGetRecapVideoResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRecapVideo503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response GetRecapVideo503JSONResponse) VisitGetRecapVideoResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateRecapVideoRequestObject struct {
+	TripId string `json:"tripId"`
+}
+
+type CreateRecapVideoResponseObject interface {
+	VisitCreateRecapVideoResponse(w http.ResponseWriter) error
+}
+
+type CreateRecapVideo202JSONResponse RecapVideo
+
+func (response CreateRecapVideo202JSONResponse) VisitCreateRecapVideoResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(202)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateRecapVideo401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CreateRecapVideo401JSONResponse) VisitCreateRecapVideoResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateRecapVideo403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response CreateRecapVideo403JSONResponse) VisitCreateRecapVideoResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateRecapVideo404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CreateRecapVideo404JSONResponse) VisitCreateRecapVideoResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateRecapVideo503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response CreateRecapVideo503JSONResponse) VisitCreateRecapVideoResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListRecommendationsRequestObject struct {
 	TripId string `json:"tripId"`
 	Params ListRecommendationsParams
@@ -12624,6 +13095,12 @@ type StrictServerInterface interface {
 	// UpdateExpense Change an expense
 	// (PATCH /v1/trips/{tripId}/expenses/{expenseId})
 	UpdateExpense(ctx context.Context, request UpdateExpenseRequestObject) (UpdateExpenseResponseObject, error)
+	// ListExperiences Things to do near the trip, with partner hand-off links
+	// (GET /v1/trips/{tripId}/experiences)
+	ListExperiences(ctx context.Context, request ListExperiencesRequestObject) (ListExperiencesResponseObject, error)
+	// RecordExperienceClick Count a tap on an experience link
+	// (POST /v1/trips/{tripId}/experiences/clicks)
+	RecordExperienceClick(ctx context.Context, request RecordExperienceClickRequestObject) (RecordExperienceClickResponseObject, error)
 	// ListInvites List invite links
 	// (GET /v1/trips/{tripId}/invites)
 	ListInvites(ctx context.Context, request ListInvitesRequestObject) (ListInvitesResponseObject, error)
@@ -12693,6 +13170,12 @@ type StrictServerInterface interface {
 	// GetRecap The facts for the trip recap
 	// (GET /v1/trips/{tripId}/recap)
 	GetRecap(ctx context.Context, request GetRecapRequestObject) (GetRecapResponseObject, error)
+	// GetRecapVideo The latest recap video job
+	// (GET /v1/trips/{tripId}/recap/video)
+	GetRecapVideo(ctx context.Context, request GetRecapVideoRequestObject) (GetRecapVideoResponseObject, error)
+	// CreateRecapVideo Start making the recap video
+	// (POST /v1/trips/{tripId}/recap/video)
+	CreateRecapVideo(ctx context.Context, request CreateRecapVideoRequestObject) (CreateRecapVideoResponseObject, error)
 	// ListRecommendations Picks for you in one category
 	// (GET /v1/trips/{tripId}/recommendations)
 	ListRecommendations(ctx context.Context, request ListRecommendationsRequestObject) (ListRecommendationsResponseObject, error)
@@ -14321,6 +14804,65 @@ func (sh *strictHandler) UpdateExpense(w http.ResponseWriter, r *http.Request, t
 	}
 }
 
+// ListExperiences operation middleware
+func (sh *strictHandler) ListExperiences(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request ListExperiencesRequestObject
+
+	request.TripId = tripId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListExperiences(ctx, request.(ListExperiencesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListExperiences")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListExperiencesResponseObject); ok {
+		if err := validResponse.VisitListExperiencesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RecordExperienceClick operation middleware
+func (sh *strictHandler) RecordExperienceClick(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request RecordExperienceClickRequestObject
+
+	request.TripId = tripId
+
+	var body RecordExperienceClickJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.RecordExperienceClick(ctx, request.(RecordExperienceClickRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RecordExperienceClick")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(RecordExperienceClickResponseObject); ok {
+		if err := validResponse.VisitRecordExperienceClickResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListInvites operation middleware
 func (sh *strictHandler) ListInvites(w http.ResponseWriter, r *http.Request, tripId string) {
 	var request ListInvitesRequestObject
@@ -14986,6 +15528,58 @@ func (sh *strictHandler) GetRecap(w http.ResponseWriter, r *http.Request, tripId
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetRecapResponseObject); ok {
 		if err := validResponse.VisitGetRecapResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetRecapVideo operation middleware
+func (sh *strictHandler) GetRecapVideo(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request GetRecapVideoRequestObject
+
+	request.TripId = tripId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetRecapVideo(ctx, request.(GetRecapVideoRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetRecapVideo")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetRecapVideoResponseObject); ok {
+		if err := validResponse.VisitGetRecapVideoResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateRecapVideo operation middleware
+func (sh *strictHandler) CreateRecapVideo(w http.ResponseWriter, r *http.Request, tripId string) {
+	var request CreateRecapVideoRequestObject
+
+	request.TripId = tripId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateRecapVideo(ctx, request.(CreateRecapVideoRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateRecapVideo")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateRecapVideoResponseObject); ok {
+		if err := validResponse.VisitCreateRecapVideoResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
