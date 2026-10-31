@@ -1,6 +1,4 @@
-import { offlineHook } from "@/local/offlineHook";
 import { localStore } from "@/local/store";
-import { useWriteQueue } from "@/local/useWriteQueue";
 import { createApiClient, type ApiClient, type StoredTokens } from "@voyagami/api-client";
 import {
   createContext,
@@ -149,11 +147,9 @@ export function AuthProvider({
         },
         onSignedOut: () => setStatus("signedOut"),
         fetch: withBreadcrumbs(fetchImpl),
-        offline: offlineHook,
       }),
     [fetchImpl],
   );
-  useWriteQueue(api, status === "signedIn");
 
   // Auto sign-in on relaunch: saved tokens mean signed in. An expired access token is
   // refreshed on the first request, and a dead session lands back on sign-in via onSignedOut.
