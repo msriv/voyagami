@@ -9,3 +9,4 @@ build/
 coverage/
 .expo/
 packages/api-client/src/generated/
+services/api/internal/ranking/testdata/
