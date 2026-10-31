@@ -82,6 +82,7 @@ function Screens() {
           <Stack.Screen name="trips/[id]/crew" />
           <Stack.Screen name="trips/[id]/polls" />
           <Stack.Screen name="trips/[id]/stays" />
+          <Stack.Screen name="trips/[id]/picks" />
           <Stack.Screen name="trips/[id]/live" />
           <Stack.Screen name="trips/[id]/comments" />
           <Stack.Screen name="plans" />
