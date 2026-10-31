@@ -51,6 +51,9 @@ func NewHandler(logger *slog.Logger, verifier auth.Verifier, opts ...Option) htt
 	if (h.trialJob != nil || h.deletionJob != nil || h.recapJob != nil) && h.jobsSecret != "" {
 		h.mountJobs(mux)
 	}
+	if h.eventRows != nil && h.jobsSecret != "" {
+		h.mountReport(mux)
+	}
 	api.HandlerWithOptions(strict, api.StdHTTPServerOptions{
 		BaseRouter:  mux,
 		Middlewares: []api.MiddlewareFunc{requireAuth(logger, verifier)},
@@ -105,6 +108,7 @@ type handlers struct {
 	asker         ask.Drafter
 	askCount      AskCounter
 	jobsSecret    string
+	eventRows     EventRows
 	feed          repo.Feed
 	presence      repo.Presence
 	rates         rates.Provider
