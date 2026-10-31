@@ -10,21 +10,13 @@ import { useTranslation } from "@/i18n";
 import { usePaywall } from "@/plans/Paywall";
 import { useTripPlan } from "@/plans/useTripPlan";
 import { useTheme } from "@/theme";
+import { addCatalogPlace } from "@/trips/addCatalogPlace";
 import { Button, Card, Chip, IconButton, Text } from "@/ui";
 import { Icon } from "@/ui/icons";
 
 const GROUPS = ["see", "eat", "stay", "do", "shop", "nightlife"] as const;
 type Group = (typeof GROUPS)[number];
 type Reason = "style" | "quality" | "distance" | "popularity";
-
-const STOP_CATEGORY = {
-  see: "sights",
-  eat: "food",
-  stay: "stay",
-  do: "activity",
-  shop: "shopping",
-  nightlife: "other",
-} as const;
 
 interface Pick {
   place: {
@@ -90,30 +82,8 @@ export default function PicksScreen() {
   async function add(p: Pick) {
     setNote(undefined);
     try {
-      let day = date;
-      if (!day) {
-        const trip = await api.unwrap(
-          api.GET("/v1/trips/{tripId}", { params: { path: { tripId: id } } }),
-        );
-        day = trip.dates?.start;
-      }
-      if (!day) return setNote(t("picks.noDay"));
-      await api.unwrap(
-        api.POST("/v1/trips/{tripId}/stops", {
-          params: { path: { tripId: id } },
-          body: {
-            date: day,
-            place: {
-              name: p.place.name,
-              lat: p.place.lat,
-              lng: p.place.lng,
-              ...(p.place.address ? { address: p.place.address } : null),
-              category: STOP_CATEGORY[p.place.group],
-            },
-          },
-        }),
-      );
-      setNote(t("picks.added", { name: p.place.name }));
+      const ok = await addCatalogPlace(api, id, p.place, date);
+      setNote(ok ? t("picks.added", { name: p.place.name }) : t("picks.noDay"));
     } catch {
       setNote(t("picks.addError"));
     }
@@ -193,6 +163,11 @@ export default function PicksScreen() {
                   {p.reasons.map((r) => (
                     <Text key={r}>{t(`picks.reasons.${r}`)}</Text>
                   ))}
+                  <Button
+                    label={t("picks.details", { name: p.place.name })}
+                    variant="ghost"
+                    onPress={() => router.push(`/trips/${id}/place?placeId=${p.place.id}`)}
+                  />
                   <Button
                     label={t("picks.add", { name: p.place.name })}
                     variant="secondary"
