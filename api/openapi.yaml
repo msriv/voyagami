@@ -18,6 +18,16 @@ tags:
     description: Phone sign-in, token refresh and sign-out.
   - name: account
     description: The signed-in person.
+  - name: privacy
+    description: Consent choices, data export and account deletion.
+  - name: support
+    description: Messages to support.
+  - name: analytics
+    description: Product events.
+  - name: sponsored
+    description: Sponsored cards.
+  - name: ask
+    description: AI trip drafts.
 paths:
   /health:
     get:
@@ -36,6 +46,332 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Health"
+  /v1/me/consents:
+    get:
+      operationId: getMyConsents
+      tags: [privacy]
+      summary: The signed-in person's consent choices
+      description: |
+        One answer per purpose: `unset` (never asked), `granted` or `denied`.
+        Each can be changed later. Needs a bearer token.
+      responses:
+        "200":
+          description: The choices.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Consents"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    patch:
+      operationId: updateMyConsents
+      tags: [privacy]
+      summary: Change consent choices
+      description: Changes only the purposes that are sent. Needs a bearer token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsentsUpdate"
+      responses:
+        "200":
+          description: The choices after the change.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Consents"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/me/export:
+    get:
+      operationId: exportMyData
+      tags: [privacy]
+      summary: Download the person's data
+      description: |
+        A ZIP with JSON and CSV files of the person's trips, stops, expenses and
+        journal. Free for everyone. Needs a bearer token.
+      responses:
+        "200":
+          description: The ZIP file.
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/me/deletion:
+    get:
+      operationId: getMyDeletion
+      tags: [privacy]
+      summary: Whether account deletion is scheduled
+      responses:
+        "200":
+          description: The deletion state.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deletion"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    delete:
+      operationId: cancelMyDeletion
+      tags: [privacy]
+      summary: Keep the account after all
+      description: Cancels a scheduled deletion. Succeeds when none is scheduled.
+      responses:
+        "204":
+          description: Cancelled.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/support/messages:
+    post:
+      operationId: sendSupportMessage
+      tags: [support]
+      summary: Send a message to support
+      description: |
+        From the in-app Help screen. The diagnostics come from the phone; they
+        carry no phone number, location or trip content. Needs a bearer token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupportMessage"
+      responses:
+        "202":
+          description: Received.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportReceipt"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/events:
+    post:
+      operationId: sendEvents
+      tags: [analytics]
+      summary: Send product events in a batch
+      description: |
+        Funnel and paywall events. No phone numbers, locations or free text:
+        the server drops any event whose name is not on the list in
+        `docs/analytics.md`, and any property that is not a short string, a
+        number or a boolean. Events from a person who has not granted the
+        `analytics` consent are dropped. Needs a bearer token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventBatch"
+      responses:
+        "200":
+          description: How many events were kept.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventReceipt"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/sponsored:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: group
+        in: query
+        required: false
+        description: The list the card would sit in. Left out for the trip-wide list.
+        schema:
+          $ref: "#/components/schemas/PlaceGroup"
+    get:
+      operationId: getSponsoredCard
+      tags: [sponsored]
+      summary: The sponsored card for a list, if there is one
+      description: |
+        At most one card, on every plan including Plus. Chosen by the trip's
+        destination and the list's group only. A card the person hid is not
+        returned for 30 days. Needs a bearer token and membership.
+      responses:
+        "200":
+          description: The card, or none.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SponsoredResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/sponsored/{cardId}/impressions:
+    parameters:
+      - name: cardId
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      operationId: recordSponsoredImpression
+      tags: [sponsored]
+      summary: The card was shown
+      description: Counted once per person per card per day. Needs a bearer token.
+      responses:
+        "204":
+          description: Recorded.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/sponsored/{cardId}/clicks:
+    parameters:
+      - name: cardId
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      operationId: recordSponsoredClick
+      tags: [sponsored]
+      summary: The card was tapped
+      description: Counted once per person per card per day. Needs a bearer token.
+      responses:
+        "204":
+          description: Recorded.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/sponsored/{cardId}/hide:
+    parameters:
+      - name: cardId
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      operationId: hideSponsoredCard
+      tags: [sponsored]
+      summary: Hide this card for 30 days
+      description: Needs a bearer token.
+      responses:
+        "200":
+          description: When the card may come back.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SponsoredHidden"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/ask/drafts:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      operationId: createAskDraft
+      tags: [ask]
+      summary: Ask for a day-by-day draft
+      description: |
+        The person describes what they want. The draft is built only from places
+        in our own catalogue near the trip, so nothing is invented. It is a
+        preview: nothing is added to the trip until the person picks items and
+        adds them as stops. The text is treated as data, never as instructions.
+        Counts against the monthly Ask limit (Free 3, Plus fair use); answers 403
+        with code `limit_reached` and feature `askDrafts` when it is used up.
+        Needs a bearer token and an editor or owner role.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AskRequest"
+      responses:
+        "200":
+          description: The draft.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AskDraft"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/bookings/{bookingId}/flight-status:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getFlightStatus
+      tags: [bookings]
+      summary: Live status of a flight booking
+      description: |
+        Matches the booking's airline and flight number to the status provider.
+        Answers 503 until a provider is set up. Needs a bearer token and
+        membership.
+      responses:
+        "200":
+          description: The status.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlightStatus"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/me/entitlements:
     get:
       operationId: getMyEntitlements
@@ -288,6 +624,29 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    delete:
+      operationId: scheduleMyDeletion
+      tags: [privacy]
+      summary: Delete the account in 30 days
+      description: |
+        Schedules deletion 30 days from now. The person stays signed in and can cancel with `DELETE /v1/me/deletion` until then.
+        Personal data is deleted then; other people's shared records stay with
+        the name removed. Answers 409 with code `subscription_active` while a
+        subscription is running, so the person cancels it in the store first.
+        Needs a bearer token.
+      responses:
+        "200":
+          description: Deletion is scheduled (or already was).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deletion"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
         "503":
           $ref: "#/components/responses/Unavailable"
   /v1/me/devices/{deviceId}:
@@ -2587,6 +2946,234 @@ components:
         endsOn:
           type: string
           description: The last day the pass works, YYYY-MM-DD. Left out when the trip has no end date, so the pass has no end yet.
+    ConsentState:
+      type: string
+      enum: [unset, granted, denied]
+    Consents:
+      type: object
+      required: [location, notifications, photos, analytics]
+      properties:
+        location:
+          $ref: "#/components/schemas/ConsentState"
+        notifications:
+          $ref: "#/components/schemas/ConsentState"
+        photos:
+          $ref: "#/components/schemas/ConsentState"
+        analytics:
+          $ref: "#/components/schemas/ConsentState"
+        updatedAt:
+          type: string
+          format: date-time
+    ConsentsUpdate:
+      type: object
+      description: Only the purposes that are sent change. `unset` cannot be sent.
+      properties:
+        location:
+          type: string
+          enum: [granted, denied]
+        notifications:
+          type: string
+          enum: [granted, denied]
+        photos:
+          type: string
+          enum: [granted, denied]
+        analytics:
+          type: string
+          enum: [granted, denied]
+    Deletion:
+      type: object
+      required: [scheduled]
+      properties:
+        scheduled:
+          type: boolean
+        deleteOn:
+          type: string
+          format: date-time
+          description: When the account and personal data are deleted. Only when scheduled.
+    SupportMessage:
+      type: object
+      required: [category, text]
+      properties:
+        category:
+          type: string
+          enum: [billing, account, bug, other]
+        text:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        diagnostics:
+          $ref: "#/components/schemas/Diagnostics"
+    Diagnostics:
+      type: object
+      description: What the phone adds to help support. Nothing here names the person or a place.
+      properties:
+        appVersion:
+          type: string
+          maxLength: 32
+        os:
+          type: string
+          enum: [ios, android]
+        osVersion:
+          type: string
+          maxLength: 32
+        deviceModel:
+          type: string
+          maxLength: 64
+        locale:
+          type: string
+          maxLength: 35
+        requestId:
+          type: string
+          maxLength: 64
+          description: The request id of a failed call, if the person is reporting one.
+    SupportReceipt:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+    Event:
+      type: object
+      required: [name, at]
+      properties:
+        name:
+          type: string
+          maxLength: 64
+        at:
+          type: string
+          format: date-time
+        props:
+          type: object
+          description: Short strings (up to 64 characters), numbers and booleans only.
+          additionalProperties:
+            oneOf:
+              - type: string
+                maxLength: 64
+              - type: number
+              - type: boolean
+    EventBatch:
+      type: object
+      required: [events]
+      properties:
+        events:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/Event"
+    EventReceipt:
+      type: object
+      required: [accepted, dropped]
+      properties:
+        accepted:
+          type: integer
+        dropped:
+          type: integer
+    SponsoredCard:
+      type: object
+      required: [id, sponsor, title, url]
+      properties:
+        id:
+          type: string
+        sponsor:
+          type: string
+          description: Who pays for the card. Shown next to the "Sponsored" label, which the app always draws.
+        title:
+          type: string
+        body:
+          type: string
+        imageUrl:
+          type: string
+          format: uri
+        url:
+          type: string
+          format: uri
+    SponsoredResult:
+      type: object
+      properties:
+        card:
+          $ref: "#/components/schemas/SponsoredCard"
+    SponsoredHidden:
+      type: object
+      required: [hiddenUntil]
+      properties:
+        hiddenUntil:
+          type: string
+          format: date-time
+    AskRequest:
+      type: object
+      required: [prompt]
+      properties:
+        prompt:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: What the person wants, in their own words.
+        lang:
+          type: string
+          description: BCP 47 language for the notes. Defaults to the person's language.
+    AskDraftItem:
+      type: object
+      required: [placeId, name]
+      properties:
+        placeId:
+          type: string
+          description: A catalogue place id. Add it as a stop of kind catalog.
+        name:
+          type: string
+        note:
+          type: string
+          description: Why it fits, one short line.
+    AskDraftDay:
+      type: object
+      required: [day, items]
+      properties:
+        day:
+          type: integer
+          minimum: 1
+          description: Day 1, 2, ... of the draft. The app maps it onto the trip's dates.
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AskDraftItem"
+    AskDraft:
+      type: object
+      required: [days]
+      properties:
+        days:
+          type: array
+          items:
+            $ref: "#/components/schemas/AskDraftDay"
+        remaining:
+          type: integer
+          description: Drafts left this month, or -1 for no cap.
+    FlightStatus:
+      type: object
+      required: [state]
+      properties:
+        state:
+          type: string
+          enum: [scheduled, delayed, cancelled, departed, landed, unknown]
+        departure:
+          $ref: "#/components/schemas/FlightLeg"
+        arrival:
+          $ref: "#/components/schemas/FlightLeg"
+        updatedAt:
+          type: string
+          format: date-time
+    FlightLeg:
+      type: object
+      properties:
+        scheduled:
+          type: string
+          format: date-time
+        estimated:
+          type: string
+          format: date-time
+        terminal:
+          type: string
+        gate:
+          type: string
     StayLink:
       type: object
       required: [partnerId, name, url]
