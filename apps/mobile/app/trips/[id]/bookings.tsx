@@ -10,6 +10,7 @@ import { ApiError, NetworkError, type components } from "@voyagami/api-client";
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
+import { useTripChanges } from "@/trips/useTripChanges";
 import type { Trip } from "@/trips/summary";
 import { Button, Card, IconButton, Sheet, Text } from "@/ui";
 import { Icon } from "@/ui/icons";
@@ -50,6 +51,8 @@ export default function BookingsScreen() {
   }, [api, id]);
 
   // Also reloads on coming back from adding a booking.
+  useTripChanges(id, () => void load());
+
   useFocusEffect(
     useCallback(() => {
       void load();

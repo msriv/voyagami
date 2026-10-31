@@ -10,6 +10,7 @@ import { ApiError, NetworkError } from "@voyagami/api-client";
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
+import { useTripChanges } from "@/trips/useTripChanges";
 import { daysInRange, isoToDate } from "@/trips/dates";
 import { BestOrder } from "@/trips/BestOrder";
 import { DraggableStop } from "@/trips/DraggableStop";
@@ -55,6 +56,8 @@ export default function ItineraryScreen() {
   }, [api, id]);
 
   // Also reloads on coming back from adding a place.
+  useTripChanges(id, () => void load());
+
   useFocusEffect(
     useCallback(() => {
       void load();
