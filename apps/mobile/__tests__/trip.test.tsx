@@ -90,6 +90,23 @@ describe("Trip overview", () => {
     expect(await screen.findByText(/Trip Pass active/)).toBeTruthy();
   });
 
+  it("says who bought the Trip Pass and when it ends", async () => {
+    mockApi({
+      "GET /v1/me": () => json(200, { id: "u1" }),
+      "GET /v1/trips/t1": () => json(200, trip("owner")),
+      "GET /v1/trips/t1/tasks": () => json(200, { tasks: [] }),
+      "GET /v1/trips/t1/members": () =>
+        json(200, {
+          members: [{ uid: "u2", role: "editor", status: "active", displayName: "Ben" }],
+        }),
+      "GET /v1/trips/t1/entitlements": () =>
+        json(200, { plan: "pass", features: {}, pass: { boughtBy: "u2", endsOn: "2099-11-21" } }),
+    });
+    await renderRouter(routes, { initialUrl: "/trips/t1" });
+    expect(await screen.findByText(/Trip Pass from Ben/)).toBeTruthy();
+    expect(screen.getByText(/Works until .*2099/)).toBeTruthy();
+  });
+
   it("shows the crew and an Invite button to the owner only", async () => {
     mockApi({
       "GET /v1/me": () => json(200, { id: "u1" }),

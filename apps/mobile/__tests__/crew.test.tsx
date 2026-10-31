@@ -77,6 +77,16 @@ describe("Crew", () => {
     expect(screen.queryByText("Old friend")).toBeNull();
   });
 
+  it("says a Trip Pass covers everyone", async () => {
+    mockApi({
+      ...base(),
+      "GET /v1/trips/t1/entitlements": () =>
+        json(200, { plan: "pass", features: {}, pass: { boughtBy: "u1" } }),
+    });
+    await renderRouter(routes, { initialUrl: "/trips/t1/crew" });
+    expect(await screen.findByText(/This trip has a Trip Pass/)).toBeTruthy();
+  });
+
   it("shares a new invite link with the code, once", async () => {
     const share = jest
       .spyOn(Share, "share")

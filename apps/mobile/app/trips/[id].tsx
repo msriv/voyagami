@@ -34,11 +34,12 @@ export default function TripScreen() {
   const { region } = useProfile();
   const [state, setState] = useState<State>({ kind: "loading" });
   const [crew, setCrew] = useState<string[]>([]);
+  const [names, setNames] = useState<Record<string, string>>({});
   const [menu, setMenu] = useState(false);
   const [name, setName] = useState("");
   const [formError, setFormError] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
-  const { plan, readOnly } = useTripPlan(id);
+  const { plan, readOnly, pass } = useTripPlan(id);
 
   const load = useCallback(async () => {
     try {
@@ -50,7 +51,10 @@ export default function TripScreen() {
       // The avatar stack is decoration: a failure here must not block the trip.
       api
         .unwrap(api.GET("/v1/trips/{tripId}/members", { params: { path: { tripId: id } } }))
-        .then((r) => setCrew(r.members.map((m) => m.displayName ?? "")))
+        .then((r) => {
+          setCrew(r.members.map((m) => m.displayName ?? ""));
+          setNames(Object.fromEntries(r.members.map((m) => [m.uid, m.displayName ?? ""])));
+        })
         .catch(() => undefined);
     } catch (e) {
       setState(
@@ -126,6 +130,7 @@ export default function TripScreen() {
   const kicker = [...countries, ...(abroad ? [t("trip.international")] : [])]
     .join(" · ")
     .toUpperCase();
+  const buyer = pass ? names[pass.boughtBy] : undefined;
   const archived = trip.status === "past";
   const canEdit = trip.role !== "viewer";
   const sections = [
@@ -185,7 +190,21 @@ export default function TripScreen() {
             <SyncStatus onDark onPress={() => router.push(`/trips/${id}/sync`)} />
             {plan === "pass" || plan === "plus" ? (
               <Text variant="caption" color="white">
-                {t(plan === "pass" ? "trip.passActive" : "trip.plusActive")}
+                {plan === "pass" && pass
+                  ? [
+                      buyer ? t("trip.passBoughtBy", { name: buyer }) : t("trip.passActive"),
+                      pass.endsOn
+                        ? t("trip.passEnds", {
+                            date: formatDate(isoToDate(pass.endsOn), locale, {
+                              timeZone: "UTC",
+                              withYear: true,
+                            }),
+                          })
+                        : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")
+                  : t(plan === "pass" ? "trip.passActive" : "trip.plusActive")}
               </Text>
             ) : plan === "free" && days > 0 ? (
               <Pressable
