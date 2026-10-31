@@ -7,6 +7,7 @@ import { ApiError } from "@voyagami/api-client";
 
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
+import { SponsoredCard } from "@/sponsored/SponsoredCard";
 import { useTheme } from "@/theme";
 import { Button, Card, IconButton, Text } from "@/ui";
 import { Icon } from "@/ui/icons";
@@ -82,6 +83,7 @@ export default function StaysScreen() {
         </View>
 
         <Text>{t("stays.note")}</Text>
+        <SponsoredCard tripId={id} group="stay" />
 
         {state.kind === "loading" ? <Text color="muted">{t("stays.loading")}</Text> : null}
         {state.kind === "noDestination" ? (
