@@ -42,6 +42,8 @@ type Users interface {
 type TripUsage interface {
 	// Add raises one counter on the trip by n, atomically.
 	Add(ctx context.Context, tripID string, c model.UsageCounter, n int) error
+}
+
 // Devices stores the phones a person is signed in on and their push tokens.
 type Devices interface {
 	// Put stores or refreshes a device, keeping one document per device ID.
