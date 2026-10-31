@@ -128,7 +128,16 @@ export default function TripScreen() {
     .toUpperCase();
   const archived = trip.status === "past";
   const canEdit = trip.role !== "viewer";
-  const sections = ["itinerary", "map", "bookings", "money", "journal", "crew", "recap"] as const;
+  const sections = [
+    "itinerary",
+    "map",
+    "bookings",
+    "money",
+    "journal",
+    "crew",
+    "stays",
+    "recap",
+  ] as const;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.indigo }}>
