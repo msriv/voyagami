@@ -173,7 +173,7 @@ func (h *handlers) UpdateTrip(ctx context.Context, req api.UpdateTripRequestObje
 		return nil, err
 	}
 	b := req.Body
-	if role == model.RoleViewer || ((b.Status != nil || b.Budget != nil) && role != model.RoleOwner) {
+	if !model.Can(role, model.ActionEdit) || ((b.Status != nil || b.Budget != nil) && !model.Can(role, model.ActionManageTrip)) {
 		return api.UpdateTrip403JSONResponse{ForbiddenJSONResponse: api.ForbiddenJSONResponse(errBody(ctx, codeForbidden, msgRoleDenied))}, nil
 	}
 	var patch model.TripPatch

@@ -105,7 +105,7 @@ func (h *handlers) SetMemberRole(ctx context.Context, req api.SetMemberRoleReque
 	if d, ok := deny.(api.NotFoundJSONResponse); ok {
 		return api.SetMemberRole404JSONResponse{NotFoundJSONResponse: d}, nil
 	}
-	if role != model.RoleOwner {
+	if !model.Can(role, model.ActionManageCrew) {
 		return api.SetMemberRole403JSONResponse{ForbiddenJSONResponse: errForbidden(ctx)}, nil
 	}
 	if !req.Body.Role.Valid() {
@@ -141,7 +141,7 @@ func (h *handlers) RemoveMember(ctx context.Context, req api.RemoveMemberRequest
 	}
 	status := model.MemberLeft
 	if req.Uid != uid {
-		if role != model.RoleOwner {
+		if !model.Can(role, model.ActionManageCrew) {
 			return api.RemoveMember403JSONResponse{ForbiddenJSONResponse: errForbidden(ctx)}, nil
 		}
 		status = model.MemberRemoved
@@ -174,7 +174,7 @@ func (h *handlers) ListInvites(ctx context.Context, req api.ListInvitesRequestOb
 	if d, ok := deny.(api.NotFoundJSONResponse); ok {
 		return api.ListInvites404JSONResponse{NotFoundJSONResponse: d}, nil
 	}
-	if role != model.RoleOwner {
+	if !model.Can(role, model.ActionManageCrew) {
 		return api.ListInvites403JSONResponse{ForbiddenJSONResponse: errForbidden(ctx)}, nil
 	}
 	all, err := h.invites.List(ctx, req.TripId)
@@ -200,7 +200,7 @@ func (h *handlers) CreateInvite(ctx context.Context, req api.CreateInviteRequest
 	if d, ok := deny.(api.NotFoundJSONResponse); ok {
 		return api.CreateInvite404JSONResponse{NotFoundJSONResponse: d}, nil
 	}
-	if role != model.RoleOwner {
+	if !model.Can(role, model.ActionManageCrew) {
 		return api.CreateInvite403JSONResponse{ForbiddenJSONResponse: errForbidden(ctx)}, nil
 	}
 	b := req.Body
@@ -259,7 +259,7 @@ func (h *handlers) RevokeInvite(ctx context.Context, req api.RevokeInviteRequest
 	if err != nil {
 		return nil, err
 	}
-	if role != model.RoleOwner {
+	if !model.Can(role, model.ActionManageCrew) {
 		return api.RevokeInvite403JSONResponse{ForbiddenJSONResponse: errForbidden(ctx)}, nil
 	}
 	if err := h.invites.Revoke(ctx, req.TripId, req.InviteId, time.Now()); err != nil {

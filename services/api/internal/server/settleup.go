@@ -137,7 +137,7 @@ func (h *handlers) RecordSettlement(ctx context.Context, req api.RecordSettlemen
 		return nil, err
 	}
 	b := req.Body
-	if role != model.RoleOwner && id.UserID != b.FromUid && id.UserID != b.ToUid {
+	if !model.Can(role, model.ActionModerate) && id.UserID != b.FromUid && id.UserID != b.ToUid {
 		return api.RecordSettlement403JSONResponse{ForbiddenJSONResponse: errForbidden(ctx)}, nil
 	}
 	for _, uid := range []string{b.FromUid, b.ToUid} {

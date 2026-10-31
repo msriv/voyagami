@@ -203,7 +203,7 @@ func (h *handlers) DeleteComment(ctx context.Context, req api.DeleteCommentReque
 	if err != nil {
 		return nil, err
 	}
-	if cur.AuthorUID != uid && role != model.RoleOwner {
+	if cur.AuthorUID != uid && !model.Can(role, model.ActionModerate) {
 		return api.DeleteComment403JSONResponse{ForbiddenJSONResponse: errForbidden(ctx)}, nil
 	}
 	if err := h.comments.Delete(ctx, req.TripId, req.CommentId); err != nil {

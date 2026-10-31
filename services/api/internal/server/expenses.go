@@ -153,13 +153,10 @@ func (h *handlers) featureAllowed(ctx context.Context, uid, tripID string, f ent
 // canChangeExpense says whether the caller may edit or delete e: the owner
 // any, an editor only the ones they added or paid for.
 func canChangeExpense(role model.Role, uid string, e model.Expense) bool {
-	switch role {
-	case model.RoleOwner:
+	if model.Can(role, model.ActionModerate) {
 		return true
-	case model.RoleEditor:
-		return e.CreatedBy == uid || e.PaidByUID == uid
 	}
-	return false
+	return model.Can(role, model.ActionEdit) && (e.CreatedBy == uid || e.PaidByUID == uid)
 }
 
 // ListExpenses returns a trip's expenses to any member.
@@ -203,7 +200,7 @@ func (h *handlers) CreateExpense(ctx context.Context, req api.CreateExpenseReque
 	if err != nil {
 		return nil, err
 	}
-	if role == model.RoleViewer {
+	if !model.Can(role, model.ActionEdit) {
 		return api.CreateExpense403JSONResponse{ForbiddenJSONResponse: errForbidden(ctx)}, nil
 	}
 	trip, err := h.trips.Get(ctx, req.TripId)

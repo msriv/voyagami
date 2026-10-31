@@ -46,3 +46,20 @@ When a later ticket needs direct client access (live co-editing in D2, local-fir
 ## To document here
 
 - Data export and account deletion.
+
+## Roles and permissions
+
+Every member has one role on a trip: owner, editor or viewer. The server decides, in one function: `model.Can(role, action)` in `services/api/internal/model/permissions.go`. Handlers call it and never compare roles themselves. The app only hides buttons to match; it is not the check.
+
+| Action                                                                                    | Owner | Editor | Viewer |
+| ----------------------------------------------------------------------------------------- | ----- | ------ | ------ |
+| Read everything on the trip                                                               | yes   | yes    | yes    |
+| Edit: stops, tasks, bookings, expenses, polls, meet points, trip name and dates           | yes   | yes    | no     |
+| Write the journal (own entries)                                                           | yes   | yes    | no     |
+| Manage trip: archive, set budget                                                          | yes   | no     | no     |
+| Manage crew: roles, remove people, invites                                                | yes   | no     | no     |
+| Moderate: change any expense, delete any comment, record settlements between other people | yes   | no     | no     |
+
+Some things need no role beyond membership: joining a trip, sharing a location, voting in a poll, adding a comment, and recording a settlement you are part of. Editors change or delete only the expenses they added or paid for. Comment authors delete their own comments.
+
+A person who is not a member gets 404 (the trip is not revealed). A member without the role gets 403. `TestCan` covers the matrix; each endpoint class has a viewer and non-member case in its handler tests.
