@@ -51,6 +51,22 @@ export const en = {
       generic: "Something went wrong. Try again.",
     },
   },
+  stamps: {
+    title: "Collect your first five stamps",
+    intro: "Each one teaches a part of the app. They stay on Home until you are done.",
+    earnedNow: "New stamp: {{name}}",
+    rowEarned: "{{name}}, stamped",
+    rowOpen: "{{name}}, not yet. {{hint}}",
+    tick: "✓",
+    count: "{{earned}} of {{total}}",
+    kinds: {
+      createTrip: { title: "Create a trip", hint: "Start with where you are going" },
+      inviteCrew: { title: "Invite your crew", hint: "One link, any chat app" },
+      addPlaces: { title: "Add 3 places", hint: "Search, or paste a reel link" },
+      logExpense: { title: "Log an expense", hint: "Even the airport chai counts" },
+      writeJournal: { title: "Write a journal day", hint: "One line is enough" },
+    },
+  },
   tour: {
     progress: "Step {{n}} of {{total}}",
     skip: "Skip tour",
