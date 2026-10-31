@@ -204,3 +204,28 @@ func TestDevPlanMarks(t *testing.T) {
 		}
 	}
 }
+
+func TestAccountPlanSub(t *testing.T) {
+	c := testClient(t)
+	ctx := testCtx(t)
+	s := NewEntitlements(c)
+	put := func(doc map[string]any) string {
+		uid := model.NewID()
+		if _, err := c.Collection(entitlementsCollection).Doc(uid).Set(ctx, doc); err != nil {
+			t.Fatal(err)
+		}
+		return uid
+	}
+	ends := time.Now().Add(30 * 24 * time.Hour).Truncate(time.Second)
+	a, err := s.AccountPlan(ctx, put(map[string]any{"plus": map[string]any{"active": true, "expiresAt": ends, "willRenew": false, "billingIssue": true, "productId": "plus_monthly"}}))
+	if err != nil || a.Sub == nil || a.Sub.Trial || a.Sub.WillRenew || !a.Sub.BillingIssue || !a.Sub.EndsAt.Equal(ends) || a.Sub.ProductID != "plus_monthly" {
+		t.Errorf("subscription: %+v, %v", a.Sub, err)
+	}
+	a, err = s.AccountPlan(ctx, put(map[string]any{"trial": map[string]any{"endsAt": ends}}))
+	if err != nil || a.Sub == nil || !a.Sub.Trial || !a.Sub.EndsAt.Equal(ends) {
+		t.Errorf("trial: %+v, %v", a.Sub, err)
+	}
+	if a, err = s.AccountPlan(ctx, model.NewID()); err != nil || a.Sub != nil || a.Plus {
+		t.Errorf("no document: %+v, %v", a, err)
+	}
+}
