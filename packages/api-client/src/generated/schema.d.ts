@@ -2004,7 +2004,9 @@ export interface components {
         /**
          * @description The one error shape every non-2xx response uses. Codes: `bad_request`,
          *     `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,
-         *     `method_not_allowed`, `internal`, `unavailable`, `timeout`.
+         *     `method_not_allowed`, `internal`, `unavailable`, `timeout`, `limit_reached`.
+         *     A `limit_reached` answer is a 403 that also names the `feature` whose
+         *     plan limit stopped the request; Plus or a Trip Pass would lift it.
          */
         Error: {
             /** @description Stable machine-readable error code. The app switches on this. */
@@ -2013,6 +2015,8 @@ export interface components {
             message: string;
             /** @description Same value as the `X-Request-Id` response header. Quote it in bug reports. Callers may send their own `X-Request-Id` (1 to 64 characters from letters, digits, `-`, `_`, `.`); otherwise the server makes one. */
             requestId?: string;
+            /** @description Only on `limit_reached`. The plan feature that is at its limit, for example `bestOrder`. */
+            feature?: string;
             fieldErrors?: components["schemas"]["FieldError"][];
         };
         FieldError: {
@@ -2057,7 +2061,10 @@ export interface components {
                 "application/json": components["schemas"]["Error"];
             };
         };
-        /** @description The person is on the trip but their role does not allow this. */
+        /**
+         * @description The person is on the trip but their role does not allow this, or (code
+         *     `limit_reached`, with `feature`) the plan limit does.
+         */
         Forbidden: {
             headers: {
                 [name: string]: unknown;
@@ -2304,6 +2311,7 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
             503: components["responses"]["Unavailable"];
         };
     };
@@ -3897,6 +3905,7 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             503: components["responses"]["Unavailable"];
         };

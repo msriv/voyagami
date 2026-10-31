@@ -960,10 +960,15 @@ type EntitlementsPlan string
 
 // Error The one error shape every non-2xx response uses. Codes: `bad_request`,
 // `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,
-// `method_not_allowed`, `internal`, `unavailable`, `timeout`.
+// `method_not_allowed`, `internal`, `unavailable`, `timeout`, `limit_reached`.
+// A `limit_reached` answer is a 403 that also names the `feature` whose
+// plan limit stopped the request; Plus or a Trip Pass would lift it.
 type Error struct {
 	// Code Stable machine-readable error code. The app switches on this.
-	Code        string        `json:"code"`
+	Code string `json:"code"`
+
+	// Feature Only on `limit_reached`. The plan feature that is at its limit, for example `bestOrder`.
+	Feature     *string       `json:"feature,omitempty"`
 	FieldErrors *[]FieldError `json:"fieldErrors,omitempty"`
 
 	// Message Plain-English explanation for logs and developers. Not shown to people.
@@ -1790,37 +1795,51 @@ type UnitsTemperature string
 
 // BadRequest The one error shape every non-2xx response uses. Codes: `bad_request`,
 // `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,
-// `method_not_allowed`, `internal`, `unavailable`, `timeout`.
+// `method_not_allowed`, `internal`, `unavailable`, `timeout`, `limit_reached`.
+// A `limit_reached` answer is a 403 that also names the `feature` whose
+// plan limit stopped the request; Plus or a Trip Pass would lift it.
 type BadRequest = Error
 
 // Conflict The one error shape every non-2xx response uses. Codes: `bad_request`,
 // `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,
-// `method_not_allowed`, `internal`, `unavailable`, `timeout`.
+// `method_not_allowed`, `internal`, `unavailable`, `timeout`, `limit_reached`.
+// A `limit_reached` answer is a 403 that also names the `feature` whose
+// plan limit stopped the request; Plus or a Trip Pass would lift it.
 type Conflict = Error
 
 // Forbidden The one error shape every non-2xx response uses. Codes: `bad_request`,
 // `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,
-// `method_not_allowed`, `internal`, `unavailable`, `timeout`.
+// `method_not_allowed`, `internal`, `unavailable`, `timeout`, `limit_reached`.
+// A `limit_reached` answer is a 403 that also names the `feature` whose
+// plan limit stopped the request; Plus or a Trip Pass would lift it.
 type Forbidden = Error
 
 // NotFound The one error shape every non-2xx response uses. Codes: `bad_request`,
 // `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,
-// `method_not_allowed`, `internal`, `unavailable`, `timeout`.
+// `method_not_allowed`, `internal`, `unavailable`, `timeout`, `limit_reached`.
+// A `limit_reached` answer is a 403 that also names the `feature` whose
+// plan limit stopped the request; Plus or a Trip Pass would lift it.
 type NotFound = Error
 
 // TooManyRequests The one error shape every non-2xx response uses. Codes: `bad_request`,
 // `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,
-// `method_not_allowed`, `internal`, `unavailable`, `timeout`.
+// `method_not_allowed`, `internal`, `unavailable`, `timeout`, `limit_reached`.
+// A `limit_reached` answer is a 403 that also names the `feature` whose
+// plan limit stopped the request; Plus or a Trip Pass would lift it.
 type TooManyRequests = Error
 
 // Unauthorized The one error shape every non-2xx response uses. Codes: `bad_request`,
 // `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,
-// `method_not_allowed`, `internal`, `unavailable`, `timeout`.
+// `method_not_allowed`, `internal`, `unavailable`, `timeout`, `limit_reached`.
+// A `limit_reached` answer is a 403 that also names the `feature` whose
+// plan limit stopped the request; Plus or a Trip Pass would lift it.
 type Unauthorized = Error
 
 // Unavailable The one error shape every non-2xx response uses. Codes: `bad_request`,
 // `unauthenticated`, `invalid_code`, `rate_limited`, `forbidden`, `not_found`,
-// `method_not_allowed`, `internal`, `unavailable`, `timeout`.
+// `method_not_allowed`, `internal`, `unavailable`, `timeout`, `limit_reached`.
+// A `limit_reached` answer is a 403 that also names the `feature` whose
+// plan limit stopped the request; Plus or a Trip Pass would lift it.
 type Unavailable = Error
 
 // ResolvePlaceLinkJSONBody defines parameters for ResolvePlaceLink.
@@ -5257,6 +5276,20 @@ func (response CreateTrip401JSONResponse) VisitCreateTripResponse(w http.Respons
 	return err
 }
 
+type CreateTrip403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response CreateTrip403JSONResponse) VisitCreateTripResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type CreateTrip503JSONResponse struct{ UnavailableJSONResponse }
 
 func (response CreateTrip503JSONResponse) VisitCreateTripResponse(w http.ResponseWriter) error {
@@ -6345,6 +6378,20 @@ func (response SuggestBestOrder401JSONResponse) VisitSuggestBestOrderResponse(w 
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SuggestBestOrder403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response SuggestBestOrder403JSONResponse) VisitSuggestBestOrderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
 	_, err := buf.WriteTo(w)
 	return err
 }
