@@ -60,10 +60,6 @@ func (h *handlers) SendEvents(ctx context.Context, _ api.SendEventsRequestObject
 	return api.SendEvents503JSONResponse{UnavailableJSONResponse: api.UnavailableJSONResponse(errBody(ctx, codeUnavailable, msgNotBuilt))}, nil
 }
 
-func (h *handlers) SendSupportMessage(ctx context.Context, _ api.SendSupportMessageRequestObject) (api.SendSupportMessageResponseObject, error) {
-	return api.SendSupportMessage503JSONResponse{UnavailableJSONResponse: api.UnavailableJSONResponse(errBody(ctx, codeUnavailable, msgNotBuilt))}, nil
-}
-
 func (h *handlers) UpdateMyConsents(ctx context.Context, _ api.UpdateMyConsentsRequestObject) (api.UpdateMyConsentsResponseObject, error) {
 	return api.UpdateMyConsents503JSONResponse{UnavailableJSONResponse: api.UnavailableJSONResponse(errBody(ctx, codeUnavailable, msgNotBuilt))}, nil
 }
