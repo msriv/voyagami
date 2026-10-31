@@ -87,6 +87,11 @@ export default function ProfileScreen() {
         />
         <Button label={t("tour.replay")} variant="secondary" onPress={replayTour} />
         <Button
+          label={t("profile.help")}
+          variant="secondary"
+          onPress={() => router.push("/help")}
+        />
+        <Button
           label={t("profile.notifications")}
           variant="secondary"
           onPress={() => router.push("/notifications")}

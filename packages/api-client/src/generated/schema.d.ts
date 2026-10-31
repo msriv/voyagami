@@ -1777,6 +1777,39 @@ export interface components {
             features: {
                 [key: string]: components["schemas"]["EntitlementDecision"];
             };
+            pass?: components["schemas"]["PassInfo"];
+            subscription?: components["schemas"]["SubscriptionInfo"];
+        };
+        /**
+         * @description How the signed-in person's own Plus is running. Left out on Free, and when
+         *     Plus comes only from a crew member or a Trip Pass. The Manage subscription
+         *     screen uses it.
+         */
+        SubscriptionInfo: {
+            /** @enum {string} */
+            state: "subscribed" | "trial";
+            /**
+             * Format: date-time
+             * @description When it renews (willRenew is true) or ends (false), or when the trial ends. Left out when the store has not said.
+             */
+            endsAt?: string;
+            /** @description False after the person turned renewal off. Plus still works until endsAt. Always false for a trial. */
+            willRenew: boolean;
+            /** @description True when the store could not take payment. Tell the person to fix their payment method. */
+            billingIssue: boolean;
+            /** @description The store product, for example to say monthly or yearly. */
+            productId?: string;
+        };
+        /**
+         * @description The trip's Trip Pass. Only on the trip's entitlements, and only while the
+         *     trip has a pass that was not refunded and has not ended. It covers the
+         *     whole crew, whoever bought it.
+         */
+        PassInfo: {
+            /** @description The id of the member who bought it. Look the name up in the crew. */
+            boughtBy: string;
+            /** @description The last day the pass works, YYYY-MM-DD. Left out when the trip has no end date, so the pass has no end yet. */
+            endsOn?: string;
         };
         /** @enum {string} */
         ConsentState: "unset" | "granted" | "denied";
@@ -1943,12 +1976,25 @@ export interface components {
             countryCode?: string;
             timeZone?: string;
             photos: components["schemas"]["CatalogPlacePhoto"][];
+            /**
+             * @description When the place is open, in its own time zone (`timeZone`). Left out when
+             *     we do not know. A weekday with no entry is closed that day.
+             */
+            openingHours?: components["schemas"]["OpeningPeriod"][];
             sources: components["schemas"]["CatalogPlaceSource"][];
             /**
              * Format: double
              * @description From the search point. Only in the nearby list.
              */
             distanceMeters?: number;
+        };
+        OpeningPeriod: {
+            /** @enum {string} */
+            day: "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+            /** @description Opening time, 24-hour HH:MM. The app formats it for the person's clock setting. */
+            open: string;
+            /** @description Closing time. Earlier than `open` means it closes after midnight, on the next day. */
+            close: string;
         };
         CatalogPlaceList: {
             places: components["schemas"]["CatalogPlace"][];

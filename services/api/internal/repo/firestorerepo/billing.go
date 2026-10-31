@@ -106,7 +106,7 @@ func (s *Billing) applyPass(tx *firestore.Transaction, e billing.Event, seen *fi
 	case e.Type == "NON_RENEWING_PURCHASE" && e.TripID != "":
 		doc := map[string]any{"tripId": e.TripID, "purchasedBy": e.UID, "productId": e.ProductID, "purchasedAt": e.At}
 		if err != nil || !existing.Exists() {
-			doc["refundedAt"] = nil // a null field is what HasPass looks for
+			doc["refundedAt"] = nil // a null field is what ActivePass looks for
 		} // else a refund that arrived first keeps its refundedAt
 		if err := tx.Set(ref, doc, firestore.MergeAll); err != nil {
 			return err
@@ -115,12 +115,18 @@ func (s *Billing) applyPass(tx *firestore.Transaction, e billing.Event, seen *fi
 	return tx.Set(seen, map[string]any{"type": e.Type, "at": e.At})
 }
 
-// HasPass reports whether the trip has a Trip Pass that has not been refunded.
-func (s *Billing) HasPass(ctx context.Context, tripID string) (bool, error) {
+// ActivePass reports whether the trip has a Trip Pass that was not refunded,
+// and who bought it.
+func (s *Billing) ActivePass(ctx context.Context, tripID string) (boughtBy string, ok bool, err error) {
 	docs, err := s.client.Collection(tripPassesCollection).
 		Where("tripId", "==", tripID).Where("refundedAt", "==", nil).Limit(1).Documents(ctx).GetAll()
 	if err != nil {
-		return false, mapErr("find trip pass", err)
+		return "", false, mapErr("find trip pass", err)
 	}
-	return len(docs) > 0, nil
+	if len(docs) == 0 {
+		return "", false, nil
+	}
+	by, _ := docs[0].DataAt("purchasedBy")
+	boughtBy, _ = by.(string)
+	return boughtBy, true, nil
 }

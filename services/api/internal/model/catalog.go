@@ -37,6 +37,14 @@ type PlaceSource struct {
 	SourceID string
 }
 
+// OpeningPeriod is one stretch the place is open on a weekday, in the place's
+// own time zone. Close earlier than Open means it closes after midnight.
+type OpeningPeriod struct {
+	Day   string // mon, tue, wed, thu, fri, sat, sun
+	Open  string // HH:MM, 24-hour
+	Close string // HH:MM, 24-hour
+}
+
 // CatalogPlace is a place in our own catalogue (collection places), written by
 // the places pipeline. It is not Google data.
 type CatalogPlace struct {
@@ -49,6 +57,8 @@ type CatalogPlace struct {
 	CountryCode string
 	TimeZone    string
 	Photos      []PlacePhoto
+	// Hours is when the place is open, empty when unknown. A day with no period is closed.
+	Hours []OpeningPeriod
 	// Provenance is the source and licence per field name.
 	Provenance map[string]PlaceSource
 	// Ranking inputs, zero when unknown.

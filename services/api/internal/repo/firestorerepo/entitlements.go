@@ -8,6 +8,7 @@ import (
 	"cloud.google.com/go/firestore"
 	"google.golang.org/api/iterator"
 
+	"github.com/msriv/voyagami/services/api/internal/entitlements"
 	"github.com/msriv/voyagami/services/api/internal/notify"
 )
 
@@ -53,25 +54,47 @@ type accountUsage struct {
 	AskDrafts   int       `firestore:"askDrafts"`
 }
 
+// AccountPlan is what the entitlements document says about a person.
+type AccountPlan struct {
+	Plus      bool
+	AskDrafts int
+	// Sub is set while Plus is on, and says how.
+	Sub *entitlements.Subscription
+}
+
 // Account returns whether the person has Plus right now (a subscription or a
 // running trial) and their Ask drafts this month. A person with no document
 // is on Free.
 func (s *Entitlements) Account(ctx context.Context, uid string) (plus bool, askDrafts int, err error) {
+	a, err := s.AccountPlan(ctx, uid)
+	return a.Plus, a.AskDrafts, err
+}
+
+// AccountPlan is Account plus how the Plus is running.
+func (s *Entitlements) AccountPlan(ctx context.Context, uid string) (AccountPlan, error) {
 	snap, err := s.client.Collection(entitlementsCollection).Doc(uid).Get(ctx)
 	if isNotFound(err) {
-		return false, 0, nil
+		return AccountPlan{}, nil
 	}
 	if err != nil {
-		return false, 0, mapErr("get entitlements", err)
+		return AccountPlan{}, mapErr("get entitlements", err)
 	}
 	var d entitlementsDoc
 	if err := snap.DataTo(&d); err != nil {
-		return false, 0, mapErr("decode entitlements", err)
+		return AccountPlan{}, mapErr("decode entitlements", err)
 	}
-	trialing := d.Trial != nil && d.Trial.EndsAt.After(time.Now())
+	now := time.Now()
+	trialing := d.Trial != nil && d.Trial.EndsAt.After(now)
 	// A subscription whose end date has passed is over, even if the expiry event never arrived.
-	subscribed := d.Plus.Active && (d.Plus.ExpiresAt.IsZero() || d.Plus.ExpiresAt.After(time.Now()))
-	return subscribed || trialing, d.Usage.askDraftsIn(time.Now()), nil
+	subscribed := d.Plus.Active && (d.Plus.ExpiresAt.IsZero() || d.Plus.ExpiresAt.After(now))
+	out := AccountPlan{Plus: subscribed || trialing, AskDrafts: d.Usage.askDraftsIn(now)}
+	switch {
+	case subscribed:
+		out.Sub = &entitlements.Subscription{EndsAt: d.Plus.ExpiresAt, WillRenew: d.Plus.WillRenew, BillingIssue: d.Plus.BillingIssue, ProductID: d.Plus.ProductID}
+	case trialing:
+		out.Sub = &entitlements.Subscription{Trial: true, EndsAt: d.Trial.EndsAt}
+	}
+	return out, nil
 }
 
 // monthStart is the first instant of t's month in UTC. Counters reset on it.
