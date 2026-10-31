@@ -1,47 +1,48 @@
 # Product analytics
 
-Built for VOY-75. The app sends events to `POST /v1/events`; the server checks them and stores the good ones in the `analyticsEvents` Firestore collection. No third-party analytics SDK is used. Counting funnels is done by querying that collection (BigQuery export of Firestore is the next step when the weekly review needs a dashboard; that needs Mihir to turn on the export, so it stays on the ticket).
+We keep our own small event pipeline: the app sends batches to `POST /v1/events` and the server stores counts. No third-party analytics tool is used, so nothing leaves our own project and no paid account is needed. The weekly review reads the stored counts.
 
 ## Rules
 
-- Events are kept only for people whose `analytics` consent is `granted` (`GET /v1/me/consents`). Without it, the server drops the whole batch and says so in the reply.
-- Event names come from a fixed list (below). An unknown name is dropped.
-- A batch has 1 to 50 events. An event older than 7 days (phones may hold events while offline) or more than 5 minutes in the future is dropped.
-- At most 10 properties per event. Property names are `camelCase` words. A value is an identifier (letters, digits, `_ . : -`, up to 64 characters), a number or a boolean. Anything else is dropped, so free text (it has spaces) cannot get in.
-- A property whose name contains `phone`, `email`, `name`, `address`, `lat`, `lng`, `lon`, `location`, `text`, `note`, `message` or `token` is dropped. This is blunt on purpose; pick another word.
-- Each stored event has the person's id, so funnels can count people. It has no phone number, location or content.
+- The app sends nothing until the person turns on **Help improve the app** in Privacy. Turning it off stops sending at once and drops anything still waiting.
+- Events carry a name, a time and a few short properties. Never a phone number, a place, a trip name or any free text.
+- Properties are short fixed words (like a paywall moment), numbers or booleans.
+- The server drops any name not on the list below.
 
 ## Events
 
-| Name                   | When                                | Useful properties                       |
-| ---------------------- | ----------------------------------- | --------------------------------------- |
-| `app_installed`        | First launch                        |                                         |
-| `sign_in`              | Sign-in succeeds                    | `isNewUser`                             |
-| `onboarding_completed` | Onboarding is done                  |                                         |
-| `trip_created`         | A trip is made                      | `destinations` (count), `hasDates`      |
-| `invite_sent`          | An invite link is shared            | `channel`                               |
-| `crew_joined`          | Someone joins a trip                |                                         |
-| `place_added`          | A stop is added                     | `source` (search, picks, pin)           |
-| `expense_added`        | An expense is saved                 | `split` (equal, exact, percent, shares) |
-| `journal_entry_added`  | A journal entry is saved            |                                         |
-| `ask_draft_created`    | An Ask draft is made                |                                         |
-| `trial_started`        | A trial starts                      |                                         |
-| `subscription_started` | Plus is bought                      | `product` (store product id)            |
-| `trip_pass_bought`     | A Trip Pass is bought               |                                         |
-| `paywall_shown`        | The paywall appears                 | `moment` (see below)                    |
-| `paywall_dismissed`    | The paywall is closed               | `moment`                                |
-| `paywall_converted`    | A purchase is made from the paywall | `moment`, `product`                     |
-| `screen_viewed`        | A screen opens                      | `route`                                 |
+| Name                | When                                                  | Properties                |
+| ------------------- | ----------------------------------------------------- | ------------------------- |
+| `app_open`          | The app opens, or a person signs in with analytics on | none                      |
+| `trip_created`      | A trip is created none                                |
+| `invite_sent`       | An invite is shared                                   | none                      |
+| `crew_joined`       | A person joins a trip by invite                       | none                      |
+| `expense_added`     | An expense is saved none                              |
+| `trial_started`     | A free trial begins (server)                          | none                      |
+| `paid`              | A purchase completes (server)                         | `plan` (`plus` or `pass`) |
+| `paywall_shown`     | The paywall opens                                     | `moment`                  |
+| `paywall_dismissed` | "Not now" or close                                    | `moment`                  |
+| `paywall_converted` | "Try Plus" is tapped                                  | `moment`                  |
 
-`moment` is the `feature` of the limit that opened the paywall (for example `bestOrder`, `topPicks`, `journalPhotos`), or `trial_end` or `plans`.
+## Funnel
 
-## Funnels
+install (first `app_open`), sign-in, first trip, invite sent, crew joined, first expense, trial start, paid. Each step is the first time its event appears for a person. `trial_started` and `paid` are sent by the server from store notifications, not by the app.
 
-install (`app_installed`) to sign-in (`sign_in`) to first trip (`trip_created`) to invite sent (`invite_sent`) to crew joined (`crew_joined`) to first expense (`expense_added`) to trial start (`trial_started`) to paid (`subscription_started` or `trip_pass_bought`).
+## Weekly review
 
-Paywall: for each `moment`, `paywall_shown` against `paywall_dismissed` and `paywall_converted`.
+Count events per week by name and divide each funnel step by the one before it. Paywall conversion is `paywall_converted` over `paywall_shown`, per `moment`.
+
+## Server checks
+
+`POST /v1/events` (VOY-75) checks each batch before storing it in the `analyticsEvents` collection.
+
+- Kept only for people whose `analytics` consent is `granted` (`GET /v1/me/consents`). Without it the whole batch is dropped and the reply says so.
+- A batch has 1 to 50 events. An event older than 7 days or more than 5 minutes in the future is dropped.
+- At most 10 properties per event, with `camelCase` names. A value is an identifier (letters, digits, `_ . : -`, up to 64 characters), a number or a boolean. Free text has spaces, so it cannot get in.
+- A property whose name contains `phone`, `email`, `name`, `address`, `lat`, `lng`, `lon`, `location`, `text`, `note`, `message` or `token` is dropped.
+- Each stored event has the person's id so funnels can count people, and nothing else about them.
 
 ## Not done yet
 
-- The weekly dashboard (needs the BigQuery export and a viewer).
-- Removing a person's events when their account is deleted. They carry the id but no contact details; add it to the purge when the events move to BigQuery.
+- The weekly dashboard needs the BigQuery export of Firestore, which Mihir turns on.
+- Deleting an account does not yet remove its events. They carry the id but no contact details. Add it to the purge when events move to BigQuery.

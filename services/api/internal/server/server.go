@@ -9,10 +9,12 @@ import (
 	"time"
 
 	"github.com/msriv/voyagami/services/api/internal/api"
+	"github.com/msriv/voyagami/services/api/internal/ask"
 	"github.com/msriv/voyagami/services/api/internal/auth"
 	"github.com/msriv/voyagami/services/api/internal/billing"
 	"github.com/msriv/voyagami/services/api/internal/devlog"
 	"github.com/msriv/voyagami/services/api/internal/entitlements"
+	"github.com/msriv/voyagami/services/api/internal/export"
 	"github.com/msriv/voyagami/services/api/internal/importer"
 	"github.com/msriv/voyagami/services/api/internal/places"
 	"github.com/msriv/voyagami/services/api/internal/rates"
@@ -44,7 +46,7 @@ func NewHandler(logger *slog.Logger, verifier auth.Verifier, opts ...Option) htt
 	if h.billing != nil && h.billingSecret != "" {
 		h.mountBilling(mux)
 	}
-	if h.trialJob != nil && h.jobsSecret != "" {
+	if (h.trialJob != nil || h.deletionJob != nil) && h.jobsSecret != "" {
 		h.mountJobs(mux)
 	}
 	api.HandlerWithOptions(strict, api.StdHTTPServerOptions{
@@ -78,6 +80,7 @@ type handlers struct {
 	devices       repo.Devices
 	consents      repo.Consents
 	productEvents repo.Events
+	export        *export.Sources
 	support       repo.Support
 	supportLimit  *userLimiter
 	events        Publisher
@@ -86,10 +89,14 @@ type handlers struct {
 	billing       billing.Store
 	billingSecret string
 	trialJob      TrialReminderJob
+	deletionJob   TrialReminderJob
+	deletions     repo.Deletions
 	stayPartners  []stays.Partner
 	stayClicks    StayClicks
 	staysOn       bool
 	catalog       repo.PlaceCatalog
+	asker         ask.Drafter
+	askCount      AskCounter
 	jobsSecret    string
 	feed          repo.Feed
 	presence      repo.Presence

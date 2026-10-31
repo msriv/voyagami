@@ -14,6 +14,8 @@ import (
 // together.
 var Names = map[string]bool{
 	"app_installed":        true,
+	"app_open":             true,
+	"paid":                 true,
 	"sign_in":              true,
 	"onboarding_completed": true,
 	"trip_created":         true,

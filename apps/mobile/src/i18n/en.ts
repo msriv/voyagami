@@ -104,6 +104,12 @@ export const en = {
       "Plus is on. The whole crew gets best order, currencies and the live map on your trips.",
     freeNote:
       "You are on the Free plan. Joining trips, settling up and meet points are always free.",
+    renews: "Renews on {{date}}.",
+    endsOn: "Plus ends on {{date}}. It works until then.",
+    trial: "You are on the free trial.",
+    trialEnds: "Your free trial ends on {{date}}.",
+    subscribed: "Your subscription is active.",
+    billingIssue: "The store could not take your payment. Update your payment method in the store.",
     cancelTitle: "Change or cancel",
     cancelBody:
       "The App Store or Google Play looks after your subscription, so you change or cancel it there. Open the page below, pick Voyagami and choose what you want.",
@@ -258,6 +264,8 @@ export const en = {
   },
   trip: {
     passActive: "Trip Pass active. It covers the whole crew on this trip.",
+    passBoughtBy: "Trip Pass from {{name}}. It covers the whole crew on this trip.",
+    passEnds: "Works until {{date}}.",
     plusActive: "Plus covers the whole crew on this trip.",
     passSuggest: "A {{name}} Trip Pass fits this trip. See plans",
     readOnly:
@@ -409,6 +417,19 @@ export const en = {
     notFound: "We couldn't find this place.",
     photoBy: "Photo: {{credit}}",
     sources: "Details from {{names}}.",
+    hours: "Opening hours",
+    closed: "Closed",
+    dayHours: "{{day}}: {{hours}}",
+    span: "{{open}} to {{close}}",
+    days: {
+      mon: "Monday",
+      tue: "Tuesday",
+      wed: "Wednesday",
+      thu: "Thursday",
+      fri: "Friday",
+      sat: "Saturday",
+      sun: "Sunday",
+    },
     openMap: "Open in maps",
     share: "Share this place",
     add: "Add to the trip",
@@ -516,6 +537,7 @@ export const en = {
   },
   crew: {
     title: "Crew",
+    passNote: "This trip has a Trip Pass. It covers everyone in the crew, whoever bought it.",
     chat: "Trip chat",
     live: "Live locations",
     polls: "Polls",

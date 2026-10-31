@@ -9,9 +9,11 @@ import (
 
 	"cloud.google.com/go/firestore"
 
+	"github.com/msriv/voyagami/services/api/internal/ask"
 	"github.com/msriv/voyagami/services/api/internal/auth"
 	"github.com/msriv/voyagami/services/api/internal/config"
 	"github.com/msriv/voyagami/services/api/internal/entitlements"
+	"github.com/msriv/voyagami/services/api/internal/export"
 	"github.com/msriv/voyagami/services/api/internal/importer"
 	"github.com/msriv/voyagami/services/api/internal/otp"
 	"github.com/msriv/voyagami/services/api/internal/places"
@@ -60,6 +62,8 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 	users := firestorerepo.NewUsers(client)
 	devices := firestorerepo.NewDevices(client)
 	bill := firestorerepo.NewBilling(client)
+	consents := firestorerepo.NewConsents(client)
+	deletions := firestorerepo.NewDeletions(client)
 	deps := signInDeps{
 		verifier: signin.NewVerifier(keys),
 		options: []server.Option{
@@ -75,6 +79,12 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 			server.WithPolls(firestorerepo.NewPolls(client)),
 			server.WithInvites(firestorerepo.NewInvites(client)),
 			server.WithDevices(devices),
+			server.WithConsents(consents),
+			server.WithDeletions(deletions),
+			server.WithExport(export.Sources{
+				Users: users, Consents: consents, Trips: trips, Stops: firestorerepo.NewStops(client),
+				Expenses: firestorerepo.NewExpenses(client), Bookings: firestorerepo.NewBookings(client), Journal: firestorerepo.NewJournal(client),
+			}),
 			server.WithConsents(firestorerepo.NewConsents(client)),
 			server.WithSupport(firestorerepo.NewSupport(client)),
 			server.WithCatalog(firestorerepo.NewCatalog(client)),
@@ -100,9 +110,10 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 	}
 	deps.options = append(deps.options, server.WithStays(partners, firestorerepo.NewStayClicks(client)))
 	if cfg.JobsSecret != "" {
-		deps.options = append(deps.options, server.WithJobs(newTrialReminders(cfg, logger, users, devices, firestorerepo.NewEntitlements(client)), cfg.JobsSecret))
+		deps.options = append(deps.options, server.WithJobs(newTrialReminders(cfg, logger, users, devices, firestorerepo.NewEntitlements(client)), cfg.JobsSecret),
+			server.WithDeletionJob(accountPurge{deletions: deletions, logger: logger}, cfg.JobsSecret))
 	} else {
-		logger.Warn("JOBS_SECRET is not set, so trial reminders do not run")
+		logger.Warn("JOBS_SECRET is not set, so trial reminders and account deletions do not run")
 	}
 	if cfg.Env == "dev" {
 		deps.options = append(deps.options, server.WithDevLogs(firestorerepo.NewDevLogs(client)))
@@ -113,6 +124,11 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 		}))
 	} else {
 		logger.Warn("VERTEX_LOCATION or GCP_PROJECT is not set, so reading bookings from text and PDFs is off")
+	}
+	if cfg.VertexLocation != "" && cfg.GCPProject != "" {
+		deps.options = append(deps.options, server.WithAsk(&ask.Vertex{
+			Project: cfg.GCPProject, Location: cfg.VertexLocation, Model: cfg.VertexModel,
+		}, firestorerepo.NewEntitlements(client)))
 	}
 	switch {
 	case cfg.PlacesAPIKey != "":
