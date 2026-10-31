@@ -1,7 +1,16 @@
 import { useRouter } from "expo-router";
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
 import { useTranslation } from "@/i18n";
+import { onLimitReached } from "@/plans/limitEvents";
 import { usePlanPrices } from "@/plans/prices";
 import { useTheme } from "@/theme";
 import { Button, Sheet, Text } from "@/ui";
@@ -38,6 +47,7 @@ export function PaywallProvider({ children }: { children: ReactNode }) {
   const [feature, setFeature] = useState<string | undefined>();
 
   const show = useCallback((f: string) => setFeature(f), []);
+  useEffect(() => onLimitReached(show), [show]);
   const api = useMemo(() => ({ show }), [show]);
   const close = () => setFeature(undefined);
   const moment = feature ? momentFor(feature) : "default";

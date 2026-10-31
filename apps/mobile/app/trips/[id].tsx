@@ -16,6 +16,7 @@ import { countryName } from "@/trips/destinations";
 import { daysBetween, daysInRange, isoToDate } from "@/trips/dates";
 import type { Trip } from "@/trips/summary";
 import { TripTasks } from "@/trips/TripTasks";
+import { useTripReadOnly } from "@/plans/useReadOnly";
 import { SyncStatus } from "@/local/SyncStatus";
 import { Button, Card, IconButton, Input, Sheet, Text, WavePattern } from "@/ui";
 import { Icon } from "@/ui/icons";
@@ -37,6 +38,7 @@ export default function TripScreen() {
   const [name, setName] = useState("");
   const [formError, setFormError] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
+  const readOnly = useTripReadOnly(id);
 
   const load = useCallback(async () => {
     try {
@@ -170,6 +172,11 @@ export default function TripScreen() {
               {dates}
             </Text>
             <SyncStatus onDark onPress={() => router.push(`/trips/${id}/sync`)} />
+            {readOnly ? (
+              <Text variant="caption" color="white" style={{ fontWeight: "800" }}>
+                {t("trip.readOnly")}
+              </Text>
+            ) : null}
             <Text variant="caption" color="white">
               {t("trip.roleLine", { role: t(`trip.roles.${trip.role}`) })}
             </Text>
