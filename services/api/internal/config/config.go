@@ -32,6 +32,9 @@ type Config struct {
 	VertexModel    string
 	// PlacesAPIKey is the Google Places key (VOY-7). Empty means dev falls back to OpenStreetMap search.
 	PlacesAPIKey string
+	// RevenueCatWebhookSecret is the Authorization value RevenueCat sends with
+	// each webhook. Empty turns the webhook off.
+	RevenueCatWebhookSecret string
 }
 
 // minAuthSecret is the shortest AUTH_SECRET accepted.
@@ -87,6 +90,7 @@ func Load(getenv func(string) string) (Config, error) {
 	cfg.VertexLocation = getenv("VERTEX_LOCATION")
 	cfg.VertexModel = getenv("VERTEX_MODEL")
 	cfg.PlacesAPIKey = getenv("PLACES_API_KEY")
+	cfg.RevenueCatWebhookSecret = getenv("REVENUECAT_WEBHOOK_SECRET")
 	switch cfg.DevPlan = getenv("DEV_PLAN"); {
 	case cfg.DevPlan == "":
 	case cfg.Env != "dev":

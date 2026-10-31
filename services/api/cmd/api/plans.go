@@ -11,11 +11,11 @@ import (
 )
 
 // planSource reads plan facts from Firestore: Plus, the per-person trip count
-// and the per-trip counters. Trip Passes have no storage yet (D4 trip pass
-// ticket), so they read as none.
+// the per-trip counters and Trip Passes (written by the RevenueCat webhook).
 type planSource struct {
 	accounts *firestorerepo.Entitlements
 	trips    *firestorerepo.Trips
+	billing  *firestorerepo.Billing
 	// devPlan is "free" or "plus" to force every account's plan (dev only), else "".
 	// The counters are still real, so a forced Free plan hits its limits.
 	devPlan string
@@ -69,6 +69,9 @@ func (p planSource) Trip(ctx context.Context, tripID string) (entitlements.Trip,
 			t.MemberPlus = true
 			break
 		}
+	}
+	if t.Pass, err = p.billing.HasPass(ctx, tripID); err != nil {
+		return entitlements.Trip{}, err
 	}
 	return t, nil
 }

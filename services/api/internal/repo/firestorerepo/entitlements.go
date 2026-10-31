@@ -19,8 +19,15 @@ func NewEntitlements(client *firestore.Client) *Entitlements { return &Entitleme
 
 type entitlementsDoc struct {
 	Plus struct {
-		Active bool `firestore:"active"`
+		Active       bool      `firestore:"active"`
+		ProductID    string    `firestore:"productId"`
+		ExpiresAt    time.Time `firestore:"expiresAt"`
+		WillRenew    bool      `firestore:"willRenew"`
+		BillingIssue bool      `firestore:"billingIssue"`
 	} `firestore:"plus"`
+	Billing struct {
+		LastEventAt time.Time `firestore:"lastEventAt"`
+	} `firestore:"billing"`
 	Trial *struct {
 		EndsAt time.Time `firestore:"endsAt"`
 	} `firestore:"trial"`
@@ -45,5 +52,7 @@ func (s *Entitlements) Account(ctx context.Context, uid string) (plus bool, askD
 		return false, 0, mapErr("decode entitlements", err)
 	}
 	trialing := d.Trial != nil && d.Trial.EndsAt.After(time.Now())
-	return d.Plus.Active || trialing, d.Usage.AskDrafts, nil
+	// A subscription whose end date has passed is over, even if the expiry event never arrived.
+	subscribed := d.Plus.Active && (d.Plus.ExpiresAt.IsZero() || d.Plus.ExpiresAt.After(time.Now()))
+	return subscribed || trialing, d.Usage.AskDrafts, nil
 }

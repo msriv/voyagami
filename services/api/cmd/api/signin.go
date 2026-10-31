@@ -58,6 +58,7 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 	trips := firestorerepo.NewTrips(client)
 	users := firestorerepo.NewUsers(client)
 	devices := firestorerepo.NewDevices(client)
+	bill := firestorerepo.NewBilling(client)
 	deps := signInDeps{
 		verifier: signin.NewVerifier(keys),
 		options: []server.Option{
@@ -73,14 +74,20 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 			server.WithPolls(firestorerepo.NewPolls(client)),
 			server.WithInvites(firestorerepo.NewInvites(client)),
 			server.WithDevices(devices),
+			server.WithStamps(firestorerepo.NewStamps(client)),
 			server.WithCrewEvents(newCrewEvents(cfg, logger, trips, users, devices)),
 			server.WithUsage(firestorerepo.NewUsage(client)),
 			server.WithJournal(firestorerepo.NewJournal(client)),
 			server.WithBookings(firestorerepo.NewBookings(client)),
 			server.WithSettleUp(firestorerepo.NewSettlements(client)),
-			server.WithEntitlements(entitlements.New(limitsFor(cfg)), planSource{firestorerepo.NewEntitlements(client), trips, cfg.DevPlan}),
+			server.WithEntitlements(entitlements.New(limitsFor(cfg)), planSource{firestorerepo.NewEntitlements(client), trips, bill, cfg.DevPlan}),
 		},
 		close: func() { _ = client.Close() },
+	}
+	if cfg.RevenueCatWebhookSecret != "" {
+		deps.options = append(deps.options, server.WithBilling(bill, cfg.RevenueCatWebhookSecret))
+	} else {
+		logger.Warn("REVENUECAT_WEBHOOK_SECRET is not set, so purchases do not reach plans")
 	}
 	if cfg.Env == "dev" {
 		deps.options = append(deps.options, server.WithDevLogs(firestorerepo.NewDevLogs(client)))

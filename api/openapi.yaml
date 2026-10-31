@@ -167,6 +167,26 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/me/stamps:
+    get:
+      operationId: listMyStamps
+      tags: [account]
+      summary: The first five stamps and which ones the caller has earned
+      description: |
+        Always lists all five in the same order. A stamp is earned once and
+        stays earned. Earning all five is what the "extra week of Plus"
+        reward (VOY-203) will look at.
+      responses:
+        "200":
+          description: The stamps.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StampList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/trips:
     get:
       operationId: listTrips
@@ -2259,6 +2279,33 @@ components:
           description: One decision per feature, keyed by feature name.
           additionalProperties:
             $ref: "#/components/schemas/EntitlementDecision"
+    StampKind:
+      type: string
+      enum: [createTrip, inviteCrew, addPlaces, logExpense, writeJournal]
+    Stamp:
+      type: object
+      required: [kind, earned]
+      properties:
+        kind:
+          $ref: "#/components/schemas/StampKind"
+        earned:
+          type: boolean
+        earnedAt:
+          type: string
+          format: date-time
+          description: When it was earned. Missing until then.
+    StampList:
+      type: object
+      required: [stamps, earned, total]
+      properties:
+        stamps:
+          type: array
+          items:
+            $ref: "#/components/schemas/Stamp"
+        earned:
+          type: integer
+        total:
+          type: integer
     DeviceRegistration:
       type: object
       required: [platform, pushToken]

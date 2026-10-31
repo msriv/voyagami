@@ -125,6 +125,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me/stamps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The first five stamps and which ones the caller has earned
+         * @description Always lists all five in the same order. A stamp is earned once and
+         *     stays earned. Earning all five is what the "extra week of Plus"
+         *     reward (VOY-203) will look at.
+         */
+        get: operations["listMyStamps"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/trips": {
         parameters: {
             query?: never;
@@ -1339,6 +1361,22 @@ export interface components {
                 [key: string]: components["schemas"]["EntitlementDecision"];
             };
         };
+        /** @enum {string} */
+        StampKind: "createTrip" | "inviteCrew" | "addPlaces" | "logExpense" | "writeJournal";
+        Stamp: {
+            kind: components["schemas"]["StampKind"];
+            earned: boolean;
+            /**
+             * Format: date-time
+             * @description When it was earned. Missing until then.
+             */
+            earnedAt?: string;
+        };
+        StampList: {
+            stamps: components["schemas"]["Stamp"][];
+            earned: number;
+            total: number;
+        };
         DeviceRegistration: {
             /** @enum {string} */
             platform: "ios" | "android";
@@ -2268,6 +2306,28 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    listMyStamps: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The stamps. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StampList"];
+                };
             };
             401: components["responses"]["Unauthorized"];
             503: components["responses"]["Unavailable"];
