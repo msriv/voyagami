@@ -24,3 +24,14 @@
 - The API opens one Firestore listener per kind, so any Cloud Run instance can serve the stream. The first snapshot of each listener is the current state and is not sent.
 - Nothing is replayed. The stream ends after about four minutes. The app reconnects with `Last-Event-ID`, and the first event is then `resync`: refetch everything for the trip, then apply `change` events as they arrive.
 - Any active member can listen, viewers included.
+
+## Concurrent edit rules
+
+These hold for every shared record (stops, tasks, bookings, expenses, polls, meet points). The server applies them; the app never merges.
+
+- **Per field, last write wins.** A patch changes only the fields it names (Firestore field updates). Two people changing different fields of one stop both keep their change. Two people changing the same field: the later write stands, and the earlier one is replaced. Nothing else on the record is touched.
+- **Order uses a sort key.** Stops are ordered by a fractional key (`fracindex`). Moving or inserting writes only the moved stop's key, so two people reordering at once do not overwrite each other's moves. If two stops end up with the same key, they sort by id, so every device shows the same order.
+- **Deletes win.** A delete marks the record deleted (`deletedAt`). An edit that arrives after the delete is refused with 404; it never brings the record back. To undo, add the item again.
+- **Nothing is lost silently.** An edit that is refused answers with an error the app shows. The live feed (above) tells everyone to refetch, so a device that lost a race sees the winning value within seconds.
+
+`TestStopsConcurrentEdits` and `TestStopsConcurrentInserts` in `services/api/internal/server/stops_test.go` prove the first three rules for stops.

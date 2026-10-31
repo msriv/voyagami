@@ -261,3 +261,54 @@ func (f *fakeStops) SetOrders(_ context.Context, _ string, orders map[string]str
 	}
 	return nil
 }
+
+// Two people editing different fields of one stop at the same time both keep
+// their change, and the same field is last write wins.
+func TestStopsConcurrentEdits(t *testing.T) {
+	r := newStopRig(t)
+	_, s := r.add("owner", "2027-02-01", "Cafe", "")
+	patch := func(token, body string) {
+		t.Helper()
+		if code := call(r.h, "PATCH", r.path("/"+s.Id), token, body).Code; code != 200 {
+			t.Fatalf("patch: %d", code)
+		}
+	}
+	patch("owner", `{"note":"egg coffee"}`)
+	patch("editor", `{"startLocal":"09:30"}`)
+	patch("editor", `{"durationMin":45}`)
+	patch("owner", `{"note":"best at dawn"}`)
+
+	rec := call(r.h, "GET", r.path(""), "owner", "")
+	var l api.StopList
+	_ = json.Unmarshal(rec.Body.Bytes(), &l)
+	got := l.Stops[0]
+	if *got.Note != "best at dawn" || *got.StartLocal != "09:30" || *got.DurationMin != 45 {
+		t.Fatalf("lost a change: %+v", got)
+	}
+
+	// Delete wins: an edit that arrives after the delete is refused, not revived.
+	if code := call(r.h, "DELETE", r.path("/"+s.Id), "owner", "").Code; code != 204 {
+		t.Fatalf("delete: %d", code)
+	}
+	if code := call(r.h, "PATCH", r.path("/"+s.Id), "editor", `{"note":"late"}`).Code; code != 404 {
+		t.Fatalf("edit after delete: %d", code)
+	}
+}
+
+// Two people adding a stop before the same neighbour at the same moment both
+// land, in a stable order.
+func TestStopsConcurrentInserts(t *testing.T) {
+	r := newStopRig(t)
+	const day = "2027-02-01"
+	_, a := r.add("owner", day, "A", "")
+	r.add("owner", day, "B", `,"beforeStopId":"`+a.Id+`"`)
+	r.add("editor", day, "C", `,"beforeStopId":"`+a.Id+`"`)
+	got := r.day(day)
+	if len(got) != 3 || got[2] != "A" {
+		t.Fatalf("got %v", got)
+	}
+	again := r.day(day)
+	if !same(got, again) {
+		t.Fatalf("order not stable: %v then %v", got, again)
+	}
+}
