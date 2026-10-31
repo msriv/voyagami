@@ -465,6 +465,11 @@ export const en = {
     back: "Back to itinerary",
     manualTab: "Add by hand",
     intro: "Pick a result above, or fill in the details yourself. You can change the time later.",
+    link: {
+      label: "Or paste a map link",
+      find: "Find place",
+      none: "Couldn't find a place in that link. Try a Google Maps or OpenStreetMap link.",
+    },
     search: {
       label: "Search for a place",
       none: "No matches. Add it by hand below.",

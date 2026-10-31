@@ -582,6 +582,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/places/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Turn a pasted maps link into a place candidate
+         * @description Reads a Google Maps, OpenStreetMap or `geo:` link and returns the pin
+         *     and name in it, for the person to confirm. The link is treated as data:
+         *     only maps hosts are ever contacted, and only to follow a short link.
+         *     404 when no place can be read from the link.
+         */
+        post: operations["resolvePlaceLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/trips/{tripId}/polls": {
         parameters: {
             query?: never;
@@ -2920,6 +2943,35 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             503: components["responses"]["Unavailable"];
+        };
+    };
+    resolvePlaceLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    url: string;
+                };
+            };
+        };
+        responses: {
+            /** @description The place found in the link. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlaceSearchResult"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     listPolls: {

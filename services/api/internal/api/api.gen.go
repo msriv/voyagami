@@ -1794,6 +1794,11 @@ type Unauthorized = Error
 // `method_not_allowed`, `internal`, `unavailable`, `timeout`.
 type Unavailable = Error
 
+// ResolvePlaceLinkJSONBody defines parameters for ResolvePlaceLink.
+type ResolvePlaceLinkJSONBody struct {
+	Url string `json:"url"`
+}
+
 // SearchPlacesParams defines parameters for SearchPlaces.
 type SearchPlacesParams struct {
 	Q   string   `form:"q" json:"q"`
@@ -1838,6 +1843,9 @@ type JoinTripJSONRequestBody = InviteJoin
 
 // UpdateMeJSONRequestBody defines body for UpdateMe for application/json ContentType.
 type UpdateMeJSONRequestBody = MeUpdate
+
+// ResolvePlaceLinkJSONRequestBody defines body for ResolvePlaceLink for application/json ContentType.
+type ResolvePlaceLinkJSONRequestBody ResolvePlaceLinkJSONBody
 
 // CreateTripJSONRequestBody defines body for CreateTrip for application/json ContentType.
 type CreateTripJSONRequestBody = TripCreate
@@ -1940,6 +1948,9 @@ type ServerInterface interface {
 	// GetMyEntitlements What the signed-in person's plan allows
 	// (GET /v1/me/entitlements)
 	GetMyEntitlements(w http.ResponseWriter, r *http.Request)
+	// ResolvePlaceLink Turn a pasted maps link into a place candidate
+	// (POST /v1/places/resolve)
+	ResolvePlaceLink(w http.ResponseWriter, r *http.Request)
 	// SearchPlaces Search for a place by name
 	// (GET /v1/places/search)
 	SearchPlaces(w http.ResponseWriter, r *http.Request, params SearchPlacesParams)
@@ -2245,6 +2256,20 @@ func (siw *ServerInterfaceWrapper) GetMyEntitlements(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetMyEntitlements(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ResolvePlaceLink operation middleware
+func (siw *ServerInterfaceWrapper) ResolvePlaceLink(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ResolvePlaceLink(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -4230,6 +4255,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/v1/trips/{tripId}/journal/{date}", wrapper.PutJournalEntry)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/rates", wrapper.GetRate)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/places/search", wrapper.SearchPlaces)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/places/resolve", wrapper.ResolvePlaceLink)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/polls", wrapper.ListPolls)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/polls", wrapper.CreatePoll)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/polls/{pollId}/vote", wrapper.VotePoll)
@@ -4727,6 +4753,70 @@ func (response GetMyEntitlements503JSONResponse) VisitGetMyEntitlementsResponse(
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ResolvePlaceLinkRequestObject struct {
+	Body *ResolvePlaceLinkJSONRequestBody
+}
+
+type ResolvePlaceLinkResponseObject interface {
+	VisitResolvePlaceLinkResponse(w http.ResponseWriter) error
+}
+
+type ResolvePlaceLink200JSONResponse PlaceSearchResult
+
+func (response ResolvePlaceLink200JSONResponse) VisitResolvePlaceLinkResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ResolvePlaceLink400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response ResolvePlaceLink400JSONResponse) VisitResolvePlaceLinkResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ResolvePlaceLink401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ResolvePlaceLink401JSONResponse) VisitResolvePlaceLinkResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ResolvePlaceLink404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ResolvePlaceLink404JSONResponse) VisitResolvePlaceLinkResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
 	_, err := buf.WriteTo(w)
 	return err
 }
@@ -9392,6 +9482,9 @@ type StrictServerInterface interface {
 	// GetMyEntitlements What the signed-in person's plan allows
 	// (GET /v1/me/entitlements)
 	GetMyEntitlements(ctx context.Context, request GetMyEntitlementsRequestObject) (GetMyEntitlementsResponseObject, error)
+	// ResolvePlaceLink Turn a pasted maps link into a place candidate
+	// (POST /v1/places/resolve)
+	ResolvePlaceLink(ctx context.Context, request ResolvePlaceLinkRequestObject) (ResolvePlaceLinkResponseObject, error)
 	// SearchPlaces Search for a place by name
 	// (GET /v1/places/search)
 	SearchPlaces(ctx context.Context, request SearchPlacesRequestObject) (SearchPlacesResponseObject, error)
@@ -9854,6 +9947,37 @@ func (sh *strictHandler) GetMyEntitlements(w http.ResponseWriter, r *http.Reques
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetMyEntitlementsResponseObject); ok {
 		if err := validResponse.VisitGetMyEntitlementsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ResolvePlaceLink operation middleware
+func (sh *strictHandler) ResolvePlaceLink(w http.ResponseWriter, r *http.Request) {
+	var request ResolvePlaceLinkRequestObject
+
+	var body ResolvePlaceLinkJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ResolvePlaceLink(ctx, request.(ResolvePlaceLinkRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ResolvePlaceLink")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ResolvePlaceLinkResponseObject); ok {
+		if err := validResponse.VisitResolvePlaceLinkResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

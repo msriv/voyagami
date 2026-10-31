@@ -958,6 +958,40 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/places/resolve:
+    post:
+      operationId: resolvePlaceLink
+      tags: [places]
+      summary: Turn a pasted maps link into a place candidate
+      description: |
+        Reads a Google Maps, OpenStreetMap or `geo:` link and returns the pin
+        and name in it, for the person to confirm. The link is treated as data:
+        only maps hosts are ever contacted, and only to follow a short link.
+        404 when no place can be read from the link.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url:
+                  type: string
+                  maxLength: 2000
+      responses:
+        "200":
+          description: The place found in the link.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlaceSearchResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /v1/trips/{tripId}/polls:
     parameters:
       - name: tripId
