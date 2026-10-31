@@ -1,4 +1,5 @@
 import { localStore } from "@/local/store";
+import { markReachable } from "@/local/syncStatus";
 import { useWriteQueue } from "@/local/useWriteQueue";
 import { createApiClient, type ApiClient, type StoredTokens } from "@voyagami/api-client";
 import {
@@ -30,10 +31,12 @@ function withBreadcrumbs(base?: typeof fetch): typeof fetch {
     const path = url.replace(/^https?:\/\/[^/]+/, "").replace(/\?.*$/, "");
     try {
       const response = await (base ?? globalThis.fetch)(input, init);
+      markReachable(true);
       reporter.breadcrumb(`${method} ${path} ${response.status}`);
       if (response.status >= 500) reporter.log("warn", `${method} ${path} ${response.status}`);
       return response;
     } catch (e) {
+      markReachable(false);
       reporter.breadcrumb(`${method} ${path} failed`);
       reporter.log("warn", `${method} ${path} network failure: ${String(e)}`);
       throw e;

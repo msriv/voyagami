@@ -1,5 +1,6 @@
 import type { components } from "@voyagami/api-client";
 
+import { queueChanged } from "./changes";
 import { localStore } from "./store";
 
 /**
@@ -48,6 +49,7 @@ export async function enqueue(op: QueuedOp & { id: string }, now = Date.now()): 
   const list = await pendingWrites();
   if (list.some((e) => e.id === op.id)) return;
   await localStore().put(QUEUE, [...list, { ...op, createdAt: now, attempts: 0, nextAt: now }]);
+  queueChanged();
 }
 
 export async function dismissFailed(id: string): Promise<void> {
@@ -55,6 +57,7 @@ export async function dismissFailed(id: string): Promise<void> {
     FAILED,
     (await failedWrites()).filter((e) => e.id !== id),
   );
+  queueChanged();
 }
 
 /** What sending an entry came to. */
@@ -81,6 +84,7 @@ export async function flush(
         { ...head, attempts, nextAt: now + backoffMs(attempts) },
         ...rest,
       ]);
+      queueChanged();
       break;
     }
     list = rest;
@@ -88,6 +92,7 @@ export async function flush(
     else
       await localStore().put(FAILED, [...(await failedWrites()), { ...head, reason: out.reject }]);
     await localStore().put(QUEUE, list);
+    queueChanged();
   }
   return sent;
 }
