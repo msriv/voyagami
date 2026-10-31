@@ -72,3 +72,7 @@ These hold for every shared record (stops, tasks, bookings, expenses, polls, mee
 Tapping the sync badge in the trip header (when something is waiting or refused) opens `Changes to send` for that trip. Waiting changes can be sent now or discarded. Refused changes show the server's reason and can be tried again (same ID, so never doubled) or discarded.
 
 Not built yet: the "someone else changed it after you" explanation and a restore. That needs the server to say which edit won and what the loser held; today only creates are queued, and a create cannot be overridden, so there is nothing to explain yet.
+
+## Saved on this phone
+
+Profile shows how much the phone keeps for offline use and a `Clear saved copies` button. Clearing removes the saved copies of trips, itineraries, bookings, expenses and journal; they download again when a screen is opened. It never touches the write queue or the failed list, because those changes exist nowhere else. The manual airplane-mode script is `docs/offline-test.md`.

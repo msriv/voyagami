@@ -51,6 +51,13 @@ export const en = {
       generic: "Something went wrong. Try again.",
     },
   },
+  storage: {
+    title: "Saved on this phone",
+    loading: "Checking",
+    used: "Trips and plans kept for offline use: {{size}}",
+    note: "Clearing removes these copies. They download again when you open a trip. Changes waiting to send are kept.",
+    clear: "Clear saved copies",
+  },
   sync: {
     title: "Changes to send",
     opensList: "Opens the changes to send",

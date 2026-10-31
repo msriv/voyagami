@@ -10,6 +10,7 @@ import {
   formatMonth,
   weekdayLabels,
   defaultUnits,
+  formatBytes,
   formatDate,
   formatDistance,
   formatMoney,
@@ -165,5 +166,13 @@ describe("localeFor", () => {
   it("keeps the input when the tag or region is not valid", () => {
     expect(localeFor("not a tag", "IN")).toBe("not a tag");
     expect(localeFor("en", "xx-!")).toBe("en");
+  });
+});
+
+describe("formatBytes", () => {
+  it("uses kilobytes below a megabyte and megabytes above", () => {
+    expect(formatBytes(48_000, "en")).toMatch(/48\s?kB/i);
+    expect(formatBytes(48_000_000, "en")).toMatch(/48\s?MB/i);
+    expect(formatBytes(10, "en")).toMatch(/1\s?kB/i);
   });
 });

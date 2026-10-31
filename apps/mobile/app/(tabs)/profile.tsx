@@ -4,6 +4,7 @@ import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAuth } from "@/auth";
+import { SavedOnPhone } from "@/local/SavedOnPhone";
 import { useTranslation } from "@/i18n";
 import { useProfile } from "@/profile";
 import { useTheme } from "@/theme";
@@ -87,6 +88,9 @@ export default function ProfileScreen() {
             <Text variant="bodyStrong">{t("profile.dataRegion")}</Text>
             <Text variant="caption">{t("profile.dataNote")}</Text>
           </View>
+        </Card>
+        <Card>
+          <SavedOnPhone />
         </Card>
 
         <Button label={t("profile.signOut")} variant="secondary" onPress={() => void signOut()} />
