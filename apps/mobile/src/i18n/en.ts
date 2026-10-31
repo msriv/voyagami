@@ -379,6 +379,11 @@ export const en = {
       generic: "Something went wrong. Try again.",
     },
   },
+  sponsored: {
+    label: "Sponsored",
+    open: "Sponsored: {{title}}",
+    hide: "Hide for 30 days",
+  },
   picks: {
     title: "Picks for you",
     back: "Back to trip",

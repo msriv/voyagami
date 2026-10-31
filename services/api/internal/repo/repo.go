@@ -8,6 +8,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/msriv/voyagami/services/api/internal/analytics"
 	"github.com/msriv/voyagami/services/api/internal/model"
 )
 
@@ -74,10 +75,45 @@ type Consents interface {
 	Update(ctx context.Context, uid string, p model.ConsentsPatch, now time.Time) (model.Consents, error)
 }
 
+// Events stores checked product events.
+type Events interface {
+	// Add stores the events for one person.
+	Add(ctx context.Context, uid string, events []analytics.Event, now time.Time) error
+}
+
+// Deletions stores account deletion requests and carries them out.
+type Deletions interface {
+	// Schedule records the request. Asking again keeps the first date.
+	Schedule(ctx context.Context, uid string, now time.Time) (model.Deletion, error)
+	// Get returns the request, or ErrNotFound when none is scheduled.
+	Get(ctx context.Context, uid string) (model.Deletion, error)
+	// Cancel drops a scheduled request. Cancelling none is not an error.
+	Cancel(ctx context.Context, uid string) error
+	// Due returns the people whose deletion date has come, at most limit.
+	Due(ctx context.Context, now time.Time, limit int) ([]string, error)
+	// Purge deletes the person's personal data and anonymises what they leave
+	// on other people's trips. Running it again finishes whatever is left.
+	Purge(ctx context.Context, uid string, now time.Time) error
+}
+
 // Support stores messages from the Help screen.
 type Support interface {
 	// Add stores a message and returns its ID.
 	Add(ctx context.Context, m model.SupportMessage) (string, error)
+}
+
+// Sponsored holds the sponsored card inventory and what people did with it.
+type Sponsored interface {
+	// Live returns the cards that run at now. The inventory is small and kept by hand.
+	Live(ctx context.Context, now time.Time) ([]model.SponsoredCard, error)
+	// Get returns one card, or ErrNotFound.
+	Get(ctx context.Context, id string) (model.SponsoredCard, error)
+	// Hidden returns the cards this person hid that are still hidden at now.
+	Hidden(ctx context.Context, uid string, now time.Time) (map[string]bool, error)
+	// Hide hides a card from this person until the given time.
+	Hide(ctx context.Context, uid, cardID string, until time.Time) error
+	// Record counts an impression or click once per person, card, kind and day.
+	Record(ctx context.Context, uid, cardID string, kind model.SponsoredEvent, now time.Time) error
 }
 
 // Trips stores trips and who is on them. Membership changes keep the trip's

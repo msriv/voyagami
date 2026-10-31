@@ -1427,22 +1427,10 @@ type Event struct {
 	At   time.Time `json:"at"`
 	Name string    `json:"name"`
 
-	// Props Short strings (up to 64 characters), numbers and booleans only.
-	Props *map[string]Event_Props_AdditionalProperties `json:"props,omitempty"`
-}
-
-// EventProps0 defines model for Event.Props.0.
-type EventProps0 = string
-
-// EventProps1 defines model for Event.Props.1.
-type EventProps1 = float32
-
-// EventProps2 defines model for Event.Props.2.
-type EventProps2 = bool
-
-// Event_Props_AdditionalProperties defines model for Event.props.AdditionalProperties.
-type Event_Props_AdditionalProperties struct {
-	union json.RawMessage
+	// Props At most 10 properties. Values are identifiers (letters, digits and
+	// `_ . : -`, up to 64 characters), numbers or booleans; the server drops
+	// anything else, and any property whose name suggests personal data.
+	Props *map[string]interface{} `json:"props,omitempty"`
 }
 
 // EventBatch defines model for EventBatch.
@@ -2684,94 +2672,6 @@ type CreateTaskJSONRequestBody = TaskCreate
 
 // UpdateTaskJSONRequestBody defines body for UpdateTask for application/json ContentType.
 type UpdateTaskJSONRequestBody = TaskUpdate
-
-// AsEventProps0 returns the union data inside the Event_Props_AdditionalProperties as a EventProps0
-func (t Event_Props_AdditionalProperties) AsEventProps0() (EventProps0, error) {
-	var body EventProps0
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromEventProps0 overwrites any union data inside the Event_Props_AdditionalProperties as the provided EventProps0
-func (t *Event_Props_AdditionalProperties) FromEventProps0(v EventProps0) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeEventProps0 performs a merge with any union data inside the Event_Props_AdditionalProperties, using the provided EventProps0
-func (t *Event_Props_AdditionalProperties) MergeEventProps0(v EventProps0) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsEventProps1 returns the union data inside the Event_Props_AdditionalProperties as a EventProps1
-func (t Event_Props_AdditionalProperties) AsEventProps1() (EventProps1, error) {
-	var body EventProps1
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromEventProps1 overwrites any union data inside the Event_Props_AdditionalProperties as the provided EventProps1
-func (t *Event_Props_AdditionalProperties) FromEventProps1(v EventProps1) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeEventProps1 performs a merge with any union data inside the Event_Props_AdditionalProperties, using the provided EventProps1
-func (t *Event_Props_AdditionalProperties) MergeEventProps1(v EventProps1) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsEventProps2 returns the union data inside the Event_Props_AdditionalProperties as a EventProps2
-func (t Event_Props_AdditionalProperties) AsEventProps2() (EventProps2, error) {
-	var body EventProps2
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromEventProps2 overwrites any union data inside the Event_Props_AdditionalProperties as the provided EventProps2
-func (t *Event_Props_AdditionalProperties) FromEventProps2(v EventProps2) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeEventProps2 performs a merge with any union data inside the Event_Props_AdditionalProperties, using the provided EventProps2
-func (t *Event_Props_AdditionalProperties) MergeEventProps2(v EventProps2) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-func (t Event_Props_AdditionalProperties) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	return b, err
-}
-
-func (t *Event_Props_AdditionalProperties) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	return err
-}
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {

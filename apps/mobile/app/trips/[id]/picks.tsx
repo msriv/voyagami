@@ -10,6 +10,7 @@ import { useTranslation } from "@/i18n";
 import { usePaywall } from "@/plans/Paywall";
 import { useTripPlan } from "@/plans/useTripPlan";
 import { useTheme } from "@/theme";
+import { SponsoredCard } from "@/sponsored/SponsoredCard";
 import { addCatalogPlace } from "@/trips/addCatalogPlace";
 import { Button, Card, Chip, IconButton, Text } from "@/ui";
 import { Icon } from "@/ui/icons";
@@ -121,6 +122,7 @@ export default function PicksScreen() {
           ))}
         </View>
 
+        <SponsoredCard tripId={id} group={group} />
         {note ? <Text accessibilityLiveRegion="polite">{note}</Text> : null}
         {state.kind === "loading" ? <Text color="muted">{t("picks.loading")}</Text> : null}
         {state.kind === "noPosition" ? (
