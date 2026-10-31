@@ -8,9 +8,16 @@ jest.mock("expo-notifications", () => ({
 
 // The native map has no JS implementation; screens only need it to render children.
 jest.mock("react-native-maps", () => {
-  const { View } = jest.requireActual<typeof import("react-native")>("react-native");
+  const { View, Pressable } = jest.requireActual<typeof import("react-native")>("react-native");
   const MapView = ({ children }: { children?: unknown }) => (
     <View testID="map">{children as never}</View>
   );
-  return { __esModule: true, default: MapView, Marker: () => null, Polyline: () => null };
+  return {
+    __esModule: true,
+    default: MapView,
+    Marker: ({ title, onPress }: { title?: string; onPress?: () => void }) => (
+      <Pressable accessibilityRole="button" accessibilityLabel={`pin ${title}`} onPress={onPress} />
+    ),
+    Polyline: () => null,
+  };
 });

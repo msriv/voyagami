@@ -468,6 +468,7 @@ export const en = {
     error: "Something went wrong. Try again.",
     empty: "Add places to your itinerary to see them on the map.",
     allDays: "All days",
+    directions: "Directions",
     listHeading: "Places on the map",
     noPins: "None of these places has a map pin yet.",
     pinLabel: "Stop {{n}}, {{name}}, {{day}}",

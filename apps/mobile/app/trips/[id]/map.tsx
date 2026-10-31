@@ -2,7 +2,7 @@ import { formatDate } from "@voyagami/locale";
 import { getLocales } from "expo-localization";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Linking, Platform, Pressable, ScrollView, View } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -10,15 +10,16 @@ import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { isoToDate } from "@/trips/dates";
-import { daysWithStops, mapPins } from "@/trips/mapPins";
+import { displayTime } from "@/trips/stops";
+import { daysWithStops, directionsUrl, mapPins } from "@/trips/mapPins";
 import type { Stop } from "@/trips/stops";
-import { Card, Chip, IconButton, Text } from "@/ui";
+import { Button, Card, Chip, IconButton, Text } from "@/ui";
 import { Icon } from "@/ui/icons";
 
 /** Every stop with a pin on a map, numbered by day order, with a day filter and a list for screen readers. */
 export default function MapScreen() {
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, hitArea } = useTheme();
   const { api } = useAuth();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -26,6 +27,7 @@ export default function MapScreen() {
   const [stops, setStops] = useState<Stop[] | undefined>();
   const [failed, setFailed] = useState(false);
   const [day, setDay] = useState<string | undefined>();
+  const [picked, setPicked] = useState<string | undefined>();
 
   useEffect(() => {
     api
@@ -37,6 +39,7 @@ export default function MapScreen() {
   const days = useMemo(() => daysWithStops(stops ?? []), [stops]);
   const shown = day ? [day] : days;
   const pins = useMemo(() => mapPins(stops ?? [], shown), [stops, shown]);
+  const callout = pins.find((p) => p.id === picked);
   const dayLabel = (iso: string) => formatDate(isoToDate(iso), locale, { timeZone: "UTC" });
 
   return (
@@ -124,6 +127,7 @@ export default function MapScreen() {
                   key={p.id}
                   coordinate={{ latitude: p.lat, longitude: p.lng }}
                   title={`${p.number}. ${p.name}`}
+                  onPress={() => setPicked(p.id)}
                 >
                   <View
                     style={{
@@ -146,20 +150,43 @@ export default function MapScreen() {
             </MapView>
           </View>
 
+          {callout ? (
+            <Card style={{ marginHorizontal: 20, marginTop: 12, gap: 6 }}>
+              <Text variant="bodyStrong">{`${callout.number}. ${callout.name}`}</Text>
+              {callout.startLocal ? (
+                <Text variant="caption">{displayTime(callout.startLocal, locale)}</Text>
+              ) : null}
+              {callout.note ? <Text>{callout.note}</Text> : null}
+              <Button
+                label={t("map.directions")}
+                variant="secondary"
+                onPress={() =>
+                  void Linking.openURL(
+                    directionsUrl(Platform.OS, callout.lat, callout.lng, callout.name),
+                  ).catch(() => undefined)
+                }
+              />
+            </Card>
+          ) : null}
+
           <ScrollView contentContainerStyle={{ padding: 20, gap: 8 }}>
             <Text variant="bodyStrong">{t("map.listHeading")}</Text>
             {pins.length === 0 ? <Text color="muted">{t("map.noPins")}</Text> : null}
             {pins.map((p) => (
-              <Text
+              <Pressable
                 key={p.id}
+                accessibilityRole="button"
+                accessibilityState={{ selected: p.id === picked }}
                 accessibilityLabel={t("map.pinLabel", {
                   n: p.number,
                   name: p.name,
                   day: dayLabel(p.date),
                 })}
+                onPress={() => setPicked(p.id)}
+                style={{ minHeight: hitArea.min, justifyContent: "center" }}
               >
-                {`${p.number}. ${p.name}`}
-              </Text>
+                <Text>{`${p.number}. ${p.name}`}</Text>
+              </Pressable>
             ))}
           </ScrollView>
         </>
