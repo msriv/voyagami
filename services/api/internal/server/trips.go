@@ -7,6 +7,7 @@ import (
 
 	"github.com/msriv/voyagami/services/api/internal/api"
 	"github.com/msriv/voyagami/services/api/internal/auth"
+	"github.com/msriv/voyagami/services/api/internal/entitlements"
 	"github.com/msriv/voyagami/services/api/internal/model"
 	"github.com/msriv/voyagami/services/api/internal/repo"
 )
@@ -110,6 +111,11 @@ func (h *handlers) CreateTrip(ctx context.Context, req api.CreateTripRequestObje
 	}
 	if h.trips == nil {
 		return api.CreateTrip503JSONResponse{UnavailableJSONResponse: api.UnavailableJSONResponse(errBody(ctx, codeUnavailable, msgNoTrips))}, nil
+	}
+	if over, err := h.overLimit(ctx, id.UserID, "", entitlements.UpcomingTrips, msgTripLimit); err != nil {
+		return nil, err
+	} else if over != nil {
+		return api.CreateTrip403JSONResponse{ForbiddenJSONResponse: api.ForbiddenJSONResponse(*over)}, nil
 	}
 	b := req.Body
 	trip := model.Trip{

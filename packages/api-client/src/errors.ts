@@ -7,6 +7,8 @@ export class ApiError extends Error {
   readonly status: number;
   readonly code: string;
   readonly requestId: string | undefined;
+  /** On `limit_reached`: the plan feature at its limit, like `bestOrder`. */
+  readonly feature: string | undefined;
   readonly fieldErrors: readonly { field: string; message: string }[];
 
   constructor(status: number, body: Partial<ApiErrorBody> | undefined) {
@@ -15,6 +17,7 @@ export class ApiError extends Error {
     this.status = status;
     this.code = body?.code ?? "unknown";
     this.requestId = body?.requestId;
+    this.feature = body?.feature;
     this.fieldErrors = body?.fieldErrors ?? [];
   }
 }

@@ -227,7 +227,7 @@ func (h *handlers) CreateExpense(ctx context.Context, req api.CreateExpenseReque
 		if ok, err := h.multiCurrencyAllowed(ctx, id.UserID, req.TripId); err != nil {
 			return nil, err
 		} else if !ok {
-			return api.CreateExpense403JSONResponse{ForbiddenJSONResponse: api.ForbiddenJSONResponse(errBody(ctx, codeForbidden, msgNeedsPlus))}, nil
+			return api.CreateExpense403JSONResponse{ForbiddenJSONResponse: api.ForbiddenJSONResponse(limitBody(ctx, entitlements.MultiCurrency, msgNeedsPlus))}, nil
 		}
 	}
 	e, msg, err := h.buildExpense(ctx, trip, e, &b.Split)
@@ -329,7 +329,7 @@ func (h *handlers) UpdateExpense(ctx context.Context, req api.UpdateExpenseReque
 		if ok, err := h.multiCurrencyAllowed(ctx, uid, req.TripId); err != nil {
 			return nil, err
 		} else if !ok {
-			return api.UpdateExpense403JSONResponse{ForbiddenJSONResponse: api.ForbiddenJSONResponse(errBody(ctx, codeForbidden, msgNeedsPlus))}, nil
+			return api.UpdateExpense403JSONResponse{ForbiddenJSONResponse: api.ForbiddenJSONResponse(limitBody(ctx, entitlements.MultiCurrency, msgNeedsPlus))}, nil
 		}
 	}
 	if b.Split != nil {
