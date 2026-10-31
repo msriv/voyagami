@@ -397,6 +397,7 @@ export const en = {
       landed: "Landed",
       unknown: "No status yet",
     },
+  },
   ask: {
     title: "Ask",
     back: "Back",
