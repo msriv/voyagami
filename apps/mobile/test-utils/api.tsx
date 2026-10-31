@@ -5,6 +5,7 @@ import AuthLayout from "../app/(auth)/_layout";
 import Code from "../app/(auth)/code";
 import Welcome from "../app/(auth)/index";
 import Notifications from "../app/notifications";
+import Plans from "../app/plans";
 import Connect from "../app/onboarding/connect";
 import Region from "../app/onboarding/region";
 import Style from "../app/onboarding/style";
@@ -41,6 +42,7 @@ export const routes: Record<string, ComponentType> = {
   "(auth)/sign-in": SignIn,
   "onboarding/connect": Connect,
   notifications: Notifications,
+  plans: Plans,
   "onboarding/region": Region,
   "onboarding/style": Style,
   "(auth)/code": Code,
