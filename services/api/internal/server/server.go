@@ -45,7 +45,7 @@ func NewHandler(logger *slog.Logger, verifier auth.Verifier, opts ...Option) htt
 	if h.billing != nil && h.billingSecret != "" {
 		h.mountBilling(mux)
 	}
-	if h.trialJob != nil && h.jobsSecret != "" {
+	if (h.trialJob != nil || h.deletionJob != nil) && h.jobsSecret != "" {
 		h.mountJobs(mux)
 	}
 	api.HandlerWithOptions(strict, api.StdHTTPServerOptions{
@@ -85,6 +85,8 @@ type handlers struct {
 	billing       billing.Store
 	billingSecret string
 	trialJob      TrialReminderJob
+	deletionJob   TrialReminderJob
+	deletions     repo.Deletions
 	stayPartners  []stays.Partner
 	stayClicks    StayClicks
 	staysOn       bool
