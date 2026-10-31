@@ -66,3 +66,9 @@ These hold for every shared record (stops, tasks, bookings, expenses, polls, mee
 4. **synced**: nothing waiting.
 
 "Offline" is not a network probe: `markReachable` is set by every API call (an answer means reachable, a thrown fetch means not), so the badge only says offline after a real call failed. The count comes from the write queue, which tells the badge when it changes. The badge is a polite live region, so changes are read out.
+
+## Changes to send
+
+Tapping the sync badge in the trip header (when something is waiting or refused) opens `Changes to send` for that trip. Waiting changes can be sent now or discarded. Refused changes show the server's reason and can be tried again (same ID, so never doubled) or discarded.
+
+Not built yet: the "someone else changed it after you" explanation and a restore. That needs the server to say which edit won and what the loser held; today only creates are queued, and a create cannot be overridden, so there is nothing to explain yet.

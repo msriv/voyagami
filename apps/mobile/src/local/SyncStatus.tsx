@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
@@ -18,7 +18,13 @@ const dot: Record<SyncState, "matcha" | "gold" | "white" | "vermilion"> = {
  * The words carry the state; the dot is decoration. Changes are announced to screen readers.
  * `onDark` is for the trip header, which is dark.
  */
-export function SyncStatus({ onDark = false }: { onDark?: boolean }) {
+export function SyncStatus({
+  onDark = false,
+  onPress,
+}: {
+  onDark?: boolean;
+  onPress?: () => void;
+}) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { state, pending, failed } = useSyncStatus();
@@ -34,13 +40,24 @@ export function SyncStatus({ onDark = false }: { onDark?: boolean }) {
           : t("sync.synced");
   const color = onDark ? "white" : "ink";
 
+  // Something is waiting or refused: the badge opens the list of changes. All saved: nothing to open.
+  const opens = onPress && state !== "synced";
+  const Wrapper = opens ? Pressable : View;
+  const wrapperProps = opens
+    ? {
+        accessibilityRole: "button" as const,
+        accessibilityHint: t("sync.opensList"),
+        onPress,
+        style: { gap: 4, minHeight: 44, justifyContent: "center" as const },
+      }
+    : { accessibilityRole: "text" as const, style: { gap: 4 } };
+
   return (
-    <View
+    <Wrapper
       accessible
-      accessibilityRole="text"
       accessibilityLabel={label}
       accessibilityLiveRegion="polite"
-      style={{ gap: 4 }}
+      {...wrapperProps}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
         <View
@@ -60,6 +77,6 @@ export function SyncStatus({ onDark = false }: { onDark?: boolean }) {
           {t("sync.offlineHint")}
         </Text>
       ) : null}
-    </View>
+    </Wrapper>
   );
 }
