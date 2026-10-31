@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-// TrialReminderJob sends the trial-ending pushes that are due.
+// TrialReminderJob is work a scheduler triggers: it returns how many things it did.
 type TrialReminderJob interface {
 	Run(ctx context.Context) (int, error)
 }
@@ -21,21 +21,37 @@ func WithJobs(trial TrialReminderJob, secret string) Option {
 	return func(h *handlers) { h.trialJob, h.jobsSecret = trial, secret }
 }
 
+// WithDeletionJob turns on POST /v1/jobs/account-deletions, which a scheduler
+// calls daily to purge accounts whose 30 days are over. It is guarded like the
+// other jobs; the reply counts the accounts purged.
+func WithDeletionJob(job TrialReminderJob, secret string) Option {
+	return func(h *handlers) { h.deletionJob, h.jobsSecret = job, secret }
+}
+
 func (h *handlers) mountJobs(mux *http.ServeMux) {
-	mux.HandleFunc("POST /v1/jobs/trial-reminders", func(w http.ResponseWriter, r *http.Request) {
+	if h.trialJob != nil {
+		h.mountJob(mux, "trial-reminders", "reached", "trial reminders failed", h.trialJob)
+	}
+	if h.deletionJob != nil {
+		h.mountJob(mux, "account-deletions", "purged", "account deletions failed", h.deletionJob)
+	}
+}
+
+func (h *handlers) mountJob(mux *http.ServeMux, name, key, failure string, job TrialReminderJob) {
+	mux.HandleFunc("POST /v1/jobs/"+name, func(w http.ResponseWriter, r *http.Request) {
 		got := []byte(r.Header.Get("Authorization"))
 		if subtle.ConstantTimeCompare(got, []byte("Bearer "+h.jobsSecret)) != 1 {
 			writeError(w, r, http.StatusUnauthorized, codeUnauthenticated, "Sign-in is required.")
 			return
 		}
-		n, err := h.trialJob.Run(r.Context())
+		n, err := job.Run(r.Context())
 		if err != nil {
-			// Reminders already claimed went out; the next run picks up the rest.
-			slog.Default().Error("trial reminders failed", "requestId", requestIDFrom(r.Context()), "reached", n, "error", err)
+			// Work already done stays done; the next run picks up the rest.
+			slog.Default().Error(failure, "requestId", requestIDFrom(r.Context()), "done", n, "error", err)
 			writeError(w, r, http.StatusInternalServerError, codeInternal, "Something went wrong.")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]int{"reached": n})
+		_ = json.NewEncoder(w).Encode(map[string]int{key: n})
 	})
 }

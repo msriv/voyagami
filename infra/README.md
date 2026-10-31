@@ -108,6 +108,15 @@ gcloud scheduler jobs create http trial-reminders --location=asia-south1 \
   --headers="Authorization=Bearer $SECRET"
 ```
 
+`POST /v1/jobs/account-deletions` deletes the accounts whose 30 days are over (VOY-72). It uses the same secret. Create its job once a day:
+
+```sh
+gcloud scheduler jobs create http account-deletions --location=asia-south1 \
+  --schedule="0 3 * * *" --http-method=POST \
+  --uri="$(terraform output -raw api_url)/v1/jobs/account-deletions" \
+  --headers="Authorization=Bearer $SECRET"
+```
+
 ## Deploying the API (dev)
 
 `make deploy-dev` builds `services/api/Dockerfile` for linux/amd64, pushes it to Artifact Registry (`voyagami`) tagged with the git commit, rolls `voyagami-api` to it and checks `/health`. It needs `docker` and a signed-in `gcloud` (`gcloud auth login`, project `voyagami-dev-512208`). The same script runs from GitHub: Actions, "Deploy API (dev)", Run workflow, on `main` only. It signs in through workload identity, so no key is stored.
