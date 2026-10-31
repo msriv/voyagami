@@ -16,7 +16,7 @@ import { countryName } from "@/trips/destinations";
 import { daysBetween, daysInRange, isoToDate } from "@/trips/dates";
 import type { Trip } from "@/trips/summary";
 import { TripTasks } from "@/trips/TripTasks";
-import { useTripReadOnly } from "@/plans/useReadOnly";
+import { passFor, useTripPlan } from "@/plans/useTripPlan";
 import { SyncStatus } from "@/local/SyncStatus";
 import { Button, Card, IconButton, Input, Sheet, Text, WavePattern } from "@/ui";
 import { Icon } from "@/ui/icons";
@@ -38,7 +38,7 @@ export default function TripScreen() {
   const [name, setName] = useState("");
   const [formError, setFormError] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
-  const readOnly = useTripReadOnly(id);
+  const { plan, readOnly } = useTripPlan(id);
 
   const load = useCallback(async () => {
     try {
@@ -120,6 +120,7 @@ export default function TripScreen() {
         ", " +
         t("trip.days", { count: daysBetween(start, end) })
       : t("trip.flexibleDays", { count: flexible?.days ?? 0 });
+  const days = start && end ? daysBetween(start, end) : (flexible?.days ?? 0);
   const countries = [...new Set(trip.destinations.map((d) => d.countryCode))].map(countryName);
   const abroad = trip.destinations.some((d) => region && d.countryCode !== region);
   const kicker = [...countries, ...(abroad ? [t("trip.international")] : [])]
@@ -172,6 +173,25 @@ export default function TripScreen() {
               {dates}
             </Text>
             <SyncStatus onDark onPress={() => router.push(`/trips/${id}/sync`)} />
+            {plan === "pass" || plan === "plus" ? (
+              <Text variant="caption" color="white">
+                {t(plan === "pass" ? "trip.passActive" : "trip.plusActive")}
+              </Text>
+            ) : plan === "free" && days > 0 ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t("trip.passSuggest", {
+                  name: t(`plans.tiers.${passFor(days)}`),
+                })}
+                onPress={() => router.push("/plans")}
+                hitSlop={8}
+                style={{ minHeight: 44, justifyContent: "center" }}
+              >
+                <Text variant="caption" color="white" style={{ textDecorationLine: "underline" }}>
+                  {t("trip.passSuggest", { name: t(`plans.tiers.${passFor(days)}`) })}
+                </Text>
+              </Pressable>
+            ) : null}
             {readOnly ? (
               <Text variant="caption" color="white" style={{ fontWeight: "800" }}>
                 {t("trip.readOnly")}
