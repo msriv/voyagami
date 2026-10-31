@@ -55,3 +55,14 @@ These hold for every shared record (stops, tasks, bookings, expenses, polls, mee
 - **Nothing is lost silently.** An edit that is refused answers with an error the app shows. The live feed (above) tells everyone to refetch, so a device that lost a race sees the winning value within seconds.
 
 `TestStopsConcurrentEdits` and `TestStopsConcurrentInserts` in `services/api/internal/server/stops_test.go` prove the first three rules for stops.
+
+## Sync status
+
+`SyncStatus` (shown in the trip header) says where the phone's changes stand. One state at a time, strongest first:
+
+1. **attention**: the server refused a queued change (it is on the failed list).
+2. **offline**: the last call to the server got no answer. Shows the number of changes saved on the phone and the board's "keep going" line.
+3. **syncing**: changes are waiting to send.
+4. **synced**: nothing waiting.
+
+"Offline" is not a network probe: `markReachable` is set by every API call (an answer means reachable, a thrown fetch means not), so the badge only says offline after a real call failed. The count comes from the write queue, which tells the badge when it changes. The badge is a polite live region, so changes are read out.

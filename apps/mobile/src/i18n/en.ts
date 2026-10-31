@@ -51,6 +51,17 @@ export const en = {
       generic: "Something went wrong. Try again.",
     },
   },
+  sync: {
+    synced: "Everything is saved",
+    syncing_one: "Sending {{count}} change",
+    syncing_other: "Sending {{count}} changes",
+    offline: "No signal",
+    offlineSaved_one: "No signal. {{count}} change saved on your phone",
+    offlineSaved_other: "No signal. {{count}} changes saved on your phone",
+    offlineHint: "Keep going. Changes are saved on your phone and send by themselves.",
+    attention_one: "{{count}} change needs attention",
+    attention_other: "{{count}} changes need attention",
+  },
   trip: {
     invite: "+ Invite",
     international: "International",

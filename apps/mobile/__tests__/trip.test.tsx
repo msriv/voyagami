@@ -43,6 +43,7 @@ describe("Trip overview", () => {
     await renderRouter(routes, { initialUrl: "/trips/t1" });
     expect(await screen.findByText("Hanoi food week")).toBeTruthy();
     expect(screen.getByText("Your role: Owner")).toBeTruthy();
+    expect(screen.getByLabelText("Everything is saved")).toBeTruthy();
     expect(screen.getAllByLabelText(/^Day \d/)).toHaveLength(3);
     expect(screen.getByRole("button", { name: "Journal" })).toBeTruthy();
   });
