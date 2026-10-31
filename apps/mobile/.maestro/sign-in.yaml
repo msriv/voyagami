@@ -1,0 +1,14 @@
+# Smoke flow: sign in with the dev code. Run with `maestro test apps/mobile/.maestro/sign-in.yaml`
+# against a dev build whose API uses the stub SMS provider (code 123456).
+appId: app.voyagami.dev
+---
+- launchApp:
+    clearState: true
+- assertVisible: "Let's get you a passport."
+- tapOn: "Mobile number"
+- inputText: "+919999999999"
+- tapOn: "Send 6-digit code"
+- assertVisible: "Enter your code"
+- tapOn: "6-digit code"
+- inputText: "123456"
+- tapOn: "Verify"
