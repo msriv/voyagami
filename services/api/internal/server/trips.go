@@ -135,6 +135,7 @@ func (h *handlers) CreateTrip(ctx context.Context, req api.CreateTripRequestObje
 		}
 		return nil, err
 	}
+	h.award(ctx, id.UserID, model.StampCreateTrip)
 	return api.CreateTrip201JSONResponse(tripFrom(created, model.RoleOwner)), nil
 }
 

@@ -489,6 +489,33 @@ func (e SplitInputMethod) Valid() bool {
 	}
 }
 
+// Defines values for StampKind.
+const (
+	AddPlaces    StampKind = "addPlaces"
+	CreateTrip   StampKind = "createTrip"
+	InviteCrew   StampKind = "inviteCrew"
+	LogExpense   StampKind = "logExpense"
+	WriteJournal StampKind = "writeJournal"
+)
+
+// Valid indicates whether the value is a known member of the StampKind enum.
+func (e StampKind) Valid() bool {
+	switch e {
+	case AddPlaces:
+		return true
+	case CreateTrip:
+		return true
+	case InviteCrew:
+		return true
+	case LogExpense:
+		return true
+	case WriteJournal:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for TravelStyleInterests.
 const (
 	Beaches        TravelStyleInterests = "beaches"
@@ -1587,6 +1614,25 @@ type SplitInput struct {
 // SplitInputMethod defines model for SplitInput.Method.
 type SplitInputMethod string
 
+// Stamp defines model for Stamp.
+type Stamp struct {
+	Earned bool `json:"earned"`
+
+	// EarnedAt When it was earned. Missing until then.
+	EarnedAt *time.Time `json:"earnedAt,omitempty"`
+	Kind     StampKind  `json:"kind"`
+}
+
+// StampKind defines model for StampKind.
+type StampKind string
+
+// StampList defines model for StampList.
+type StampList struct {
+	Earned int     `json:"earned"`
+	Stamps []Stamp `json:"stamps"`
+	Total  int     `json:"total"`
+}
+
 // Stop defines model for Stop.
 type Stop struct {
 	// Date The day, YYYY-MM-DD.
@@ -2011,6 +2057,9 @@ type ServerInterface interface {
 	// GetMyEntitlements What the signed-in person's plan allows
 	// (GET /v1/me/entitlements)
 	GetMyEntitlements(w http.ResponseWriter, r *http.Request)
+	// ListMyStamps The first five stamps and which ones the caller has earned
+	// (GET /v1/me/stamps)
+	ListMyStamps(w http.ResponseWriter, r *http.Request)
 	// ResolvePlaceLink Turn a pasted maps link into a place candidate
 	// (POST /v1/places/resolve)
 	ResolvePlaceLink(w http.ResponseWriter, r *http.Request)
@@ -2371,6 +2420,20 @@ func (siw *ServerInterfaceWrapper) GetMyEntitlements(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetMyEntitlements(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListMyStamps operation middleware
+func (siw *ServerInterfaceWrapper) ListMyStamps(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListMyStamps(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -4344,6 +4407,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/me", wrapper.UpdateMe)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/me/devices/{deviceId}", wrapper.RemoveDevice)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/v1/me/devices/{deviceId}", wrapper.RegisterDevice)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/me/stamps", wrapper.ListMyStamps)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips", wrapper.ListTrips)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips", wrapper.CreateTrip)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}", wrapper.GetTrip)
@@ -4966,6 +5030,55 @@ func (response GetMyEntitlements401JSONResponse) VisitGetMyEntitlementsResponse(
 type GetMyEntitlements503JSONResponse struct{ UnavailableJSONResponse }
 
 func (response GetMyEntitlements503JSONResponse) VisitGetMyEntitlementsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListMyStampsRequestObject struct {
+}
+
+type ListMyStampsResponseObject interface {
+	VisitListMyStampsResponse(w http.ResponseWriter) error
+}
+
+type ListMyStamps200JSONResponse StampList
+
+func (response ListMyStamps200JSONResponse) VisitListMyStampsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListMyStamps401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ListMyStamps401JSONResponse) VisitListMyStampsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListMyStamps503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ListMyStamps503JSONResponse) VisitListMyStampsResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -9736,6 +9849,9 @@ type StrictServerInterface interface {
 	// GetMyEntitlements What the signed-in person's plan allows
 	// (GET /v1/me/entitlements)
 	GetMyEntitlements(ctx context.Context, request GetMyEntitlementsRequestObject) (GetMyEntitlementsResponseObject, error)
+	// ListMyStamps The first five stamps and which ones the caller has earned
+	// (GET /v1/me/stamps)
+	ListMyStamps(ctx context.Context, request ListMyStampsRequestObject) (ListMyStampsResponseObject, error)
 	// ResolvePlaceLink Turn a pasted maps link into a place candidate
 	// (POST /v1/places/resolve)
 	ResolvePlaceLink(ctx context.Context, request ResolvePlaceLinkRequestObject) (ResolvePlaceLinkResponseObject, error)
@@ -10260,6 +10376,30 @@ func (sh *strictHandler) GetMyEntitlements(w http.ResponseWriter, r *http.Reques
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetMyEntitlementsResponseObject); ok {
 		if err := validResponse.VisitGetMyEntitlementsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListMyStamps operation middleware
+func (sh *strictHandler) ListMyStamps(w http.ResponseWriter, r *http.Request) {
+	var request ListMyStampsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListMyStamps(ctx, request.(ListMyStampsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListMyStamps")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListMyStampsResponseObject); ok {
+		if err := validResponse.VisitListMyStampsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

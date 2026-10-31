@@ -237,6 +237,7 @@ func (h *handlers) CreateInvite(ctx context.Context, req api.CreateInviteRequest
 	if err := h.invites.Create(ctx, inv); err != nil {
 		return nil, err
 	}
+	h.award(ctx, uid, model.StampInviteCrew)
 	return api.CreateInvite201JSONResponse{Invite: inviteFrom(inv), Token: token}, nil
 }
 

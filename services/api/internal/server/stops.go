@@ -108,6 +108,7 @@ func (h *handlers) CreateStop(ctx context.Context, req api.CreateStopRequestObje
 		return h.createStopError(ctx, err)
 	}
 	if id, err := identity(ctx, "CreateStop"); err == nil {
+		h.countPlace(ctx, id.UserID)
 		h.emit(ctx, notify.KindStopAdded, trip.ID, id.UserID)
 	}
 	return api.CreateStop201JSONResponse(stopFrom(created)), nil
