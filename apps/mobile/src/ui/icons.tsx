@@ -8,6 +8,7 @@ export type IconName =
   | "close"
   | "more"
   | "plus"
+  | "check"
   | "home"
   | "compass"
   | "book"
@@ -39,6 +40,7 @@ export function Icon({ name, size = 24, color }: { name: IconName; size?: number
       {name === "forward" ? <Path d="M9 5l7 7-7 7" /> : null}
       {name === "close" ? <Path d="M6 6l12 12M18 6L6 18" /> : null}
       {name === "plus" ? <Path d="M12 5v14M5 12h14" /> : null}
+      {name === "check" ? <Path d="M5 12.5l4.5 4.5L19 7.5" /> : null}
       {name === "more" ? (
         <>
           <Circle cx={5} cy={12} r={1} />
