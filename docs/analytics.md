@@ -31,3 +31,18 @@ install (first `app_open`), sign-in, first trip, invite sent, crew joined, first
 ## Weekly review
 
 Count events per week by name and divide each funnel step by the one before it. Paywall conversion is `paywall_converted` over `paywall_shown`, per `moment`.
+
+## Server checks
+
+`POST /v1/events` (VOY-75) checks each batch before storing it in the `analyticsEvents` collection.
+
+- Kept only for people whose `analytics` consent is `granted` (`GET /v1/me/consents`). Without it the whole batch is dropped and the reply says so.
+- A batch has 1 to 50 events. An event older than 7 days or more than 5 minutes in the future is dropped.
+- At most 10 properties per event, with `camelCase` names. A value is an identifier (letters, digits, `_ . : -`, up to 64 characters), a number or a boolean. Free text has spaces, so it cannot get in.
+- A property whose name contains `phone`, `email`, `name`, `address`, `lat`, `lng`, `lon`, `location`, `text`, `note`, `message` or `token` is dropped.
+- Each stored event has the person's id so funnels can count people, and nothing else about them.
+
+## Not done yet
+
+- The weekly dashboard needs the BigQuery export of Firestore, which Mihir turns on.
+- Deleting an account does not yet remove its events. They carry the id but no contact details. Add it to the purge when events move to BigQuery.

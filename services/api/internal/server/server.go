@@ -80,6 +80,7 @@ type handlers struct {
 	devices       repo.Devices
 	sponsored     repo.Sponsored
 	consents      repo.Consents
+	productEvents repo.Events
 	export        *export.Sources
 	support       repo.Support
 	supportLimit  *userLimiter
