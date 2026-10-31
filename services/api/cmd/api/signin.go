@@ -110,6 +110,11 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 		return signInDeps{}, err
 	}
 	deps.options = append(deps.options, server.WithStays(partners, firestorerepo.NewStayClicks(client)))
+	expPartners, err := stays.Load(cfg.ExperiencePartners)
+	if err != nil {
+		return signInDeps{}, err
+	}
+	deps.options = append(deps.options, server.WithExperiences(expPartners, firestorerepo.NewStayClicks(client)))
 	if cfg.JobsSecret != "" {
 		deps.options = append(deps.options, server.WithJobs(newTrialReminders(cfg, logger, users, devices, firestorerepo.NewEntitlements(client)), cfg.JobsSecret),
 			server.WithDeletionJob(accountPurge{deletions: deletions, logger: logger}, cfg.JobsSecret))

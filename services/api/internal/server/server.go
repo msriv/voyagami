@@ -97,6 +97,9 @@ type handlers struct {
 	stayPartners  []stays.Partner
 	stayClicks    StayClicks
 	staysOn       bool
+	expPartners   []stays.Partner
+	expClicks     StayClicks
+	expOn         bool
 	catalog       repo.PlaceCatalog
 	asker         ask.Drafter
 	askCount      AskCounter

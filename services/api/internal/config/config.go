@@ -39,6 +39,8 @@ type Config struct {
 	JobsSecret string
 	// StayPartners is the JSON list of stay partners (see docs/stays.md). Empty means none.
 	StayPartners string
+	// ExperiencePartners is the JSON list of experience partners, same shape as StayPartners. Empty means none.
+	ExperiencePartners string
 }
 
 // minAuthSecret is the shortest AUTH_SECRET accepted.
@@ -97,6 +99,7 @@ func Load(getenv func(string) string) (Config, error) {
 	cfg.RevenueCatWebhookSecret = getenv("REVENUECAT_WEBHOOK_SECRET")
 	cfg.JobsSecret = getenv("JOBS_SECRET")
 	cfg.StayPartners = getenv("STAY_PARTNERS")
+	cfg.ExperiencePartners = getenv("EXPERIENCE_PARTNERS")
 	switch cfg.DevPlan = getenv("DEV_PLAN"); {
 	case cfg.DevPlan == "":
 	case cfg.Env != "dev":
