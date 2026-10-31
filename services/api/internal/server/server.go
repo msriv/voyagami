@@ -74,6 +74,7 @@ type handlers struct {
 	devices       repo.Devices
 	events        Publisher
 	stamps        repo.Stamps
+	stampReward   StampRewarder
 	billing       billing.Store
 	billingSecret string
 	feed          repo.Feed

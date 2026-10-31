@@ -35,16 +35,15 @@ func (f *fakeStamps) Award(_ context.Context, uid string, k model.StampKind, at 
 	return true, nil
 }
 
-func (f *fakeStamps) AddPlace(ctx context.Context, uid string, at time.Time) error {
+func (f *fakeStamps) AddPlace(ctx context.Context, uid string, at time.Time) (bool, error) {
 	f.mu.Lock()
 	f.places[uid]++
 	n := f.places[uid]
 	f.mu.Unlock()
 	if n == model.PlacesForStamp {
-		_, err := f.Award(ctx, uid, model.StampAddPlaces, at)
-		return err
+		return f.Award(ctx, uid, model.StampAddPlaces, at)
 	}
-	return nil
+	return false, nil
 }
 
 func (f *fakeStamps) List(_ context.Context, uid string) ([]model.EarnedStamp, error) {
@@ -106,5 +105,35 @@ func TestStampsOffAnswer503(t *testing.T) {
 	h := NewHandler(slog.New(slog.DiscardHandler), tokenVerifier{"owner": "u"})
 	if got := call(h, "GET", "/v1/me/stamps", "owner", "").Code; got != 503 {
 		t.Fatalf("got %d", got)
+	}
+}
+
+type fakeRewarder struct{ granted []string }
+
+func (f *fakeRewarder) GrantStampWeek(_ context.Context, uid string, _ time.Time) (bool, error) {
+	f.granted = append(f.granted, uid)
+	return true, nil
+}
+
+func TestFifthStampGrantsThePlusWeek(t *testing.T) {
+	st, rw := newFakeStamps(), &fakeRewarder{}
+	h := &handlers{stamps: st, stampReward: rw}
+	ctx := context.Background()
+	h.award(ctx, "u1", model.StampCreateTrip)
+	h.award(ctx, "u1", model.StampInviteCrew)
+	h.countPlace(ctx, "u1")
+	h.countPlace(ctx, "u1")
+	h.award(ctx, "u1", model.StampLogExpense)
+	if len(rw.granted) != 0 {
+		t.Fatalf("granted with four stamps: %v", rw.granted)
+	}
+	h.countPlace(ctx, "u1") // third place: the fourth stamp
+	h.award(ctx, "u1", model.StampWriteJournal)
+	if len(rw.granted) != 1 || rw.granted[0] != "u1" {
+		t.Fatalf("want one grant for u1, got %v", rw.granted)
+	}
+	h.award(ctx, "u1", model.StampWriteJournal) // already earned: no second check
+	if len(rw.granted) != 1 {
+		t.Fatalf("granted twice: %v", rw.granted)
 	}
 }

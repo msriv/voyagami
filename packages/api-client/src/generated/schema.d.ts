@@ -136,7 +136,7 @@ export interface paths {
          * The first five stamps and which ones the caller has earned
          * @description Always lists all five in the same order. A stamp is earned once and
          *     stays earned. Earning all five is what the "extra week of Plus"
-         *     reward (VOY-222) will look at.
+         *     reward (VOY-222) is given by the server when the fifth is earned.
          */
         get: operations["listMyStamps"];
         put?: never;

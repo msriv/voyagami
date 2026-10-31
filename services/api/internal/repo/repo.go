@@ -49,8 +49,9 @@ type Stamps interface {
 	// Award records a stamp the first time. It reports whether this call earned it.
 	Award(ctx context.Context, uid string, kind model.StampKind, at time.Time) (bool, error)
 	// AddPlace counts one place the person added and awards the Add 3 places
-	// stamp when the count reaches model.PlacesForStamp.
-	AddPlace(ctx context.Context, uid string, at time.Time) error
+	// stamp when the count reaches model.PlacesForStamp. It reports whether this
+	// call earned the stamp.
+	AddPlace(ctx context.Context, uid string, at time.Time) (bool, error)
 	// List returns the stamps the person has earned, in no set order.
 	List(ctx context.Context, uid string) ([]model.EarnedStamp, error)
 }
