@@ -96,3 +96,40 @@ export async function flush(
   }
   return sent;
 }
+
+/** Send this one on the next pass instead of waiting out its backoff. */
+export async function retryNow(id: string, now = Date.now()): Promise<void> {
+  const list = await pendingWrites();
+  await localStore().put(
+    QUEUE,
+    list.map((e) => (e.id === id ? { ...e, nextAt: now } : e)),
+  );
+  queueChanged();
+}
+
+/** Drops a change that has not been sent. The person chose to lose it. */
+export async function discardPending(id: string): Promise<void> {
+  await localStore().put(
+    QUEUE,
+    (await pendingWrites()).filter((e) => e.id !== id),
+  );
+  queueChanged();
+}
+
+/** Puts a refused change back in line for another try (the same ID, so it can never double). */
+export async function retryFailed(id: string, now = Date.now()): Promise<void> {
+  const failed = await failedWrites();
+  const hit = failed.find((e) => e.id === id);
+  if (!hit) return;
+  await localStore().put(
+    FAILED,
+    failed.filter((e) => e.id !== id),
+  );
+  const entry: QueueEntry = { ...hit };
+  delete (entry as Partial<FailedEntry>).reason;
+  await localStore().put(QUEUE, [
+    ...(await pendingWrites()),
+    { ...entry, attempts: 0, nextAt: now },
+  ]);
+  queueChanged();
+}

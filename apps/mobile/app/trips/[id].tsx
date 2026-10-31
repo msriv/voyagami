@@ -169,7 +169,7 @@ export default function TripScreen() {
             <Text variant="caption" color="white">
               {dates}
             </Text>
-            <SyncStatus onDark />
+            <SyncStatus onDark onPress={() => router.push(`/trips/${id}/sync`)} />
             <Text variant="caption" color="white">
               {t("trip.roleLine", { role: t(`trip.roles.${trip.role}`) })}
             </Text>
