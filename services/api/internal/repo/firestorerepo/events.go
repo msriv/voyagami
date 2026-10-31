@@ -2,6 +2,8 @@ package firestorerepo
 
 import (
 	"context"
+	"errors"
+	"google.golang.org/api/iterator"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -39,4 +41,32 @@ func (s *Events) Add(ctx context.Context, uid string, events []analytics.Event, 
 	}
 	bw.Flush()
 	return nil
+}
+
+// Rows returns the events from sinceDay (YYYY-MM-DD) on, at most limit of them.
+//
+// shortcut: scans the stored events, which is fine for a few thousand a week
+// from dogfooding. Move to the BigQuery export of Firestore before launch traffic.
+func (s *Events) Rows(ctx context.Context, sinceDay string, limit int) ([]analytics.Row, error) {
+	it := s.client.Collection(eventsCollection).Where("day", ">=", sinceDay).Limit(limit).Documents(ctx)
+	defer it.Stop()
+	var out []analytics.Row
+	for {
+		snap, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			return out, nil
+		}
+		if err != nil {
+			return nil, mapErr("read events", err)
+		}
+		m := snap.Data()
+		r := analytics.Row{}
+		r.UID, _ = m["uid"].(string)
+		r.Name, _ = m["name"].(string)
+		r.Day, _ = m["day"].(string)
+		if props, ok := m["props"].(map[string]any); ok {
+			r.Moment, _ = props["moment"].(string)
+		}
+		out = append(out, r)
+	}
 }

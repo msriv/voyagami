@@ -42,7 +42,17 @@ Count events per week by name and divide each funnel step by the one before it. 
 - A property whose name contains `phone`, `email`, `name`, `address`, `lat`, `lng`, `lon`, `location`, `text`, `note`, `message` or `token` is dropped.
 - Each stored event has the person's id so funnels can count people, and nothing else about them.
 
+## Weekly review
+
+`GET /v1/jobs/analytics-report?days=28` returns counts as JSON: per event the number of events and of different people, the funnel (people who did each step in the period; steps are not forced into order), and the paywall outcome per moment. It takes the same bearer secret as the scheduled jobs and has no app screen:
+
+```sh
+curl -H "Authorization: Bearer $JOBS_SECRET" "$API_URL/v1/jobs/analytics-report?days=7"
+```
+
+It scans stored events (capped at 100,000), which is fine while Mihir is the only user. It holds no phone number, place or text, only counts.
+
 ## Not done yet
 
-- The weekly dashboard needs the BigQuery export of Firestore, which Mihir turns on.
+- A chart dashboard. Turn on the BigQuery export of Firestore (needs Mihir) when the JSON stops being enough.
 - Deleting an account does not yet remove its events. They carry the id but no contact details. Add it to the purge when events move to BigQuery.
