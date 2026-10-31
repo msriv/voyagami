@@ -1,6 +1,6 @@
 import { createApiClient } from "@voyagami/api-client";
 
-import { flushQueue, newId, offlineHook, queuedHeader } from "./offlineHook";
+import { flushQueue, newId, offlineHook, queueExpense, queuedHeader } from "./offlineHook";
 import { enqueue, failedWrites, pendingWrites } from "./queue";
 import { localStore, memoryStore, setLocalStore } from "./store";
 
@@ -108,5 +108,12 @@ describe("offline expense", () => {
     expect(newId()).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
     );
+  });
+});
+
+describe("queueExpense", () => {
+  it("keeps the expense in the write queue under its own id", async () => {
+    await queueExpense("t1", { id: newId(), description: "Pho" } as never);
+    expect(await pendingWrites()).toMatchObject([{ op: "createExpense", tripId: "t1" }]);
   });
 });

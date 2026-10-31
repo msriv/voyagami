@@ -211,6 +211,7 @@ describe("Add expense", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Save expense" }));
     await waitFor(() =>
       expect(calls.find((c) => c.key === "POST /v1/trips/t1/expenses")?.body).toEqual({
+        id: expect.any(String),
         description: "Pho",
         paidByUid: "u1",
         date: "2099-11-19",
