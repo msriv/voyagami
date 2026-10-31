@@ -57,6 +57,7 @@ export const en = {
     passFrom: "Or a week Trip Pass for {{price}}",
     crewNote: "If anyone on this trip gets Plus, it works for the whole crew.",
     stillFree: "Your plan, tickets and settling up stay free.",
+    offlineStillFree: "Your trip plan and tickets always work offline, on every plan.",
     moments: {
       bestOrder: {
         title: "Find the best order again",
@@ -65,6 +66,30 @@ export const en = {
       multiCurrency: {
         title: "Add a second currency?",
         body: "Free trips use one currency. Plus converts every expense at live rates and settles everyone up in the trip's currency.",
+      },
+      forwardedBookings: {
+        title: "More bookings from email",
+        body: "Free trips can bring in a few bookings from forwarded email. Plus has no limit.",
+      },
+      files: {
+        title: "Keep more files with the trip",
+        body: "Free trips hold a few files, like tickets and passes. Plus has no limit.",
+      },
+      journalPhotos: {
+        title: "Room for more photos",
+        body: "You have used the photos that come with Free. Plus has no limit, and everything you added stays.",
+      },
+      topPicks: {
+        title: "See more top picks",
+        body: "Free shows the best few places in each list. Plus shows them all.",
+      },
+      offlineMaps: {
+        title: "Maps that work without a signal",
+        body: "Plus saves maps of your cities on your phone so they work anywhere.",
+      },
+      askDrafts: {
+        title: "More Ask drafts this month",
+        body: "You have used this month's free Ask drafts. Plus has no limit.",
       },
       default: {
         title: "This is a Plus feature",

@@ -52,7 +52,7 @@ describe("Paywall", () => {
   });
 
   it("shows the store's pass price only when there is one, and general words for other features", async () => {
-    await setup("files", "€4.99");
+    await setup("darkMode", "€4.99");
     await fireEvent.press(screen.getByLabelText("open"));
     expect(screen.getByText("This is a Plus feature")).toBeTruthy();
     expect(screen.getByText("Or a week Trip Pass for €4.99")).toBeTruthy();
@@ -62,5 +62,12 @@ describe("Paywall", () => {
     await setup("files");
     await act(async () => emitLimitReached("bestOrder"));
     expect(screen.getByText("Find the best order again")).toBeTruthy();
+  });
+
+  it("has words for each remaining moment, and says offline plan and tickets stay free", async () => {
+    await setup("offlineMaps");
+    await fireEvent.press(screen.getByLabelText("open"));
+    expect(screen.getByText("Maps that work without a signal")).toBeTruthy();
+    expect(screen.getByText(/plan and tickets always work offline/)).toBeTruthy();
   });
 });
