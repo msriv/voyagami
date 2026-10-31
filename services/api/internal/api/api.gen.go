@@ -363,6 +363,36 @@ func (e MemberRoleChangeRole) Valid() bool {
 	}
 }
 
+// Defines values for PlaceGroup.
+const (
+	PlaceGroupDo        PlaceGroup = "do"
+	PlaceGroupEat       PlaceGroup = "eat"
+	PlaceGroupNightlife PlaceGroup = "nightlife"
+	PlaceGroupSee       PlaceGroup = "see"
+	PlaceGroupShop      PlaceGroup = "shop"
+	PlaceGroupStay      PlaceGroup = "stay"
+)
+
+// Valid indicates whether the value is a known member of the PlaceGroup enum.
+func (e PlaceGroup) Valid() bool {
+	switch e {
+	case PlaceGroupDo:
+		return true
+	case PlaceGroupEat:
+		return true
+	case PlaceGroupNightlife:
+		return true
+	case PlaceGroupSee:
+		return true
+	case PlaceGroupShop:
+		return true
+	case PlaceGroupStay:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PlaceRefCategory.
 const (
 	PlaceRefCategoryActivity  PlaceRefCategory = "activity"
@@ -518,34 +548,34 @@ func (e StampKind) Valid() bool {
 
 // Defines values for TravelStyleInterests.
 const (
-	Beaches        TravelStyleInterests = "beaches"
-	CultureHistory TravelStyleInterests = "cultureHistory"
-	FoodTrails     TravelStyleInterests = "foodTrails"
-	Mountains      TravelStyleInterests = "mountains"
-	Nightlife      TravelStyleInterests = "nightlife"
-	RoadTrips      TravelStyleInterests = "roadTrips"
-	SlowCafes      TravelStyleInterests = "slowCafes"
-	Wildlife       TravelStyleInterests = "wildlife"
+	TravelStyleInterestsBeaches        TravelStyleInterests = "beaches"
+	TravelStyleInterestsCultureHistory TravelStyleInterests = "cultureHistory"
+	TravelStyleInterestsFoodTrails     TravelStyleInterests = "foodTrails"
+	TravelStyleInterestsMountains      TravelStyleInterests = "mountains"
+	TravelStyleInterestsNightlife      TravelStyleInterests = "nightlife"
+	TravelStyleInterestsRoadTrips      TravelStyleInterests = "roadTrips"
+	TravelStyleInterestsSlowCafes      TravelStyleInterests = "slowCafes"
+	TravelStyleInterestsWildlife       TravelStyleInterests = "wildlife"
 )
 
 // Valid indicates whether the value is a known member of the TravelStyleInterests enum.
 func (e TravelStyleInterests) Valid() bool {
 	switch e {
-	case Beaches:
+	case TravelStyleInterestsBeaches:
 		return true
-	case CultureHistory:
+	case TravelStyleInterestsCultureHistory:
 		return true
-	case FoodTrails:
+	case TravelStyleInterestsFoodTrails:
 		return true
-	case Mountains:
+	case TravelStyleInterestsMountains:
 		return true
-	case Nightlife:
+	case TravelStyleInterestsNightlife:
 		return true
-	case RoadTrips:
+	case TravelStyleInterestsRoadTrips:
 		return true
-	case SlowCafes:
+	case TravelStyleInterestsSlowCafes:
 		return true
-	case Wildlife:
+	case TravelStyleInterestsWildlife:
 		return true
 	default:
 		return false
@@ -887,6 +917,50 @@ type BudgetSummary struct {
 
 	// TargetMinor Absent when the trip has no budget, or the budget is in another currency.
 	TargetMinor *int64 `json:"targetMinor,omitempty"`
+}
+
+// CatalogPlace defines model for CatalogPlace.
+type CatalogPlace struct {
+	Address     *string  `json:"address,omitempty"`
+	Categories  []string `json:"categories"`
+	CountryCode *string  `json:"countryCode,omitempty"`
+
+	// DistanceMeters From the search point. Only in the nearby list.
+	DistanceMeters *float64   `json:"distanceMeters,omitempty"`
+	Group          PlaceGroup `json:"group"`
+	Id             string     `json:"id"`
+	Lat            float64    `json:"lat"`
+	Lng            float64    `json:"lng"`
+
+	// Name In the requested language when we have it.
+	Name     string               `json:"name"`
+	Photos   []CatalogPlacePhoto  `json:"photos"`
+	Sources  []CatalogPlaceSource `json:"sources"`
+	TimeZone *string              `json:"timeZone,omitempty"`
+}
+
+// CatalogPlaceList defines model for CatalogPlaceList.
+type CatalogPlaceList struct {
+	// NextCursor Present when more places follow.
+	NextCursor *string        `json:"nextCursor,omitempty"`
+	Places     []CatalogPlace `json:"places"`
+}
+
+// CatalogPlacePhoto defines model for CatalogPlacePhoto.
+type CatalogPlacePhoto struct {
+	// Attribution Author and credit line. Show it with the photo.
+	Attribution string `json:"attribution"`
+	Licence     string `json:"licence"`
+	Source      string `json:"source"`
+	Url         string `json:"url"`
+}
+
+// CatalogPlaceSource defines model for CatalogPlaceSource.
+type CatalogPlaceSource struct {
+	Field    string  `json:"field"`
+	Licence  string  `json:"licence"`
+	Source   string  `json:"source"`
+	SourceId *string `json:"sourceId,omitempty"`
 }
 
 // Comment defines model for Comment.
@@ -1334,6 +1408,9 @@ type OtpVerifyRequest struct {
 	// Region Device region (ISO 3166-1 alpha-2). Only used when the account is created, until onboarding confirms it.
 	Region *string `json:"region,omitempty"`
 }
+
+// PlaceGroup defines model for PlaceGroup.
+type PlaceGroup string
 
 // PlaceRef A catalogue place by `placeId`, or a pin the person dropped (`name`, `lat`, `lng`).
 type PlaceRef struct {
@@ -1912,6 +1989,23 @@ type Unauthorized = Error
 // plan limit stopped the request; Plus or a Trip Pass would lift it.
 type Unavailable = Error
 
+// ListNearbyPlacesParams defines parameters for ListNearbyPlaces.
+type ListNearbyPlacesParams struct {
+	Lat float64 `form:"lat" json:"lat"`
+	Lng float64 `form:"lng" json:"lng"`
+
+	// RadiusMeters Search radius. Defaults to 2000, at most 20000.
+	RadiusMeters *int        `form:"radiusMeters,omitempty" json:"radiusMeters,omitempty"`
+	Group        *PlaceGroup `form:"group,omitempty" json:"group,omitempty"`
+
+	// Limit Page size. Defaults to 20, at most 50.
+	Limit  *int    `form:"limit,omitempty" json:"limit,omitempty"`
+	Cursor *string `form:"cursor,omitempty" json:"cursor,omitempty"`
+
+	// Lang Preferred name language (BCP 47). Falls back to English, then any name.
+	Lang *string `form:"lang,omitempty" json:"lang,omitempty"`
+}
+
 // ResolvePlaceLinkJSONBody defines parameters for ResolvePlaceLink.
 type ResolvePlaceLinkJSONBody struct {
 	Url string `json:"url"`
@@ -1922,6 +2016,12 @@ type SearchPlacesParams struct {
 	Q   string   `form:"q" json:"q"`
 	Lat *float64 `form:"lat,omitempty" json:"lat,omitempty"`
 	Lng *float64 `form:"lng,omitempty" json:"lng,omitempty"`
+}
+
+// GetCatalogPlaceParams defines parameters for GetCatalogPlace.
+type GetCatalogPlaceParams struct {
+	// Lang Preferred name language (BCP 47).
+	Lang *string `form:"lang,omitempty" json:"lang,omitempty"`
 }
 
 // GetRateParams defines parameters for GetRate.
@@ -2087,12 +2187,18 @@ type ServerInterface interface {
 	// ListMyStamps The first five stamps and which ones the caller has earned
 	// (GET /v1/me/stamps)
 	ListMyStamps(w http.ResponseWriter, r *http.Request)
+	// ListNearbyPlaces Catalogue places near a point
+	// (GET /v1/places/nearby)
+	ListNearbyPlaces(w http.ResponseWriter, r *http.Request, params ListNearbyPlacesParams)
 	// ResolvePlaceLink Turn a pasted maps link into a place candidate
 	// (POST /v1/places/resolve)
 	ResolvePlaceLink(w http.ResponseWriter, r *http.Request)
 	// SearchPlaces Search for a place by name
 	// (GET /v1/places/search)
 	SearchPlaces(w http.ResponseWriter, r *http.Request, params SearchPlacesParams)
+	// GetCatalogPlace One catalogue place with photos and sources
+	// (GET /v1/places/{placeId})
+	GetCatalogPlace(w http.ResponseWriter, r *http.Request, placeId string, params GetCatalogPlaceParams)
 	// GetRate Suggested exchange rate for a pair of currencies
 	// (GET /v1/rates)
 	GetRate(w http.ResponseWriter, r *http.Request, params GetRateParams)
@@ -2476,6 +2582,117 @@ func (siw *ServerInterfaceWrapper) ListMyStamps(w http.ResponseWriter, r *http.R
 	handler.ServeHTTP(w, r)
 }
 
+// ListNearbyPlaces operation middleware
+func (siw *ServerInterfaceWrapper) ListNearbyPlaces(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListNearbyPlacesParams
+
+	// ------------- Required query parameter "lat" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "lat", r.URL.Query(), &params.Lat, runtime.BindQueryParameterOptions{Type: "number", Format: "double"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "lat"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "lat", Err: err})
+		}
+		return
+	}
+
+	// ------------- Required query parameter "lng" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "lng", r.URL.Query(), &params.Lng, runtime.BindQueryParameterOptions{Type: "number", Format: "double"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "lng"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "lng", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "radiusMeters" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "radiusMeters", r.URL.Query(), &params.RadiusMeters, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "radiusMeters"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "radiusMeters", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "group" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "group", r.URL.Query(), &params.Group, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "group"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "group", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "cursor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", r.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "cursor"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cursor", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "lang" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "lang", r.URL.Query(), &params.Lang, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "lang"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "lang", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListNearbyPlaces(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ResolvePlaceLink operation middleware
 func (siw *ServerInterfaceWrapper) ResolvePlaceLink(w http.ResponseWriter, r *http.Request) {
 
@@ -2540,6 +2757,48 @@ func (siw *ServerInterfaceWrapper) SearchPlaces(w http.ResponseWriter, r *http.R
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.SearchPlaces(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetCatalogPlace operation middleware
+func (siw *ServerInterfaceWrapper) GetCatalogPlace(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "placeId" -------------
+	var placeId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "placeId", r.PathValue("placeId"), &placeId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "placeId", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetCatalogPlaceParams
+
+	// ------------- Optional query parameter "lang" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "lang", r.URL.Query(), &params.Lang, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "lang"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "lang", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetCatalogPlace(w, r, placeId, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -4539,6 +4798,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/v1/trips/{tripId}/journal/{date}", wrapper.PutJournalEntry)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/rates", wrapper.GetRate)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/places/search", wrapper.SearchPlaces)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/places/nearby", wrapper.ListNearbyPlaces)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/places/{placeId}", wrapper.GetCatalogPlace)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/places/resolve", wrapper.ResolvePlaceLink)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/polls", wrapper.ListPolls)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/polls", wrapper.CreatePoll)
@@ -5193,6 +5454,70 @@ func (response ListMyStamps503JSONResponse) VisitListMyStampsResponse(w http.Res
 	return err
 }
 
+type ListNearbyPlacesRequestObject struct {
+	Params ListNearbyPlacesParams
+}
+
+type ListNearbyPlacesResponseObject interface {
+	VisitListNearbyPlacesResponse(w http.ResponseWriter) error
+}
+
+type ListNearbyPlaces200JSONResponse CatalogPlaceList
+
+func (response ListNearbyPlaces200JSONResponse) VisitListNearbyPlacesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListNearbyPlaces400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response ListNearbyPlaces400JSONResponse) VisitListNearbyPlacesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListNearbyPlaces401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ListNearbyPlaces401JSONResponse) VisitListNearbyPlacesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListNearbyPlaces503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response ListNearbyPlaces503JSONResponse) VisitListNearbyPlacesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ResolvePlaceLinkRequestObject struct {
 	Body *ResolvePlaceLinkJSONRequestBody
 }
@@ -5310,6 +5635,71 @@ func (response SearchPlaces401JSONResponse) VisitSearchPlacesResponse(w http.Res
 type SearchPlaces503JSONResponse struct{ UnavailableJSONResponse }
 
 func (response SearchPlaces503JSONResponse) VisitSearchPlacesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetCatalogPlaceRequestObject struct {
+	PlaceId string `json:"placeId"`
+	Params  GetCatalogPlaceParams
+}
+
+type GetCatalogPlaceResponseObject interface {
+	VisitGetCatalogPlaceResponse(w http.ResponseWriter) error
+}
+
+type GetCatalogPlace200JSONResponse CatalogPlace
+
+func (response GetCatalogPlace200JSONResponse) VisitGetCatalogPlaceResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetCatalogPlace401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response GetCatalogPlace401JSONResponse) VisitGetCatalogPlaceResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetCatalogPlace404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response GetCatalogPlace404JSONResponse) VisitGetCatalogPlaceResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetCatalogPlace503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response GetCatalogPlace503JSONResponse) VisitGetCatalogPlaceResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -10107,12 +10497,18 @@ type StrictServerInterface interface {
 	// ListMyStamps The first five stamps and which ones the caller has earned
 	// (GET /v1/me/stamps)
 	ListMyStamps(ctx context.Context, request ListMyStampsRequestObject) (ListMyStampsResponseObject, error)
+	// ListNearbyPlaces Catalogue places near a point
+	// (GET /v1/places/nearby)
+	ListNearbyPlaces(ctx context.Context, request ListNearbyPlacesRequestObject) (ListNearbyPlacesResponseObject, error)
 	// ResolvePlaceLink Turn a pasted maps link into a place candidate
 	// (POST /v1/places/resolve)
 	ResolvePlaceLink(ctx context.Context, request ResolvePlaceLinkRequestObject) (ResolvePlaceLinkResponseObject, error)
 	// SearchPlaces Search for a place by name
 	// (GET /v1/places/search)
 	SearchPlaces(ctx context.Context, request SearchPlacesRequestObject) (SearchPlacesResponseObject, error)
+	// GetCatalogPlace One catalogue place with photos and sources
+	// (GET /v1/places/{placeId})
+	GetCatalogPlace(ctx context.Context, request GetCatalogPlaceRequestObject) (GetCatalogPlaceResponseObject, error)
 	// GetRate Suggested exchange rate for a pair of currencies
 	// (GET /v1/rates)
 	GetRate(ctx context.Context, request GetRateRequestObject) (GetRateResponseObject, error)
@@ -10668,6 +11064,32 @@ func (sh *strictHandler) ListMyStamps(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ListNearbyPlaces operation middleware
+func (sh *strictHandler) ListNearbyPlaces(w http.ResponseWriter, r *http.Request, params ListNearbyPlacesParams) {
+	var request ListNearbyPlacesRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListNearbyPlaces(ctx, request.(ListNearbyPlacesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListNearbyPlaces")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListNearbyPlacesResponseObject); ok {
+		if err := validResponse.VisitListNearbyPlacesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ResolvePlaceLink operation middleware
 func (sh *strictHandler) ResolvePlaceLink(w http.ResponseWriter, r *http.Request) {
 	var request ResolvePlaceLinkRequestObject
@@ -10718,6 +11140,33 @@ func (sh *strictHandler) SearchPlaces(w http.ResponseWriter, r *http.Request, pa
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(SearchPlacesResponseObject); ok {
 		if err := validResponse.VisitSearchPlacesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetCatalogPlace operation middleware
+func (sh *strictHandler) GetCatalogPlace(w http.ResponseWriter, r *http.Request, placeId string, params GetCatalogPlaceParams) {
+	var request GetCatalogPlaceRequestObject
+
+	request.PlaceId = placeId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetCatalogPlace(ctx, request.(GetCatalogPlaceRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetCatalogPlace")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetCatalogPlaceResponseObject); ok {
+		if err := validResponse.VisitGetCatalogPlaceResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
