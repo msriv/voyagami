@@ -27,6 +27,7 @@ import Join from "../app/join";
 import Journal from "../app/trips/[id]/journal";
 import Money from "../app/trips/[id]/money";
 import Itinerary from "../app/trips/[id]/itinerary";
+import MapScreen from "../app/trips/[id]/map";
 import NewTrip from "../app/trips/new";
 import Home from "../app/(tabs)/index";
 import Profile from "../app/(tabs)/profile";
@@ -43,6 +44,7 @@ export const routes: Record<string, ComponentType> = {
   "trips/new": NewTrip,
   "trips/[id]": Trip,
   "trips/[id]/itinerary": Itinerary,
+  "trips/[id]/map": MapScreen,
   "trips/[id]/add-place": AddPlace,
   "trips/[id]/money": Money,
   "trips/[id]/bookings": Bookings,
