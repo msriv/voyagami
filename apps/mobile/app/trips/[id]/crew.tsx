@@ -30,7 +30,7 @@ export default function CrewScreen() {
   const { api } = useAuth();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { plan, pass } = useTripPlan(id);
+  const { plan } = useTripPlan(id);
   const [state, setState] = useState<State>({ kind: "loading" });
   const [open, setOpen] = useState<Member | undefined>();
   const [role, setRole] = useState<"editor" | "viewer">("editor");
