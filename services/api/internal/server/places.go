@@ -50,3 +50,18 @@ func (h *handlers) SearchPlaces(ctx context.Context, req api.SearchPlacesRequest
 	}
 	return api.SearchPlaces200JSONResponse(out), nil
 }
+
+// ResolvePlaceLink reads a pin out of a pasted maps link.
+func (h *handlers) ResolvePlaceLink(ctx context.Context, req api.ResolvePlaceLinkRequestObject) (api.ResolvePlaceLinkResponseObject, error) {
+	if _, err := identity(ctx, "ResolvePlaceLink"); err != nil {
+		return nil, err
+	}
+	if req.Body == nil || len(req.Body.Url) > 2000 {
+		return api.ResolvePlaceLink400JSONResponse{BadRequestJSONResponse: errInvalid(ctx, "url is required and at most 2000 characters.")}, nil
+	}
+	r, err := places.Resolve(ctx, req.Body.Url)
+	if err != nil {
+		return api.ResolvePlaceLink404JSONResponse{NotFoundJSONResponse: api.NotFoundJSONResponse(errBody(ctx, codeNotFound, "Couldn't find a place in that link. Try a Google Maps or OpenStreetMap link."))}, nil
+	}
+	return api.ResolvePlaceLink200JSONResponse(api.PlaceSearchResult{Name: r.Name, Lat: r.Lat, Lng: r.Lng}), nil
+}

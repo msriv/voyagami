@@ -84,6 +84,24 @@ func (e CommentCreateTargetType) Valid() bool {
 	}
 }
 
+// Defines values for DeviceRegistrationPlatform.
+const (
+	Android DeviceRegistrationPlatform = "android"
+	Ios     DeviceRegistrationPlatform = "ios"
+)
+
+// Valid indicates whether the value is a known member of the DeviceRegistrationPlatform enum.
+func (e DeviceRegistrationPlatform) Valid() bool {
+	switch e {
+	case Android:
+		return true
+	case Ios:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for EntitlementsPlan.
 const (
 	Free EntitlementsPlan = "free"
@@ -900,6 +918,17 @@ type Destination struct {
 	// TimeZone IANA zone, such as Asia/Tokyo.
 	TimeZone string `json:"timeZone"`
 }
+
+// DeviceRegistration defines model for DeviceRegistration.
+type DeviceRegistration struct {
+	Platform DeviceRegistrationPlatform `json:"platform"`
+
+	// PushToken The FCM token (iOS goes through FCM as well).
+	PushToken string `json:"pushToken"`
+}
+
+// DeviceRegistrationPlatform defines model for DeviceRegistration.Platform.
+type DeviceRegistrationPlatform string
 
 // EntitlementDecision defines model for EntitlementDecision.
 type EntitlementDecision struct {
@@ -1813,6 +1842,11 @@ type Unauthorized = Error
 // plan limit stopped the request; Plus or a Trip Pass would lift it.
 type Unavailable = Error
 
+// ResolvePlaceLinkJSONBody defines parameters for ResolvePlaceLink.
+type ResolvePlaceLinkJSONBody struct {
+	Url string `json:"url"`
+}
+
 // SearchPlacesParams defines parameters for SearchPlaces.
 type SearchPlacesParams struct {
 	Q   string   `form:"q" json:"q"`
@@ -1857,6 +1891,12 @@ type JoinTripJSONRequestBody = InviteJoin
 
 // UpdateMeJSONRequestBody defines body for UpdateMe for application/json ContentType.
 type UpdateMeJSONRequestBody = MeUpdate
+
+// RegisterDeviceJSONRequestBody defines body for RegisterDevice for application/json ContentType.
+type RegisterDeviceJSONRequestBody = DeviceRegistration
+
+// ResolvePlaceLinkJSONRequestBody defines body for ResolvePlaceLink for application/json ContentType.
+type ResolvePlaceLinkJSONRequestBody ResolvePlaceLinkJSONBody
 
 // CreateTripJSONRequestBody defines body for CreateTrip for application/json ContentType.
 type CreateTripJSONRequestBody = TripCreate
@@ -1956,9 +1996,18 @@ type ServerInterface interface {
 	// UpdateMe Change the signed-in person's profile
 	// (PATCH /v1/me)
 	UpdateMe(w http.ResponseWriter, r *http.Request)
+	// RemoveDevice Stop pushes to this phone
+	// (DELETE /v1/me/devices/{deviceId})
+	RemoveDevice(w http.ResponseWriter, r *http.Request, deviceId string)
+	// RegisterDevice Register or refresh this phone for push
+	// (PUT /v1/me/devices/{deviceId})
+	RegisterDevice(w http.ResponseWriter, r *http.Request, deviceId string)
 	// GetMyEntitlements What the signed-in person's plan allows
 	// (GET /v1/me/entitlements)
 	GetMyEntitlements(w http.ResponseWriter, r *http.Request)
+	// ResolvePlaceLink Turn a pasted maps link into a place candidate
+	// (POST /v1/places/resolve)
+	ResolvePlaceLink(w http.ResponseWriter, r *http.Request)
 	// SearchPlaces Search for a place by name
 	// (GET /v1/places/search)
 	SearchPlaces(w http.ResponseWriter, r *http.Request, params SearchPlacesParams)
@@ -2259,11 +2308,77 @@ func (siw *ServerInterfaceWrapper) UpdateMe(w http.ResponseWriter, r *http.Reque
 	handler.ServeHTTP(w, r)
 }
 
+// RemoveDevice operation middleware
+func (siw *ServerInterfaceWrapper) RemoveDevice(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "deviceId" -------------
+	var deviceId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "deviceId", r.PathValue("deviceId"), &deviceId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "deviceId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RemoveDevice(w, r, deviceId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RegisterDevice operation middleware
+func (siw *ServerInterfaceWrapper) RegisterDevice(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "deviceId" -------------
+	var deviceId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "deviceId", r.PathValue("deviceId"), &deviceId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "deviceId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RegisterDevice(w, r, deviceId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetMyEntitlements operation middleware
 func (siw *ServerInterfaceWrapper) GetMyEntitlements(w http.ResponseWriter, r *http.Request) {
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetMyEntitlements(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ResolvePlaceLink operation middleware
+func (siw *ServerInterfaceWrapper) ResolvePlaceLink(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ResolvePlaceLink(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -4221,6 +4336,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/entitlements", wrapper.GetTripEntitlements)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/me", wrapper.GetMe)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/v1/me", wrapper.UpdateMe)
+	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/me/devices/{deviceId}", wrapper.RemoveDevice)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/v1/me/devices/{deviceId}", wrapper.RegisterDevice)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips", wrapper.ListTrips)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips", wrapper.CreateTrip)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}", wrapper.GetTrip)
@@ -4249,6 +4366,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/v1/trips/{tripId}/journal/{date}", wrapper.PutJournalEntry)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/rates", wrapper.GetRate)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/places/search", wrapper.SearchPlaces)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/places/resolve", wrapper.ResolvePlaceLink)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/polls", wrapper.ListPolls)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/polls", wrapper.CreatePoll)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/polls/{pollId}/vote", wrapper.VotePoll)
@@ -4701,6 +4819,109 @@ func (response UpdateMe503JSONResponse) VisitUpdateMeResponse(w http.ResponseWri
 	return err
 }
 
+type RemoveDeviceRequestObject struct {
+	DeviceId string `json:"deviceId"`
+}
+
+type RemoveDeviceResponseObject interface {
+	VisitRemoveDeviceResponse(w http.ResponseWriter) error
+}
+
+type RemoveDevice204Response struct {
+}
+
+func (response RemoveDevice204Response) VisitRemoveDeviceResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type RemoveDevice401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response RemoveDevice401JSONResponse) VisitRemoveDeviceResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RemoveDevice503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response RemoveDevice503JSONResponse) VisitRemoveDeviceResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RegisterDeviceRequestObject struct {
+	DeviceId string `json:"deviceId"`
+	Body     *RegisterDeviceJSONRequestBody
+}
+
+type RegisterDeviceResponseObject interface {
+	VisitRegisterDeviceResponse(w http.ResponseWriter) error
+}
+
+type RegisterDevice204Response struct {
+}
+
+func (response RegisterDevice204Response) VisitRegisterDeviceResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type RegisterDevice400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response RegisterDevice400JSONResponse) VisitRegisterDeviceResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RegisterDevice401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response RegisterDevice401JSONResponse) VisitRegisterDeviceResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RegisterDevice503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response RegisterDevice503JSONResponse) VisitRegisterDeviceResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type GetMyEntitlementsRequestObject struct {
 }
 
@@ -4746,6 +4967,70 @@ func (response GetMyEntitlements503JSONResponse) VisitGetMyEntitlementsResponse(
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ResolvePlaceLinkRequestObject struct {
+	Body *ResolvePlaceLinkJSONRequestBody
+}
+
+type ResolvePlaceLinkResponseObject interface {
+	VisitResolvePlaceLinkResponse(w http.ResponseWriter) error
+}
+
+type ResolvePlaceLink200JSONResponse PlaceSearchResult
+
+func (response ResolvePlaceLink200JSONResponse) VisitResolvePlaceLinkResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ResolvePlaceLink400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response ResolvePlaceLink400JSONResponse) VisitResolvePlaceLinkResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ResolvePlaceLink401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ResolvePlaceLink401JSONResponse) VisitResolvePlaceLinkResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ResolvePlaceLink404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ResolvePlaceLink404JSONResponse) VisitResolvePlaceLinkResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
 	_, err := buf.WriteTo(w)
 	return err
 }
@@ -9436,9 +9721,18 @@ type StrictServerInterface interface {
 	// UpdateMe Change the signed-in person's profile
 	// (PATCH /v1/me)
 	UpdateMe(ctx context.Context, request UpdateMeRequestObject) (UpdateMeResponseObject, error)
+	// RemoveDevice Stop pushes to this phone
+	// (DELETE /v1/me/devices/{deviceId})
+	RemoveDevice(ctx context.Context, request RemoveDeviceRequestObject) (RemoveDeviceResponseObject, error)
+	// RegisterDevice Register or refresh this phone for push
+	// (PUT /v1/me/devices/{deviceId})
+	RegisterDevice(ctx context.Context, request RegisterDeviceRequestObject) (RegisterDeviceResponseObject, error)
 	// GetMyEntitlements What the signed-in person's plan allows
 	// (GET /v1/me/entitlements)
 	GetMyEntitlements(ctx context.Context, request GetMyEntitlementsRequestObject) (GetMyEntitlementsResponseObject, error)
+	// ResolvePlaceLink Turn a pasted maps link into a place candidate
+	// (POST /v1/places/resolve)
+	ResolvePlaceLink(ctx context.Context, request ResolvePlaceLinkRequestObject) (ResolvePlaceLinkResponseObject, error)
 	// SearchPlaces Search for a place by name
 	// (GET /v1/places/search)
 	SearchPlaces(ctx context.Context, request SearchPlacesRequestObject) (SearchPlacesResponseObject, error)
@@ -9884,6 +10178,65 @@ func (sh *strictHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// RemoveDevice operation middleware
+func (sh *strictHandler) RemoveDevice(w http.ResponseWriter, r *http.Request, deviceId string) {
+	var request RemoveDeviceRequestObject
+
+	request.DeviceId = deviceId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.RemoveDevice(ctx, request.(RemoveDeviceRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RemoveDevice")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(RemoveDeviceResponseObject); ok {
+		if err := validResponse.VisitRemoveDeviceResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RegisterDevice operation middleware
+func (sh *strictHandler) RegisterDevice(w http.ResponseWriter, r *http.Request, deviceId string) {
+	var request RegisterDeviceRequestObject
+
+	request.DeviceId = deviceId
+
+	var body RegisterDeviceJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.RegisterDevice(ctx, request.(RegisterDeviceRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RegisterDevice")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(RegisterDeviceResponseObject); ok {
+		if err := validResponse.VisitRegisterDeviceResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // GetMyEntitlements operation middleware
 func (sh *strictHandler) GetMyEntitlements(w http.ResponseWriter, r *http.Request) {
 	var request GetMyEntitlementsRequestObject
@@ -9901,6 +10254,37 @@ func (sh *strictHandler) GetMyEntitlements(w http.ResponseWriter, r *http.Reques
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetMyEntitlementsResponseObject); ok {
 		if err := validResponse.VisitGetMyEntitlementsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ResolvePlaceLink operation middleware
+func (sh *strictHandler) ResolvePlaceLink(w http.ResponseWriter, r *http.Request) {
+	var request ResolvePlaceLinkRequestObject
+
+	var body ResolvePlaceLinkJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ResolvePlaceLink(ctx, request.(ResolvePlaceLinkRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ResolvePlaceLink")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ResolvePlaceLinkResponseObject); ok {
+		if err := validResponse.VisitResolvePlaceLinkResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

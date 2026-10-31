@@ -125,6 +125,48 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/me/devices/{deviceId}:
+    parameters:
+      - name: deviceId
+        in: path
+        required: true
+        description: A stable id the app makes once per install.
+        schema:
+          type: string
+    put:
+      operationId: registerDevice
+      tags: [account]
+      summary: Register or refresh this phone for push
+      description: |
+        Call after sign-in and whenever the push token changes. One record per
+        device id, so calling again replaces the token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceRegistration"
+      responses:
+        "204":
+          description: Stored.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    delete:
+      operationId: removeDevice
+      tags: [account]
+      summary: Stop pushes to this phone
+      description: Call on sign-out. Removing a device that is not there succeeds.
+      responses:
+        "204":
+          description: Removed.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/trips:
     get:
       operationId: listTrips
@@ -960,6 +1002,40 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/places/resolve:
+    post:
+      operationId: resolvePlaceLink
+      tags: [places]
+      summary: Turn a pasted maps link into a place candidate
+      description: |
+        Reads a Google Maps, OpenStreetMap or `geo:` link and returns the pin
+        and name in it, for the person to confirm. The link is treated as data:
+        only maps hosts are ever contacted, and only to follow a short link.
+        404 when no place can be read from the link.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url:
+                  type: string
+                  maxLength: 2000
+      responses:
+        "200":
+          description: The place found in the link.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlaceSearchResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /v1/trips/{tripId}/polls:
     parameters:
       - name: tripId
@@ -2175,6 +2251,17 @@ components:
           description: One decision per feature, keyed by feature name.
           additionalProperties:
             $ref: "#/components/schemas/EntitlementDecision"
+    DeviceRegistration:
+      type: object
+      required: [platform, pushToken]
+      properties:
+        platform:
+          type: string
+          enum: [ios, android]
+        pushToken:
+          type: string
+          maxLength: 4096
+          description: The FCM token (iOS goes through FCM as well).
     MeUpdate:
       type: object
       description: Fields to change. Leave a field out to keep it.

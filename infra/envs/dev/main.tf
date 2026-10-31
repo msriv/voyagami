@@ -159,6 +159,13 @@ resource "google_project_iam_member" "api_vertex" {
   member  = "serviceAccount:${module.api_runtime.email}"
 }
 
+# Lets the API send push messages through Firebase Cloud Messaging.
+resource "google_project_iam_member" "api_fcm" {
+  project = var.project_id
+  role    = "roles/firebasecloudmessaging.admin"
+  member  = "serviceAccount:${module.api_runtime.email}"
+}
+
 resource "google_pubsub_topic_iam_member" "api_publish" {
   for_each = module.topics.topic_ids
 
