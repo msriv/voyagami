@@ -82,7 +82,7 @@ func (h *handlers) bookingAccess(ctx context.Context, op, tripID string, write b
 	if err != nil {
 		return "", nil, err
 	}
-	if write && role == model.RoleViewer {
+	if write && !model.Can(role, model.ActionEdit) {
 		return "", errForbidden(ctx), nil
 	}
 	return id.UserID, nil, nil

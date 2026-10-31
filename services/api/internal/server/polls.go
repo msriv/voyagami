@@ -110,7 +110,7 @@ func (h *handlers) CreatePoll(ctx context.Context, req api.CreatePollRequestObje
 	if d, ok := deny.(api.NotFoundJSONResponse); ok {
 		return api.CreatePoll404JSONResponse{NotFoundJSONResponse: d}, nil
 	}
-	if role == model.RoleViewer {
+	if !model.Can(role, model.ActionEdit) {
 		return api.CreatePoll403JSONResponse{ForbiddenJSONResponse: errForbidden(ctx)}, nil
 	}
 	b := req.Body
@@ -191,7 +191,7 @@ func (h *handlers) ClosePoll(ctx context.Context, req api.ClosePollRequestObject
 	if d, ok := deny.(api.NotFoundJSONResponse); ok {
 		return api.ClosePoll404JSONResponse{NotFoundJSONResponse: d}, nil
 	}
-	if role == model.RoleViewer {
+	if !model.Can(role, model.ActionEdit) {
 		return api.ClosePoll403JSONResponse{ForbiddenJSONResponse: errForbidden(ctx)}, nil
 	}
 	bad := func(msg string) (api.ClosePollResponseObject, error) {

@@ -87,7 +87,7 @@ func (h *handlers) CreateMeetPoint(ctx context.Context, req api.CreateMeetPointR
 	if d, ok := deny.(api.NotFoundJSONResponse); ok {
 		return api.CreateMeetPoint404JSONResponse{NotFoundJSONResponse: d}, nil
 	}
-	if role == model.RoleViewer {
+	if !model.Can(role, model.ActionEdit) {
 		return api.CreateMeetPoint403JSONResponse{ForbiddenJSONResponse: errForbidden(ctx)}, nil
 	}
 	b := req.Body
@@ -117,7 +117,7 @@ func (h *handlers) UpdateMeetPoint(ctx context.Context, req api.UpdateMeetPointR
 	if d, ok := deny.(api.NotFoundJSONResponse); ok {
 		return api.UpdateMeetPoint404JSONResponse{NotFoundJSONResponse: d}, nil
 	}
-	if role == model.RoleViewer {
+	if !model.Can(role, model.ActionEdit) {
 		return api.UpdateMeetPoint403JSONResponse{ForbiddenJSONResponse: errForbidden(ctx)}, nil
 	}
 	if _, err := h.meetPoints.Get(ctx, req.TripId, req.MeetPointId); errors.Is(err, repo.ErrNotFound) {
@@ -153,7 +153,7 @@ func (h *handlers) DeleteMeetPoint(ctx context.Context, req api.DeleteMeetPointR
 	if d, ok := deny.(api.NotFoundJSONResponse); ok {
 		return api.DeleteMeetPoint404JSONResponse{NotFoundJSONResponse: d}, nil
 	}
-	if role == model.RoleViewer {
+	if !model.Can(role, model.ActionEdit) {
 		return api.DeleteMeetPoint403JSONResponse{ForbiddenJSONResponse: errForbidden(ctx)}, nil
 	}
 	if err := h.meetPoints.Delete(ctx, req.TripId, req.MeetPointId); err != nil {

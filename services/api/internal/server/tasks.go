@@ -35,7 +35,7 @@ func (h *handlers) taskAccess(ctx context.Context, op, tripID string) (role mode
 	return role, id.UserID, err == nil, err
 }
 
-func (h *handlers) canEditTasks(role model.Role) bool { return role != model.RoleViewer }
+func (h *handlers) canEditTasks(role model.Role) bool { return model.Can(role, model.ActionEdit) }
 
 // ListTasks returns a trip's to-dos to any member.
 func (h *handlers) ListTasks(ctx context.Context, req api.ListTasksRequestObject) (api.ListTasksResponseObject, error) {

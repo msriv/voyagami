@@ -32,7 +32,7 @@ func (h *handlers) stopAccess(ctx context.Context, tripID string, write bool) (m
 	if err != nil {
 		return model.Trip{}, nil, err
 	}
-	if write && role == model.RoleViewer {
+	if write && !model.Can(role, model.ActionEdit) {
 		return model.Trip{}, errForbidden(ctx), nil
 	}
 	trip, err := h.trips.Get(ctx, tripID)
