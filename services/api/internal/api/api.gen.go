@@ -378,6 +378,39 @@ func (e PlaceRefCategory) Valid() bool {
 	}
 }
 
+// Defines values for PlaceSearchResultCategory.
+const (
+	PlaceSearchResultCategoryActivity  PlaceSearchResultCategory = "activity"
+	PlaceSearchResultCategoryFood      PlaceSearchResultCategory = "food"
+	PlaceSearchResultCategoryOther     PlaceSearchResultCategory = "other"
+	PlaceSearchResultCategoryShopping  PlaceSearchResultCategory = "shopping"
+	PlaceSearchResultCategorySights    PlaceSearchResultCategory = "sights"
+	PlaceSearchResultCategoryStay      PlaceSearchResultCategory = "stay"
+	PlaceSearchResultCategoryTransport PlaceSearchResultCategory = "transport"
+)
+
+// Valid indicates whether the value is a known member of the PlaceSearchResultCategory enum.
+func (e PlaceSearchResultCategory) Valid() bool {
+	switch e {
+	case PlaceSearchResultCategoryActivity:
+		return true
+	case PlaceSearchResultCategoryFood:
+		return true
+	case PlaceSearchResultCategoryOther:
+		return true
+	case PlaceSearchResultCategoryShopping:
+		return true
+	case PlaceSearchResultCategorySights:
+		return true
+	case PlaceSearchResultCategoryStay:
+		return true
+	case PlaceSearchResultCategoryTransport:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PollStatus.
 const (
 	Closed PollStatus = "closed"
@@ -1251,6 +1284,23 @@ type PlaceRef struct {
 // PlaceRefCategory Optional, for a pin the person dropped.
 type PlaceRefCategory string
 
+// PlaceSearchResult defines model for PlaceSearchResult.
+type PlaceSearchResult struct {
+	Address  *string                    `json:"address,omitempty"`
+	Category *PlaceSearchResultCategory `json:"category,omitempty"`
+	Lat      float64                    `json:"lat"`
+	Lng      float64                    `json:"lng"`
+	Name     string                     `json:"name"`
+}
+
+// PlaceSearchResultCategory defines model for PlaceSearchResult.Category.
+type PlaceSearchResultCategory string
+
+// PlaceSearchResults defines model for PlaceSearchResults.
+type PlaceSearchResults struct {
+	Results []PlaceSearchResult `json:"results"`
+}
+
 // Poll defines model for Poll.
 type Poll struct {
 	ClosedAt  *time.Time `json:"closedAt,omitempty"`
@@ -1744,6 +1794,13 @@ type Unauthorized = Error
 // `method_not_allowed`, `internal`, `unavailable`, `timeout`.
 type Unavailable = Error
 
+// SearchPlacesParams defines parameters for SearchPlaces.
+type SearchPlacesParams struct {
+	Q   string   `form:"q" json:"q"`
+	Lat *float64 `form:"lat,omitempty" json:"lat,omitempty"`
+	Lng *float64 `form:"lng,omitempty" json:"lng,omitempty"`
+}
+
 // GetRateParams defines parameters for GetRate.
 type GetRateParams struct {
 	// From ISO 4217 code of the expense currency.
@@ -1883,6 +1940,9 @@ type ServerInterface interface {
 	// GetMyEntitlements What the signed-in person's plan allows
 	// (GET /v1/me/entitlements)
 	GetMyEntitlements(w http.ResponseWriter, r *http.Request)
+	// SearchPlaces Search for a place by name
+	// (GET /v1/places/search)
+	SearchPlaces(w http.ResponseWriter, r *http.Request, params SearchPlacesParams)
 	// GetRate Suggested exchange rate for a pair of currencies
 	// (GET /v1/rates)
 	GetRate(w http.ResponseWriter, r *http.Request, params GetRateParams)
@@ -2185,6 +2245,65 @@ func (siw *ServerInterfaceWrapper) GetMyEntitlements(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetMyEntitlements(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SearchPlaces operation middleware
+func (siw *ServerInterfaceWrapper) SearchPlaces(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params SearchPlacesParams
+
+	// ------------- Required query parameter "q" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "q", r.URL.Query(), &params.Q, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "q"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "q", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "lat" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "lat", r.URL.Query(), &params.Lat, runtime.BindQueryParameterOptions{Type: "number", Format: "double"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "lat"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "lat", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "lng" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "lng", r.URL.Query(), &params.Lng, runtime.BindQueryParameterOptions{Type: "number", Format: "double"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "lng"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "lng", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SearchPlaces(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -4110,6 +4229,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/v1/trips/{tripId}/journal/{date}", wrapper.DeleteJournalEntry)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/v1/trips/{tripId}/journal/{date}", wrapper.PutJournalEntry)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/rates", wrapper.GetRate)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/places/search", wrapper.SearchPlaces)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/v1/trips/{tripId}/polls", wrapper.ListPolls)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/polls", wrapper.CreatePoll)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/v1/trips/{tripId}/polls/{pollId}/vote", wrapper.VotePoll)
@@ -4600,6 +4720,70 @@ func (response GetMyEntitlements401JSONResponse) VisitGetMyEntitlementsResponse(
 type GetMyEntitlements503JSONResponse struct{ UnavailableJSONResponse }
 
 func (response GetMyEntitlements503JSONResponse) VisitGetMyEntitlementsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SearchPlacesRequestObject struct {
+	Params SearchPlacesParams
+}
+
+type SearchPlacesResponseObject interface {
+	VisitSearchPlacesResponse(w http.ResponseWriter) error
+}
+
+type SearchPlaces200JSONResponse PlaceSearchResults
+
+func (response SearchPlaces200JSONResponse) VisitSearchPlacesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SearchPlaces400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response SearchPlaces400JSONResponse) VisitSearchPlacesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SearchPlaces401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response SearchPlaces401JSONResponse) VisitSearchPlacesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SearchPlaces503JSONResponse struct{ UnavailableJSONResponse }
+
+func (response SearchPlaces503JSONResponse) VisitSearchPlacesResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -9208,6 +9392,9 @@ type StrictServerInterface interface {
 	// GetMyEntitlements What the signed-in person's plan allows
 	// (GET /v1/me/entitlements)
 	GetMyEntitlements(ctx context.Context, request GetMyEntitlementsRequestObject) (GetMyEntitlementsResponseObject, error)
+	// SearchPlaces Search for a place by name
+	// (GET /v1/places/search)
+	SearchPlaces(ctx context.Context, request SearchPlacesRequestObject) (SearchPlacesResponseObject, error)
 	// GetRate Suggested exchange rate for a pair of currencies
 	// (GET /v1/rates)
 	GetRate(ctx context.Context, request GetRateRequestObject) (GetRateResponseObject, error)
@@ -9667,6 +9854,32 @@ func (sh *strictHandler) GetMyEntitlements(w http.ResponseWriter, r *http.Reques
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetMyEntitlementsResponseObject); ok {
 		if err := validResponse.VisitGetMyEntitlementsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SearchPlaces operation middleware
+func (sh *strictHandler) SearchPlaces(w http.ResponseWriter, r *http.Request, params SearchPlacesParams) {
+	var request SearchPlacesRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SearchPlaces(ctx, request.(SearchPlacesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SearchPlaces")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SearchPlacesResponseObject); ok {
+		if err := validResponse.VisitSearchPlacesResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

@@ -558,6 +558,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/places/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search for a place by name
+         * @description Autocomplete-style search so the person can add a place without typing
+         *     coordinates. The provider key stays on the server. Results are for
+         *     display now; only the pin the person picks is stored on the stop.
+         *     Pass `lat` and `lng` to prefer results near the trip. Any signed-in
+         *     person can search.
+         */
+        get: operations["searchPlaces"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/trips/{tripId}/polls": {
         parameters: {
             query?: never;
@@ -1645,6 +1669,19 @@ export interface components {
             rate: components["schemas"]["Rate"];
             /** @description The UTC day the rate is for, YYYY-MM-DD. */
             asOf: string;
+        };
+        PlaceSearchResults: {
+            results: components["schemas"]["PlaceSearchResult"][];
+        };
+        PlaceSearchResult: {
+            name: string;
+            address?: string;
+            /** Format: double */
+            lat: number;
+            /** Format: double */
+            lng: number;
+            /** @enum {string} */
+            category?: "food" | "sights" | "activity" | "shopping" | "stay" | "transport" | "other";
         };
         PollOptionInput: {
             label: string;
@@ -2855,6 +2892,33 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    searchPlaces: {
+        parameters: {
+            query: {
+                q: string;
+                lat?: number;
+                lng?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Up to 10 matches, best first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlaceSearchResults"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
             503: components["responses"]["Unavailable"];
         };
     };
