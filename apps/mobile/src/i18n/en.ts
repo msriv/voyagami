@@ -71,6 +71,14 @@ export const en = {
         title: "Plan it together",
         body: "Tap Invite to send a link on any chat app. Everyone edits the same plan and sees changes live.",
       },
+      money: {
+        title: "Spend in any currency",
+        body: "Tap Add to log a spend in any currency. We convert it and keep track of who owes whom.",
+      },
+      journal: {
+        title: "Your day writes itself",
+        body: "Each evening we pick your photos and stamp the place. Add a line, keep it private or share it with the crew.",
+      },
     },
   },
   manageSub: {

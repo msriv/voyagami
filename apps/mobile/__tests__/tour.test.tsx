@@ -29,7 +29,7 @@ describe("Tour", () => {
   it("walks the steps, saves progress and can be skipped", async () => {
     await renderRouter(routes, { initialUrl: "/" });
     expect(await screen.findByText("Your trip lives here")).toBeTruthy();
-    expect(screen.getByText("Step 1 of 3")).toBeTruthy();
+    expect(screen.getByText("Step 1 of 5")).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: "Next" }));
     expect(await screen.findByText("Let the day sort itself")).toBeTruthy();
     expect(mockStore.get("voyagami.tour")).toBe("1");
@@ -41,11 +41,11 @@ describe("Tour", () => {
   });
 
   it("picks up where it stopped and stays away once finished", async () => {
-    mockStore.set("voyagami.tour", "2");
+    mockStore.set("voyagami.tour", "4");
     await renderRouter(routes, { initialUrl: "/" });
-    expect(await screen.findByText("Plan it together")).toBeTruthy();
+    expect(await screen.findByText("Your day writes itself")).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: "Finish tour" }));
-    await waitFor(() => expect(screen.queryByText("Plan it together")).toBeNull());
+    await waitFor(() => expect(screen.queryByText("Your day writes itself")).toBeNull());
     expect(mockStore.get("voyagami.tour")).toBe("done");
   });
 
