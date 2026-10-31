@@ -1,4 +1,5 @@
-import { minorDigits } from "@voyagami/locale";
+import { defaultCurrency, formatMoney, minorDigits } from "@voyagami/locale";
+import { getLocales } from "expo-localization";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
@@ -10,10 +11,27 @@ import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { daysInRange } from "@/trips/dates";
-import { parseAmount, todayIn } from "@/trips/money";
+import {
+  convertMinor,
+  parseAmount,
+  rateFromMajor,
+  rateToMajor,
+  todayIn,
+  type RateRatio,
+} from "@/trips/money";
 import type { Trip } from "@/trips/summary";
 import { Button, Chip, IconButton, Input, Text } from "@/ui";
 import { Icon } from "@/ui/icons";
+
+/** True when the platform knows the ISO 4217 code. */
+function validCurrency(code: string): boolean {
+  try {
+    minorDigits(code);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 type Member = components["schemas"]["Member"];
 
@@ -21,9 +39,9 @@ const categories = ["food", "transport", "stay", "activity", "shopping", "other"
 type Category = (typeof categories)[number];
 
 /**
- * Add an expense in the trip's own currency: who paid, who shares it (split equally).
- * shortcut: equal splits only and no second currency, until exact, percent and shares splits
- * and multi-currency (VOY-150) are built.
+ * Add an expense in the trip's currency or another one (a suggested rate converts it, and the person
+ * can type their own): who paid, who shares it (split equally).
+ * shortcut: equal splits only, until exact, percent and shares splits are built.
  */
 export default function AddExpenseScreen() {
   const { t } = useTranslation();
@@ -40,6 +58,10 @@ export default function AddExpenseScreen() {
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState<Category | undefined>();
   const [date, setDate] = useState<string | undefined>();
+  const [currencyPick, setCurrencyPick] = useState<string | undefined>();
+  const [otherCode, setOtherCode] = useState("");
+  const [suggested, setSuggested] = useState<RateRatio | "none" | undefined>();
+  const [typedRate, setTypedRate] = useState("");
   const [error, setError] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
 
@@ -67,9 +89,47 @@ export default function AddExpenseScreen() {
   const days = start && end ? daysInRange(start, end) : [];
   const chosen = date ?? (trip ? (days[0] ?? todayIn(trip.timeZone)) : undefined);
 
+  const settlement = trip?.settlementCurrency;
+  const options = [
+    ...new Set([
+      ...(settlement ? [settlement] : []),
+      ...(trip?.destinations ?? []).flatMap((d) => defaultCurrency(d.countryCode) ?? []),
+    ]),
+  ];
+  const typedCode = otherCode.trim().toUpperCase();
+  const currency =
+    currencyPick === "other"
+      ? /^[A-Z]{3}$/.test(typedCode) && validCurrency(typedCode)
+        ? typedCode
+        : undefined
+      : (currencyPick ?? settlement);
+  const foreign = !!currency && !!settlement && currency !== settlement;
+
+  useEffect(() => {
+    setSuggested(undefined);
+    setTypedRate("");
+    if (!foreign || !currency || !settlement) return;
+    let live = true;
+    api
+      .unwrap(api.GET("/v1/rates", { params: { query: { from: currency, to: settlement } } }))
+      .then((q) => live && setSuggested(q.rate))
+      .catch(() => live && setSuggested("none"));
+    return () => {
+      live = false;
+    };
+  }, [api, foreign, currency, settlement]);
+
+  const typed =
+    foreign && currency && settlement ? rateFromMajor(typedRate, currency, settlement) : undefined;
+  const rate: RateRatio | undefined =
+    typed ?? (suggested && suggested !== "none" ? suggested : undefined);
+  const minorNow = currency ? parseAmount(amount, currency) : undefined;
+  const locale = getLocales()[0]?.languageTag ?? "en";
+
   async function save() {
-    if (!trip || !chosen || !paidBy) return;
-    const currency = trip.settlementCurrency;
+    if (!trip || !chosen || !paidBy || !settlement) return;
+    if (!currency) return setError(t("addExpense.errors.currency"));
+    if (foreign && !rate) return setError(t("addExpense.errors.rate"));
     const minor = parseAmount(amount, currency);
     if (!description.trim()) return setError(t("addExpense.errors.description"));
     if (minor === undefined) {
@@ -88,6 +148,7 @@ export default function AddExpenseScreen() {
             paidByUid: paidBy,
             date: chosen,
             original: { amountMinor: minor, currency },
+            ...(foreign && rate ? { rate } : null),
             split: { method: "equal", parts: sharedBy.map((uid) => ({ uid })) },
           },
         }),
@@ -128,12 +189,83 @@ export default function AddExpenseScreen() {
           maxLength={120}
         />
         <Input
-          label={t("addExpense.amountLabel", { currency: trip?.settlementCurrency ?? "" })}
+          label={t("addExpense.amountLabel", { currency: currency ?? "" })}
           value={amount}
           onChangeText={setAmount}
           keyboardType="decimal-pad"
           maxLength={14}
         />
+
+        <View style={{ gap: 6 }}>
+          <Text variant="bodyStrong">{t("addExpense.currencyLabel")}</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {options.map((c) => (
+              <Chip
+                key={c}
+                label={c}
+                selected={c === currency && currencyPick !== "other"}
+                onPress={() => setCurrencyPick(c)}
+              />
+            ))}
+            <Chip
+              label={t("addExpense.otherCurrency")}
+              selected={currencyPick === "other"}
+              onPress={() => setCurrencyPick("other")}
+            />
+          </View>
+          {currencyPick === "other" ? (
+            <Input
+              label={t("addExpense.otherCurrencyLabel")}
+              value={otherCode}
+              onChangeText={setOtherCode}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              maxLength={3}
+            />
+          ) : null}
+        </View>
+
+        {foreign && currency && settlement ? (
+          <View style={{ gap: 6 }}>
+            {rate ? (
+              <Text accessibilityLiveRegion="polite">
+                {t(typed ? "addExpense.rateYours" : "addExpense.rateSuggested", {
+                  from: formatMoney(10 ** minorDigits(currency), currency, locale),
+                  to: formatMoney(
+                    convertMinor(10 ** minorDigits(currency), rate),
+                    settlement,
+                    locale,
+                  ),
+                })}
+              </Text>
+            ) : suggested === "none" ? (
+              <Text accessibilityLiveRegion="polite">
+                {t("addExpense.rateMissing", { from: currency, to: settlement })}
+              </Text>
+            ) : (
+              <Text color="muted">{t("addExpense.rateLoading")}</Text>
+            )}
+            {rate && minorNow ? (
+              <Text variant="bodyStrong">
+                {t("addExpense.converted", {
+                  amount: formatMoney(convertMinor(minorNow, rate), settlement, locale),
+                })}
+              </Text>
+            ) : null}
+            <Input
+              label={t("addExpense.rateInput", { from: currency, to: settlement })}
+              value={typedRate}
+              onChangeText={setTypedRate}
+              keyboardType="decimal-pad"
+              maxLength={14}
+              placeholder={
+                suggested && suggested !== "none"
+                  ? String(rateToMajor(suggested, currency, settlement))
+                  : ""
+              }
+            />
+          </View>
+        ) : null}
 
         <View style={{ gap: 6 }}>
           <Text variant="bodyStrong">{t("addExpense.categoryLabel")}</Text>

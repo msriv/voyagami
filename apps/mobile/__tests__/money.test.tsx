@@ -258,4 +258,55 @@ describe("Add expense", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Save expense" }));
     expect(await screen.findByText(/Enter an amount more than zero/)).toBeTruthy();
   });
+
+  it("adds an expense in another currency with the suggested rate", async () => {
+    const calls = mockApi({
+      ...base(),
+      "GET /v1/rates": () =>
+        json(200, {
+          from: "USD",
+          to: "VND",
+          rate: { numerator: 250, denominator: 1 },
+          asOf: "2099-11-19",
+        }),
+      "POST /v1/trips/t1/expenses": () => json(201, expense("e1", "Tour", "2099-11-19", 499750)),
+    });
+    await renderRouter(routes, { initialUrl: "/trips/t1/add-expense" });
+    await fireEvent.changeText(await screen.findByLabelText("What was it for?"), "Tour");
+    await fireEvent.press(screen.getByRole("button", { name: "Other currency" }));
+    await fireEvent.changeText(screen.getByLabelText(/^Currency code/), "usd");
+    await fireEvent.changeText(screen.getByLabelText(/^Amount in USD/), "19.99");
+    expect(await screen.findByText(/About .*in the trip's currency/)).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Save expense" }));
+    await waitFor(() =>
+      expect(calls.find((c) => c.key === "POST /v1/trips/t1/expenses")?.body).toMatchObject({
+        original: { amountMinor: 1999, currency: "USD" },
+        rate: { numerator: 250, denominator: 1 },
+      }),
+    );
+  });
+
+  it("asks for a typed rate when there is none, and sends it", async () => {
+    const calls = mockApi({
+      ...base(),
+      "GET /v1/rates": () => json(404, { code: "not_found", message: "x" }),
+      "POST /v1/trips/t1/expenses": () => json(201, expense("e1", "Tour", "2099-11-19", 1)),
+    });
+    await renderRouter(routes, { initialUrl: "/trips/t1/add-expense" });
+    await fireEvent.changeText(await screen.findByLabelText("What was it for?"), "Tour");
+    await fireEvent.press(screen.getByRole("button", { name: "Other currency" }));
+    await fireEvent.changeText(screen.getByLabelText(/^Currency code/), "XTS");
+    expect(await screen.findByText(/No rate for XTS to VND/)).toBeTruthy();
+    await fireEvent.changeText(screen.getByLabelText(/^Amount in XTS/), "10");
+    await fireEvent.press(screen.getByRole("button", { name: "Save expense" }));
+    expect(await screen.findByText("Type the rate to use for this currency.")).toBeTruthy();
+    await fireEvent.changeText(screen.getByLabelText(/^Your rate/), "25000");
+    await fireEvent.press(screen.getByRole("button", { name: "Save expense" }));
+    await waitFor(() =>
+      expect(calls.find((c) => c.key === "POST /v1/trips/t1/expenses")?.body).toMatchObject({
+        original: { amountMinor: 1000, currency: "XTS" },
+        rate: { numerator: 250, denominator: 1 },
+      }),
+    );
+  });
 });
