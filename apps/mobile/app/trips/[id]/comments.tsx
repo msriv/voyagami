@@ -10,6 +10,7 @@ import { ApiError, NetworkError, type components } from "@voyagami/api-client";
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
+import { useTripChanges } from "@/trips/useTripChanges";
 import type { Trip } from "@/trips/summary";
 import { Button, Card, IconButton, Input, Sheet, Text } from "@/ui";
 import { Icon } from "@/ui/icons";
@@ -70,6 +71,8 @@ export default function CommentsScreen() {
       );
     }
   }, [api, id, targetType, targetId]);
+
+  useTripChanges(id, () => void load());
 
   useFocusEffect(
     useCallback(() => {

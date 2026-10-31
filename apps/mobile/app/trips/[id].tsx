@@ -11,6 +11,7 @@ import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useProfile } from "@/profile";
 import { useTheme } from "@/theme";
+import { useTripChanges } from "@/trips/useTripChanges";
 import { countryName } from "@/trips/destinations";
 import { daysBetween, daysInRange, isoToDate } from "@/trips/dates";
 import type { Trip } from "@/trips/summary";
@@ -54,6 +55,8 @@ export default function TripScreen() {
       );
     }
   }, [api, id]);
+
+  useTripChanges(id, () => void load());
 
   useEffect(() => {
     void load();
