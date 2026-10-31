@@ -104,6 +104,9 @@ type handlers struct {
 	recapVideos   repo.RecapVideos
 	recapRender   recapvideo.Renderer
 	recapJob      TrialReminderJob
+	expPartners   []stays.Partner
+	expClicks     StayClicks
+	expOn         bool
 	catalog       repo.PlaceCatalog
 	asker         ask.Drafter
 	askCount      AskCounter
