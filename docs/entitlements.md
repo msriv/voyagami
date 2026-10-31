@@ -29,6 +29,7 @@ d := svc.Check(user, trip, entitlements.BestOrder)
 - `GET /v1/me/entitlements` answers every feature for the caller with no trip in view.
 - `GET /v1/trips/{tripId}/entitlements` answers for one trip, so a Trip Pass or a crew member's Plus counts. Non-members get 404.
 - Both return `{plan, features}` where each feature is `{allowed, limit, used, needsPlus}`. They answer 503 if plans are not wired.
+- The trip's answer also carries `pass: {boughtBy, endsOn}` while the trip has a Trip Pass that works: `boughtBy` is the member's id, `endsOn` is the last day the pass works (trip end date plus 2 days) and is left out when the trip has no end date.
 - Plan facts come from the server-owned `entitlements/{uid}` Firestore document (`plus.active`, a future `trial.endsAt`, `usage.askDrafts`). No document means Free.
 - Trip Passes and per-trip counters have no storage yet, so they read as none and zero. Dev accounts without a mock plan have no limits anyway.
 - In the app, `useEntitlement(feature, tripId?)` reflects the answer. It allows nothing until the server answers or if the request fails.

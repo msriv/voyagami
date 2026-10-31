@@ -92,6 +92,11 @@ export default function ProfileScreen() {
           onPress={() => router.push("/privacy")}
         />
         <Button
+          label={t("profile.help")}
+          variant="secondary"
+          onPress={() => router.push("/help")}
+        />
+        <Button
           label={t("profile.notifications")}
           variant="secondary"
           onPress={() => router.push("/notifications")}

@@ -1063,9 +1063,81 @@ export const en = {
       },
     },
   },
+  help: {
+    title: "Help",
+    back: "Back",
+    intro: "Quick answers to common questions.",
+    contact: "Contact us",
+    contactNote: "We'll include your app version, phone type and language. Nothing else.",
+    contactSubject: "Voyagami help",
+    contactUnavailable: "Contact is not set up yet.",
+    articles: {
+      trial: {
+        title: "How does the free trial work?",
+        body: "Plus starts with a 7-day free trial. You see the price and the renewal date before you start. Cancel before the trial ends in your store's subscription settings and you pay nothing.",
+      },
+      cancel: {
+        title: "How do I cancel Plus?",
+        body: "The store handles subscriptions, so you cancel there. Open Plans, then Manage subscription, then the store's subscription page. If you cancel, nothing is deleted. Anything over the Free limit stays and can be read.",
+      },
+      restore: {
+        title: "I changed phone. How do I get Plus back?",
+        body: "Open Plans and tap Restore purchases. It asks the store for what you bought with the same store account.",
+      },
+      tripPass: {
+        title: "What is a Trip Pass?",
+        body: "A Trip Pass unlocks Plus features for one trip, for the whole crew, for the days of the pass. If anyone on the trip has Plus, it works for everyone on that trip.",
+      },
+      invite: {
+        title: "How do I invite people?",
+        body: "Open the trip and tap Invite. Share the link or the code. People can join without paying.",
+      },
+      join: {
+        title: "I have an invite code. What now?",
+        body: "On Home, tap Join with a code and enter it. Joining a trip is always free.",
+      },
+      roles: {
+        title: "What can owners, editors and viewers do?",
+        body: "Owners manage the crew and the trip. Editors change the plan, expenses and journal. Viewers can read everything but cannot change it.",
+      },
+      settleUp: {
+        title: "How does settle-up work?",
+        body: "Add expenses as you go and say who shares each one. Open Money, then Settle up, to see who pays whom. Settle-up is always free.",
+      },
+      currencies: {
+        title: "How do different currencies work?",
+        body: "Each trip has one settlement currency. Every expense keeps the amount and currency you paid in, and the rate used to convert it.",
+      },
+      offline: {
+        title: "Does it work without internet?",
+        body: "Yes. Your plan and tickets for upcoming trips are saved on your phone and always work offline, on every plan. Profile shows what is saved and lets you clear it.",
+      },
+      sync: {
+        title: "What does the waiting badge mean?",
+        body: "Changes you made offline wait on your phone until you are back online. Tap the badge to send them now, try again, or discard one.",
+      },
+      location: {
+        title: "Who can see my location?",
+        body: "Only people on your trip, and only if you choose to share. Sharing ends by itself, and you can stop any time.",
+      },
+      notifications: {
+        title: "How do I change notifications?",
+        body: "Open Profile, then Notifications. Choose which updates you want, set quiet hours, or mute one trip.",
+      },
+      picks: {
+        title: "Where do the picks come from?",
+        body: "Picks for you are ranked by how well a place fits your crew's style, how well it is rated, and how close it is to your stops. Whether a place pays us never changes the order.",
+      },
+      stays: {
+        title: "Can I book a stay in Voyagami?",
+        body: "No. Voyagami sends you to a booking partner's site, and you book and pay there. Afterwards, add the stay to Bookings so your crew sees it.",
+      },
+    },
+  },
   profile: {
     notifications: "Notifications",
     privacy: "Data and privacy",
+    help: "Help",
     plan: "Plans",
     homeRegion: "Home country",
     signOut: "Sign out",

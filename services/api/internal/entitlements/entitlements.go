@@ -140,6 +140,9 @@ type User struct {
 type Trip struct {
 	// Pass is true while the trip has an active Trip Pass.
 	Pass bool
+	// PassBoughtBy and PassEndsOn describe the pass when Pass is true. PassEndsOn
+	// is YYYY-MM-DD, or "" when the trip has no end date.
+	PassBoughtBy, PassEndsOn string
 	// MemberPlus is true when any member of the trip has Plus.
 	MemberPlus bool
 	// Used holds the trip's counters: BestOrder, ForwardedBookings, Files and JournalPhotos.

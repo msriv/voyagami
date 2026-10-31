@@ -32,3 +32,16 @@ func TestPassCovers(t *testing.T) {
 		t.Error("pass must end at midnight UTC on the third day after the last day")
 	}
 }
+
+func TestPassEndsOn(t *testing.T) {
+	for end, want := range map[string]string{"2026-11-10": "2026-11-12", "2026-12-30": "2027-01-01", "": "", "soon": ""} {
+		if got := passEndsOn(end); got != want {
+			t.Errorf("passEndsOn(%q) = %q, want %q", end, got, want)
+		}
+	}
+	// It must agree with passCovers: the pass works on the last day and stops the day after.
+	end := "2026-11-10"
+	if !passCovers(end, time.Date(2026, 11, 12, 23, 59, 0, 0, time.UTC)) || passCovers(end, time.Date(2026, 11, 13, 0, 0, 0, 0, time.UTC)) {
+		t.Error("passEndsOn and passCovers disagree")
+	}
+}

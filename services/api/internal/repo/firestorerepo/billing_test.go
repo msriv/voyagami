@@ -62,9 +62,12 @@ func TestBillingApply(t *testing.T) {
 		})
 	}
 	has := func() bool {
-		ok, err := b.HasPass(ctx, trip)
+		by, ok, err := b.ActivePass(ctx, trip)
 		if err != nil {
 			t.Fatal(err)
+		}
+		if ok && by == "" {
+			t.Error("a pass should say who bought it")
 		}
 		return ok
 	}
