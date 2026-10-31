@@ -9,6 +9,7 @@ import (
 
 	"cloud.google.com/go/firestore"
 
+	"github.com/msriv/voyagami/services/api/internal/ask"
 	"github.com/msriv/voyagami/services/api/internal/auth"
 	"github.com/msriv/voyagami/services/api/internal/config"
 	"github.com/msriv/voyagami/services/api/internal/entitlements"
@@ -120,6 +121,11 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 		}))
 	} else {
 		logger.Warn("VERTEX_LOCATION or GCP_PROJECT is not set, so reading bookings from text and PDFs is off")
+	}
+	if cfg.VertexLocation != "" && cfg.GCPProject != "" {
+		deps.options = append(deps.options, server.WithAsk(&ask.Vertex{
+			Project: cfg.GCPProject, Location: cfg.VertexLocation, Model: cfg.VertexModel,
+		}, firestorerepo.NewEntitlements(client)))
 	}
 	switch {
 	case cfg.PlacesAPIKey != "":
