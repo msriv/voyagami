@@ -1,5 +1,6 @@
 import { Pressable, Text } from "react-native";
-import { render, renderRouter, screen } from "expo-router/testing-library";
+import { render } from "@testing-library/react-native";
+import { renderRouter, screen } from "expo-router/testing-library";
 
 import { inaccessibleControls } from "../test-utils/a11y";
 import { json, mockApi, routes } from "../test-utils/api";
