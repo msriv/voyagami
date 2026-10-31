@@ -125,6 +125,48 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/me/devices/{deviceId}:
+    parameters:
+      - name: deviceId
+        in: path
+        required: true
+        description: A stable id the app makes once per install.
+        schema:
+          type: string
+    put:
+      operationId: registerDevice
+      tags: [account]
+      summary: Register or refresh this phone for push
+      description: |
+        Call after sign-in and whenever the push token changes. One record per
+        device id, so calling again replaces the token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceRegistration"
+      responses:
+        "204":
+          description: Stored.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    delete:
+      operationId: removeDevice
+      tags: [account]
+      summary: Stop pushes to this phone
+      description: Call on sign-out. Removing a device that is not there succeeds.
+      responses:
+        "204":
+          description: Removed.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/trips:
     get:
       operationId: listTrips
@@ -2203,6 +2245,17 @@ components:
           description: One decision per feature, keyed by feature name.
           additionalProperties:
             $ref: "#/components/schemas/EntitlementDecision"
+    DeviceRegistration:
+      type: object
+      required: [platform, pushToken]
+      properties:
+        platform:
+          type: string
+          enum: [ios, android]
+        pushToken:
+          type: string
+          maxLength: 4096
+          description: The FCM token (iOS goes through FCM as well).
     MeUpdate:
       type: object
       description: Fields to change. Leave a field out to keep it.

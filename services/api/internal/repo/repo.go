@@ -38,6 +38,16 @@ type Users interface {
 	Update(ctx context.Context, id string, patch model.UserPatch) (model.User, error)
 }
 
+// Devices stores the phones a person is signed in on and their push tokens.
+type Devices interface {
+	// Put stores or refreshes a device, keeping one document per device ID.
+	Put(ctx context.Context, uid string, d model.Device) error
+	// Delete removes a device. Removing one that is not there is not an error.
+	Delete(ctx context.Context, uid, deviceID string) error
+	// List returns the person's devices.
+	List(ctx context.Context, uid string) ([]model.Device, error)
+}
+
 // Trips stores trips and who is on them. Membership changes keep the trip's
 // memberUids mirror in step inside one transaction.
 type Trips interface {
