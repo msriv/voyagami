@@ -19,11 +19,15 @@ export function newId(): string {
  * When a new expense cannot reach the server, keep it in the write queue and answer as if it was
  * created (201 with what was sent), marked as queued. Every other call fails as before.
  */
+const expensesPath = /^\/v1\/trips\/([^/]+)\/expenses$/;
+const isNewExpense = (request: Request) =>
+  request.method === "POST" && expensesPath.test(new URL(request.url).pathname);
+
 export const offlineHook: OfflineHook = {
-  async onNetworkError(request, e) {
-    console.log("OFFLINE-HOOK", request.method, request.url, String(e));
-    const m = /^\/v1\/trips\/([^/]+)\/expenses$/.exec(new URL(request.url).pathname);
-    if (request.method !== "POST" || !m) return undefined;
+  handles: isNewExpense,
+  async onNetworkError(request) {
+    const m = expensesPath.exec(new URL(request.url).pathname);
+    if (!isNewExpense(request) || !m) return undefined;
     const body = (await request.json().catch(() => undefined)) as { id?: unknown } | undefined;
     if (!body || typeof body.id !== "string" || !body.id) return undefined;
     await enqueue({

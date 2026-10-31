@@ -9,7 +9,7 @@ const EVERY_MS = 15_000;
 /** Sends queued writes now, when the app comes back to the front, and every 15 seconds. */
 export function useWriteQueue(api: ApiClient, active: boolean) {
   useEffect(() => {
-    if (!active || process.env.JEST_WORKER_ID) return; // bisect: is the runner behind the Live hang?
+    if (!active) return;
     let busy = false;
     const run = () => {
       if (busy) return;

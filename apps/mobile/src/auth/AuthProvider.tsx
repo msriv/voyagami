@@ -1,3 +1,4 @@
+import { offlineHook } from "@/local/offlineHook";
 import { localStore } from "@/local/store";
 import { useWriteQueue } from "@/local/useWriteQueue";
 import { createApiClient, type ApiClient, type StoredTokens } from "@voyagami/api-client";
@@ -148,6 +149,7 @@ export function AuthProvider({
         },
         onSignedOut: () => setStatus("signedOut"),
         fetch: withBreadcrumbs(fetchImpl),
+        offline: offlineHook,
       }),
     [fetchImpl],
   );
