@@ -46,3 +46,22 @@ func TestSearchPlaces(t *testing.T) {
 		t.Errorf("without provider: %d", rec.Code)
 	}
 }
+
+func TestResolvePlaceLink(t *testing.T) {
+	h := NewHandler(slog.New(slog.DiscardHandler), tokenVerifier{"owner": "u-owner"})
+	post := func(tok, body string) int { return call(h, "POST", "/v1/places/resolve", tok, body).Code }
+	if c := post("", `{"url":"geo:21,105"}`); c != 401 {
+		t.Errorf("no token: %d", c)
+	}
+	rec := call(h, "POST", "/v1/places/resolve", "owner", `{"url":"https://www.google.com/maps/place/Pho+10/@21.03,105.85,15z"}`)
+	var out api.PlaceSearchResult
+	if err := json.Unmarshal(rec.Body.Bytes(), &out); err != nil || rec.Code != 200 || out.Name != "Pho 10" || out.Lat != 21.03 {
+		t.Fatalf("resolve: %d %s", rec.Code, rec.Body)
+	}
+	if c := post("owner", `{"url":"https://evil.example/@21,105"}`); c != 404 {
+		t.Errorf("foreign link: %d", c)
+	}
+	if c := post("owner", `{}`); c != 400 && c != 404 {
+		t.Errorf("empty: %d", c)
+	}
+}

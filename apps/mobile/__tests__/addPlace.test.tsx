@@ -125,3 +125,37 @@ describe("Search for a place", () => {
     expect(await screen.findByText(/Search isn't available/)).toBeTruthy();
   });
 });
+
+describe("Paste a link", () => {
+  it("fills the form from the place in the link", async () => {
+    mockApi({
+      "GET /v1/me": () => json(200, { id: "u1" }),
+      "POST /v1/places/resolve": () =>
+        json(200, { name: "Hoan Kiem Lake", lat: 21.0285, lng: 105.8542 }),
+    });
+    await renderRouter(routes, { initialUrl: url });
+    await fireEvent.changeText(
+      await screen.findByLabelText("Or paste a map link"),
+      "https://maps.app.goo.gl/x",
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Find place" }));
+    await waitFor(() =>
+      expect(screen.getByLabelText("Place name").props.value).toBe("Hoan Kiem Lake"),
+    );
+    expect(screen.getByLabelText("Latitude").props.value).toBe("21.0285");
+  });
+
+  it("says so when the link has no place", async () => {
+    mockApi({
+      "GET /v1/me": () => json(200, { id: "u1" }),
+      "POST /v1/places/resolve": () => json(404, { code: "not_found", message: "x" }),
+    });
+    await renderRouter(routes, { initialUrl: url });
+    await fireEvent.changeText(
+      await screen.findByLabelText("Or paste a map link"),
+      "https://example.com",
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Find place" }));
+    expect(await screen.findByText(/Couldn't find a place in that link/)).toBeTruthy();
+  });
+});

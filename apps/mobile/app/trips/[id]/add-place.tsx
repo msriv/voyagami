@@ -45,6 +45,8 @@ export default function AddPlaceScreen() {
   const [note, setNote] = useState("");
   const [query, setQuery] = useState("");
   const [found, setFound] = useState<SearchResult[]>([]);
+  const [link, setLink] = useState("");
+  const [linkNote, setLinkNote] = useState<string | undefined>();
   const [searchNote, setSearchNote] = useState<string | undefined>();
   const [error, setError] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
@@ -85,6 +87,17 @@ export default function AddPlaceScreen() {
     setLng(String(r.lng));
     setQuery("");
     setFound([]);
+  }
+
+  async function readLink() {
+    setLinkNote(undefined);
+    try {
+      const r = await api.unwrap(api.POST("/v1/places/resolve", { body: { url: link.trim() } }));
+      pick(r);
+      setLink("");
+    } catch (e) {
+      setLinkNote(t(e instanceof NetworkError ? "addPlace.errors.offline" : "addPlace.link.none"));
+    }
   }
 
   async function save() {
@@ -161,6 +174,27 @@ export default function AddPlaceScreen() {
             ) : null}
           </Pressable>
         ))}
+        <Input
+          label={t("addPlace.link.label")}
+          value={link}
+          onChangeText={setLink}
+          maxLength={2000}
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="url"
+        />
+        {link.trim() ? (
+          <Button
+            label={t("addPlace.link.find")}
+            variant="secondary"
+            onPress={() => void readLink()}
+          />
+        ) : null}
+        {linkNote ? (
+          <Text color="vermilion" accessibilityLiveRegion="polite">
+            {linkNote}
+          </Text>
+        ) : null}
         <Text color="muted">{t("addPlace.intro")}</Text>
 
         <Input
