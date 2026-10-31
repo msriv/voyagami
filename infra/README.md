@@ -73,6 +73,20 @@ To rotate: `openssl rand -hex 32 | tr -d '\n' | gcloud secrets versions add auth
 
 The booking import endpoint calls Gemini on Vertex with the API's own service account, so there is no key. `terraform apply` grants `roles/aiplatform.user` and sets `VERTEX_LOCATION` (`us-central1`; Gemini may not be offered in `asia-south1`). Pasted booking text and PDFs are sent to that region. Without the apply, the endpoint answers 503. Redeploy the API after the apply.
 
+## RevenueCat webhook
+
+RevenueCat tells the API about purchases at `POST /v1/billing/revenuecat`. It sends a shared secret in the `Authorization` header, which the API reads from `REVENUECAT_WEBHOOK_SECRET`. Until that is set, the route is off and purchases do not reach plans. This needs the RevenueCat sandbox project from VOY-85. In Cloud Shell:
+
+```sh
+cd infra/envs/dev
+terraform apply -target=module.secrets          # creates the empty secret
+SECRET="$(openssl rand -hex 32)"
+printf '%s' "$SECRET" | gcloud secrets versions add revenuecat-webhook-secret --data-file=-
+echo "Bearer $SECRET"                           # paste this as the webhook Authorization value in RevenueCat
+```
+
+Then add `REVENUECAT_WEBHOOK_SECRET = "revenuecat-webhook-secret"` to `secret_env` in `envs/dev/main.tf`, run `terraform apply`, and point the RevenueCat webhook at `<api url>/v1/billing/revenuecat`. The app must set the RevenueCat user ID to the account ID, and set a `tripId` attribute before a Trip Pass purchase.
+
 ## Deploying the API (dev)
 
 `make deploy-dev` builds `services/api/Dockerfile` for linux/amd64, pushes it to Artifact Registry (`voyagami`) tagged with the git commit, rolls `voyagami-api` to it and checks `/health`. It needs `docker` and a signed-in `gcloud` (`gcloud auth login`, project `voyagami-dev-512208`). The same script runs from GitHub: Actions, "Deploy API (dev)", Run workflow, on `main` only. It signs in through workload identity, so no key is stored.

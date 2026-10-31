@@ -10,6 +10,7 @@ import (
 
 	"github.com/msriv/voyagami/services/api/internal/api"
 	"github.com/msriv/voyagami/services/api/internal/auth"
+	"github.com/msriv/voyagami/services/api/internal/billing"
 	"github.com/msriv/voyagami/services/api/internal/devlog"
 	"github.com/msriv/voyagami/services/api/internal/entitlements"
 	"github.com/msriv/voyagami/services/api/internal/importer"
@@ -39,6 +40,9 @@ func NewHandler(logger *slog.Logger, verifier auth.Verifier, opts ...Option) htt
 	if h.devLogs != nil {
 		h.mountDevLogs(mux)
 	}
+	if h.billing != nil && h.billingSecret != "" {
+		h.mountBilling(mux)
+	}
 	api.HandlerWithOptions(strict, api.StdHTTPServerOptions{
 		BaseRouter:  mux,
 		Middlewares: []api.MiddlewareFunc{requireAuth(logger, verifier)},
@@ -51,28 +55,30 @@ func NewHandler(logger *slog.Logger, verifier auth.Verifier, opts ...Option) htt
 
 // handlers implements the generated api.StrictServerInterface.
 type handlers struct {
-	signIn      SignIn
-	profile     Profile
-	trips       TripStore
-	stops       StopStore
-	tasks       TaskStore
-	expenses    ExpenseStore
-	settlements SettlementStore
-	bookings    BookingStore
-	journal     JournalStore
-	invites     repo.Invites
-	polls       repo.Polls
-	meetPoints  repo.MeetPoints
-	comments    repo.Comments
-	importer    importer.Parser
-	devLogs     devlog.Store
-	usage       repo.TripUsage
-	devices     repo.Devices
-	events      Publisher
-	feed        repo.Feed
-	presence    repo.Presence
-	rates       rates.Provider
-	places      places.Searcher
+	signIn        SignIn
+	profile       Profile
+	trips         TripStore
+	stops         StopStore
+	tasks         TaskStore
+	expenses      ExpenseStore
+	settlements   SettlementStore
+	bookings      BookingStore
+	journal       JournalStore
+	invites       repo.Invites
+	polls         repo.Polls
+	meetPoints    repo.MeetPoints
+	comments      repo.Comments
+	importer      importer.Parser
+	devLogs       devlog.Store
+	usage         repo.TripUsage
+	devices       repo.Devices
+	events        Publisher
+	billing       billing.Store
+	billingSecret string
+	feed          repo.Feed
+	presence      repo.Presence
+	rates         rates.Provider
+	places        places.Searcher
 
 	plans      *entitlements.Service
 	planSource PlanSource
