@@ -29,6 +29,10 @@ const (
 	// length, not a counter, so Used is always 0. Use Recap for the full answer.
 	RecapSeconds Feature = "recapSeconds"
 
+	// TopPicks is how many recommendations a person sees per category. It is a
+	// cap on a list, not a counter, so Used is always 0. Use PickLimit.
+	TopPicks Feature = "topPicks"
+
 	// MultiCurrency lets a trip hold expenses in more than one currency.
 	MultiCurrency Feature = "multiCurrency"
 	// LiveCrewMap shows the crew's live locations all day.
@@ -78,6 +82,7 @@ var scopes = map[Feature]scope{
 	ForwardedBookings: scopeTrip,
 	Files:             scopeTrip,
 	JournalPhotos:     scopeUser,
+	TopPicks:          scopeUser,
 	MultiCurrency:     scopeTrip,
 	LiveCrewMap:       scopeTrip,
 	JoinTrip:          scopeFree,
@@ -98,6 +103,7 @@ func Free() Limits {
 		ForwardedBookings: 5,
 		Files:             3,
 		JournalPhotos:     30,
+		TopPicks:          5,
 		AskDrafts:         3,
 		RecapSeconds:      30,
 		MultiCurrency:     0,
@@ -262,4 +268,10 @@ type RecapPolicy struct {
 func (s *Service) Recap(user User, trip *Trip) RecapPolicy {
 	d := s.Check(user, trip, RecapSeconds)
 	return RecapPolicy{MaxSeconds: d.Limit, Watermark: d.Limit != Unlimited}
+}
+
+// PickLimit is how many recommendations the person may see per category, or
+// Unlimited. Free sees the top 5; Plus, or a Trip Pass on the trip, sees all.
+func (s *Service) PickLimit(user User, trip *Trip) int {
+	return s.Check(user, trip, TopPicks).Limit
 }

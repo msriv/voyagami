@@ -68,7 +68,7 @@ func TestAlwaysFreeCannotBeClosed(t *testing.T) {
 }
 
 func TestPlansSpecValues(t *testing.T) {
-	want := map[Feature]int{UpcomingTrips: 2, BestOrder: 1, ForwardedBookings: 5, Files: 3, JournalPhotos: 30, AskDrafts: 3}
+	want := map[Feature]int{UpcomingTrips: 2, BestOrder: 1, ForwardedBookings: 5, Files: 3, JournalPhotos: 30, TopPicks: 5, AskDrafts: 3}
 	for f, n := range want {
 		if Free()[f] != n {
 			t.Errorf("Free %s = %d, Plans Spec says %d", f, Free()[f], n)
@@ -150,5 +150,28 @@ func TestRecapPolicy(t *testing.T) {
 				t.Errorf("got %+v, want %+v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestPickLimit(t *testing.T) {
+	s := New(Free())
+	tests := []struct {
+		name string
+		user User
+		trip *Trip
+		want int
+	}{
+		{"free sees the top 5", User{}, &Trip{}, 5},
+		{"plus sees all", User{Plus: true}, &Trip{}, Unlimited},
+		{"a trip pass opens the list", User{}, &Trip{Pass: true}, Unlimited},
+		{"a crew member's plus does not (picks are yours)", User{}, &Trip{MemberPlus: true}, 5},
+	}
+	for _, tt := range tests {
+		if got := s.PickLimit(tt.user, tt.trip); got != tt.want {
+			t.Errorf("%s: got %d, want %d", tt.name, got, tt.want)
+		}
+	}
+	if got := New(NoLimits()).PickLimit(User{}, &Trip{}); got != Unlimited {
+		t.Errorf("dev: got %d", got)
 	}
 }
