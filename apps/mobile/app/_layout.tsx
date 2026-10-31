@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "@/auth";
 import "@/i18n";
 import { installRemoteLog, reporter } from "@/logging/remoteLog";
 import { PaywallProvider } from "@/plans/Paywall";
+import { TourProvider } from "@/tour/Tour";
 import { ProfileProvider } from "@/profile";
 import { fontAssets, ThemeProvider } from "@/theme";
 
@@ -32,7 +33,9 @@ export default function RootLayout() {
       <AuthProvider>
         <ProfileProvider>
           <StatusBar style="dark" />
-          <Screens />
+          <TourProvider>
+            <Screens />
+          </TourProvider>
         </ProfileProvider>
       </AuthProvider>
     </ThemeProvider>

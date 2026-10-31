@@ -8,6 +8,7 @@ import { SavedOnPhone } from "@/local/SavedOnPhone";
 import { useTranslation } from "@/i18n";
 import { useProfile } from "@/profile";
 import { useTheme } from "@/theme";
+import { useTour } from "@/tour/Tour";
 import { Button, Card, Text } from "@/ui";
 
 export default function ProfileScreen() {
@@ -16,6 +17,11 @@ export default function ProfileScreen() {
   const { signOut, resetDevice } = useAuth();
   const { region, currency, locale, units, displayName } = useProfile();
   const router = useRouter();
+  const tour = useTour();
+  const replayTour = () => {
+    tour.restart();
+    router.replace("/");
+  };
   const name = displayName || t("profile.traveller");
   const unitLine = [
     t(`profile.unit_${units.distance}`),
@@ -79,6 +85,7 @@ export default function ProfileScreen() {
           variant="secondary"
           onPress={() => router.push("/plans")}
         />
+        <Button label={t("tour.replay")} variant="secondary" onPress={replayTour} />
         <Button
           label={t("profile.notifications")}
           variant="secondary"
