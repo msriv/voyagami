@@ -12,6 +12,7 @@ import (
 	"github.com/msriv/voyagami/services/api/internal/auth"
 	"github.com/msriv/voyagami/services/api/internal/config"
 	"github.com/msriv/voyagami/services/api/internal/entitlements"
+	"github.com/msriv/voyagami/services/api/internal/export"
 	"github.com/msriv/voyagami/services/api/internal/importer"
 	"github.com/msriv/voyagami/services/api/internal/otp"
 	"github.com/msriv/voyagami/services/api/internal/places"
@@ -60,6 +61,7 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 	users := firestorerepo.NewUsers(client)
 	devices := firestorerepo.NewDevices(client)
 	bill := firestorerepo.NewBilling(client)
+	consents := firestorerepo.NewConsents(client)
 	deps := signInDeps{
 		verifier: signin.NewVerifier(keys),
 		options: []server.Option{
@@ -75,7 +77,11 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 			server.WithPolls(firestorerepo.NewPolls(client)),
 			server.WithInvites(firestorerepo.NewInvites(client)),
 			server.WithDevices(devices),
-			server.WithConsents(firestorerepo.NewConsents(client)),
+			server.WithConsents(consents),
+			server.WithExport(export.Sources{
+				Users: users, Consents: consents, Trips: trips, Stops: firestorerepo.NewStops(client),
+				Expenses: firestorerepo.NewExpenses(client), Bookings: firestorerepo.NewBookings(client), Journal: firestorerepo.NewJournal(client),
+			}),
 			server.WithCatalog(firestorerepo.NewCatalog(client)),
 			server.WithStamps(firestorerepo.NewStamps(client)),
 			server.WithStampReward(firestorerepo.NewEntitlements(client)),

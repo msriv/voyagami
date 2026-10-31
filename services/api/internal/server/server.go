@@ -13,6 +13,7 @@ import (
 	"github.com/msriv/voyagami/services/api/internal/billing"
 	"github.com/msriv/voyagami/services/api/internal/devlog"
 	"github.com/msriv/voyagami/services/api/internal/entitlements"
+	"github.com/msriv/voyagami/services/api/internal/export"
 	"github.com/msriv/voyagami/services/api/internal/importer"
 	"github.com/msriv/voyagami/services/api/internal/places"
 	"github.com/msriv/voyagami/services/api/internal/rates"
@@ -77,6 +78,7 @@ type handlers struct {
 	usage         repo.TripUsage
 	devices       repo.Devices
 	consents      repo.Consents
+	export        *export.Sources
 	events        Publisher
 	stamps        repo.Stamps
 	stampReward   StampRewarder

@@ -12,10 +12,6 @@ func (h *handlers) CancelMyDeletion(ctx context.Context, _ api.CancelMyDeletionR
 	return api.CancelMyDeletion503JSONResponse{UnavailableJSONResponse: api.UnavailableJSONResponse(errBody(ctx, codeUnavailable, msgNotBuilt))}, nil
 }
 
-func (h *handlers) ExportMyData(ctx context.Context, _ api.ExportMyDataRequestObject) (api.ExportMyDataResponseObject, error) {
-	return api.ExportMyData503JSONResponse{UnavailableJSONResponse: api.UnavailableJSONResponse(errBody(ctx, codeUnavailable, msgNotBuilt))}, nil
-}
-
 func (h *handlers) GetMyDeletion(ctx context.Context, _ api.GetMyDeletionRequestObject) (api.GetMyDeletionResponseObject, error) {
 	return api.GetMyDeletion503JSONResponse{UnavailableJSONResponse: api.UnavailableJSONResponse(errBody(ctx, codeUnavailable, msgNotBuilt))}, nil
 }
