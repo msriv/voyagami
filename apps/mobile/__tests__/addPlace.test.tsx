@@ -84,3 +84,44 @@ describe("Add a place by hand", () => {
     expect(await screen.findByText("Something went wrong. Try again.")).toBeTruthy();
   });
 });
+
+describe("Search for a place", () => {
+  it("fills the form from a result and saves its pin", async () => {
+    const calls = mockApi({
+      "GET /v1/me": () => json(200, { id: "u1" }),
+      "GET /v1/places/search": () =>
+        json(200, {
+          results: [
+            { name: "Pho 10", address: "10 Ly Quoc Su", lat: 21.03, lng: 105.85, category: "food" },
+          ],
+        }),
+      "POST /v1/trips/t1/stops": () => json(201, created),
+    });
+    await renderRouter(routes, { initialUrl: url });
+    await fireEvent.changeText(await screen.findByLabelText("Search for a place"), "pho");
+    await fireEvent.press(await screen.findByRole("button", { name: "Pho 10, 10 Ly Quoc Su" }));
+    expect(screen.getByLabelText("Place name").props.value).toBe("Pho 10");
+    await fireEvent.press(screen.getByRole("button", { name: "Add to itinerary" }));
+    await waitFor(() =>
+      expect(calls.find((c) => c.key === "POST /v1/trips/t1/stops")?.body).toMatchObject({
+        place: {
+          name: "Pho 10",
+          lat: 21.03,
+          lng: 105.85,
+          address: "10 Ly Quoc Su",
+          category: "food",
+        },
+      }),
+    );
+  });
+
+  it("points to hand entry when search is down", async () => {
+    mockApi({
+      "GET /v1/me": () => json(200, { id: "u1" }),
+      "GET /v1/places/search": () => json(503, { code: "unavailable", message: "x" }),
+    });
+    await renderRouter(routes, { initialUrl: url });
+    await fireEvent.changeText(await screen.findByLabelText("Search for a place"), "pho");
+    expect(await screen.findByText(/Search isn't available/)).toBeTruthy();
+  });
+});

@@ -14,6 +14,7 @@ import (
 	"github.com/msriv/voyagami/services/api/internal/entitlements"
 	"github.com/msriv/voyagami/services/api/internal/importer"
 	"github.com/msriv/voyagami/services/api/internal/otp"
+	"github.com/msriv/voyagami/services/api/internal/places"
 	"github.com/msriv/voyagami/services/api/internal/rates"
 	"github.com/msriv/voyagami/services/api/internal/repo/firestorerepo"
 	"github.com/msriv/voyagami/services/api/internal/server"
@@ -85,6 +86,14 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 		}))
 	} else {
 		logger.Warn("VERTEX_LOCATION or GCP_PROJECT is not set, so reading bookings from text and PDFs is off")
+	}
+	switch {
+	case cfg.PlacesAPIKey != "":
+		deps.options = append(deps.options, server.WithPlaces(places.Google{Key: cfg.PlacesAPIKey}))
+	case cfg.Env == "dev":
+		deps.options = append(deps.options, server.WithPlaces(places.OSM{}))
+	default:
+		logger.Warn("PLACES_API_KEY is not set, so place search is off")
 	}
 	if cfg.Env != "dev" {
 		logger.Warn("no SMS provider for this environment yet, so phone sign-in is off")
