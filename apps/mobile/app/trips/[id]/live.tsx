@@ -10,6 +10,7 @@ import { ApiError, NetworkError, type components } from "@voyagami/api-client";
 
 import { useAuth } from "@/auth";
 import { useTranslation } from "@/i18n";
+import { useConsent } from "@/privacy/Consent";
 import { useTheme } from "@/theme";
 import type { Trip } from "@/trips/summary";
 import { Button, Card, Chip, IconButton, Input, Sheet, Text } from "@/ui";
@@ -36,6 +37,7 @@ export default function LiveScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { api } = useAuth();
+  const { choices } = useConsent();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const locale = getLocales()[0]?.languageTag ?? "en";
@@ -135,6 +137,7 @@ export default function LiveScreen() {
     setBusy(true);
     setError(undefined);
     try {
+      if (!choices.location) return setError(t("live.errors.consentOff"));
       const { granted } = await Location.requestForegroundPermissionsAsync();
       if (!granted) return setError(t("live.errors.denied"));
       const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });

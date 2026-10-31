@@ -485,6 +485,7 @@ export const en = {
     updated: "Last seen {{time}}",
     errors: {
       where: "Say where to meet.",
+      consentOff: "Location sharing is turned off in Data and privacy.",
       denied: "Allow location in your phone settings to share where you are.",
       offline: "You're offline. Connect and try again.",
       generic: "Something went wrong. Try again.",
@@ -1038,8 +1039,33 @@ export const en = {
     saveFailed: "We couldn't save that. Check your connection and try again.",
     offline: "You're offline. Try again when you're back online.",
   },
+  privacy: {
+    title: "Data and privacy",
+    back: "Back",
+    intro:
+      "Choose what Voyagami may use. You can change these any time. Your phone still asks before it shares anything.",
+    items: {
+      location: {
+        title: "Share my location with my crew",
+        body: "Only when you press share, only with people on that trip, and it ends by itself.",
+      },
+      notifications: {
+        title: "Send me notifications",
+        body: "Updates from your trips, like a new poll or a reminder. Choose which in Notifications.",
+      },
+      photos: {
+        title: "Use my photos",
+        body: "Lets you add photos to your journal. You choose whether the location in a photo is kept.",
+      },
+      analytics: {
+        title: "Help improve Voyagami",
+        body: "Shares which screens are used. Never your phone number, places or anything you type.",
+      },
+    },
+  },
   profile: {
     notifications: "Notifications",
+    privacy: "Data and privacy",
     plan: "Plans",
     homeRegion: "Home country",
     signOut: "Sign out",
