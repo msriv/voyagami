@@ -78,6 +78,7 @@ type handlers struct {
 	devLogs       devlog.Store
 	usage         repo.TripUsage
 	devices       repo.Devices
+	sponsored     repo.Sponsored
 	consents      repo.Consents
 	export        *export.Sources
 	support       repo.Support

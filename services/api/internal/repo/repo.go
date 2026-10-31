@@ -95,6 +95,20 @@ type Support interface {
 	Add(ctx context.Context, m model.SupportMessage) (string, error)
 }
 
+// Sponsored holds the sponsored card inventory and what people did with it.
+type Sponsored interface {
+	// Live returns the cards that run at now. The inventory is small and kept by hand.
+	Live(ctx context.Context, now time.Time) ([]model.SponsoredCard, error)
+	// Get returns one card, or ErrNotFound.
+	Get(ctx context.Context, id string) (model.SponsoredCard, error)
+	// Hidden returns the cards this person hid that are still hidden at now.
+	Hidden(ctx context.Context, uid string, now time.Time) (map[string]bool, error)
+	// Hide hides a card from this person until the given time.
+	Hide(ctx context.Context, uid, cardID string, until time.Time) error
+	// Record counts an impression or click once per person, card, kind and day.
+	Record(ctx context.Context, uid, cardID string, kind model.SponsoredEvent, now time.Time) error
+}
+
 // Trips stores trips and who is on them. Membership changes keep the trip's
 // memberUids mirror in step inside one transaction.
 type Trips interface {
