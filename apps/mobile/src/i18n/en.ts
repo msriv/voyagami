@@ -197,6 +197,9 @@ export const en = {
     attention_other: "{{count}} changes need attention",
   },
   trip: {
+    passActive: "Trip Pass active. It covers the whole crew on this trip.",
+    plusActive: "Plus covers the whole crew on this trip.",
+    passSuggest: "A {{name}} Trip Pass fits this trip. See plans",
     readOnly:
       "Some of this trip is over the Free limit. You can read it but not change it. Plus lifts the limit.",
     invite: "+ Invite",

@@ -65,6 +65,31 @@ describe("Trip overview", () => {
     expect(await screen.findByText(/over the Free limit/)).toBeTruthy();
   });
 
+  it("suggests a Trip Pass that fits the dates, or says the pass covers the crew", async () => {
+    const tripApi = (plan: string) => ({
+      "GET /v1/me": () => json(200, { id: "u1" }),
+      "GET /v1/trips/t1": () => json(200, trip("owner")),
+      "GET /v1/trips/t1/tasks": () => json(200, { tasks: [] }),
+      "GET /v1/trips/t1/entitlements": () => json(200, { plan, features: {} }),
+    });
+    mockApi(tripApi("free"));
+    await renderRouter(routes, { initialUrl: "/trips/t1" });
+    expect(
+      await screen.findByRole("button", { name: "A Weekend Trip Pass fits this trip. See plans" }),
+    ).toBeTruthy();
+  });
+
+  it("says an active Trip Pass covers the whole crew", async () => {
+    mockApi({
+      "GET /v1/me": () => json(200, { id: "u1" }),
+      "GET /v1/trips/t1": () => json(200, trip("owner")),
+      "GET /v1/trips/t1/tasks": () => json(200, { tasks: [] }),
+      "GET /v1/trips/t1/entitlements": () => json(200, { plan: "pass", features: {} }),
+    });
+    await renderRouter(routes, { initialUrl: "/trips/t1" });
+    expect(await screen.findByText(/Trip Pass active/)).toBeTruthy();
+  });
+
   it("shows the crew and an Invite button to the owner only", async () => {
     mockApi({
       "GET /v1/me": () => json(200, { id: "u1" }),
