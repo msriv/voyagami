@@ -74,6 +74,21 @@ type Consents interface {
 	Update(ctx context.Context, uid string, p model.ConsentsPatch, now time.Time) (model.Consents, error)
 }
 
+// Deletions stores account deletion requests and carries them out.
+type Deletions interface {
+	// Schedule records the request. Asking again keeps the first date.
+	Schedule(ctx context.Context, uid string, now time.Time) (model.Deletion, error)
+	// Get returns the request, or ErrNotFound when none is scheduled.
+	Get(ctx context.Context, uid string) (model.Deletion, error)
+	// Cancel drops a scheduled request. Cancelling none is not an error.
+	Cancel(ctx context.Context, uid string) error
+	// Due returns the people whose deletion date has come, at most limit.
+	Due(ctx context.Context, now time.Time, limit int) ([]string, error)
+	// Purge deletes the person's personal data and anonymises what they leave
+	// on other people's trips. Running it again finishes whatever is left.
+	Purge(ctx context.Context, uid string, now time.Time) error
+}
+
 // Support stores messages from the Help screen.
 type Support interface {
 	// Add stores a message and returns its ID.
