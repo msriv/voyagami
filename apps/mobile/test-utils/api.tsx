@@ -27,6 +27,7 @@ import Place from "../app/trips/[id]/place";
 import Privacy from "../app/privacy";
 import Help from "../app/help";
 import Ask from "../app/trips/[id]/ask";
+import Experiences from "../app/trips/[id]/experiences";
 import Picks from "../app/trips/[id]/picks";
 import Stays from "../app/trips/[id]/stays";
 import Settle from "../app/trips/[id]/settle";
@@ -67,6 +68,7 @@ export const routes: Record<string, ComponentType> = {
   "trips/[id]/stays": Stays,
   "trips/[id]/picks": Picks,
   "trips/[id]/ask": Ask,
+  "trips/[id]/experiences": Experiences,
   privacy: Privacy,
   help: Help,
   "trips/[id]/place": Place,

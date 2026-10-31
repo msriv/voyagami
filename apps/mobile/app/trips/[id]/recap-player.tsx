@@ -185,7 +185,7 @@ export default function RecapPlayerScreen() {
           <>
             <Text variant="caption">
               {day(h.date)}
-              {names[h.authorUid] ? ` · ${names[h.authorUid]}` : ""}
+              {` · ${names[h.authorUid] || t("members.former")}`}
             </Text>
             <Text variant="handwriting">{h.text}</Text>
           </>

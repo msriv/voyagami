@@ -93,7 +93,7 @@ export default function SettleScreen() {
   const { balances, settlements, names, me } = state;
   const { currency } = balances;
   const money = (n: number) => formatMoney(n, currency, locale);
-  const who = (uid: string) => (uid === me ? t("settle.you") : names[uid] || t("settle.someone"));
+  const who = (uid: string) => (uid === me ? t("settle.you") : names[uid] || t("members.former"));
 
   async function markPaid(fromUid: string, toUid: string, amountMinor: number) {
     const key = `${fromUid}>${toUid}`;

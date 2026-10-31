@@ -187,7 +187,8 @@ export default function CommentsScreen() {
 
         {comments.length === 0 ? <Text color="muted">{t("comments.empty")}</Text> : null}
         {comments.map((c) => {
-          const who = c.authorUid === me ? t("comments.you") : names[c.authorUid] || "?";
+          const who =
+            c.authorUid === me ? t("comments.you") : names[c.authorUid] || t("members.former");
           const when = new Date(c.createdAt);
           const mine = c.authorUid === me;
           return (

@@ -85,7 +85,8 @@ export default function AddExpenseScreen() {
 
   const paidBy = payer ?? me;
   const sharedBy = sharers ?? crew.map((m) => m.uid);
-  const who = (m: Member) => (m.uid === me ? t("addExpense.you") : m.displayName);
+  const who = (m: Member) =>
+    m.uid === me ? t("addExpense.you") : m.displayName || t("members.former");
   const toggleSharer = (uid: string) =>
     setSharers(sharedBy.includes(uid) ? sharedBy.filter((u) => u !== uid) : [...sharedBy, uid]);
 

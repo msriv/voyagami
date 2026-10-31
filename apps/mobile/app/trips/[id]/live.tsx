@@ -277,7 +277,7 @@ export default function LiveScreen() {
         {others.length === 0 ? <Text color="muted">{t("live.nobody")}</Text> : null}
         {others.map((l) => (
           <Card key={l.uid}>
-            <Text variant="bodyStrong">{names[l.uid] || t("live.someone")}</Text>
+            <Text variant="bodyStrong">{names[l.uid] || t("members.former")}</Text>
             <Text color="muted">
               {t("live.updated", { time: formatTime(Date.parse(l.updatedAt), locale) })}
             </Text>

@@ -214,7 +214,9 @@ export default function CrewScreen() {
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
               <View style={{ flex: 1 }}>
                 <Text variant="bodyStrong">
-                  {m.uid === me ? t("crew.you", { name: m.displayName }) : m.displayName}
+                  {m.uid === me
+                    ? t("crew.you", { name: m.displayName })
+                    : m.displayName || t("members.former")}
                 </Text>
                 <Text variant="caption">{t(`trip.roles.${m.role}`)}</Text>
               </View>
@@ -222,7 +224,9 @@ export default function CrewScreen() {
                 <Button
                   label={t("crew.manage")}
                   variant="secondary"
-                  accessibilityLabel={t("crew.manageName", { name: m.displayName })}
+                  accessibilityLabel={t("crew.manageName", {
+                    name: m.displayName || t("members.former"),
+                  })}
                   onPress={() => {
                     setError(undefined);
                     setOpen(m);

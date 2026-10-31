@@ -293,9 +293,9 @@ export default function MoneyScreen() {
                         <Text variant="caption">
                           {x.paidByUid === me
                             ? t("money.paidByYou")
-                            : names[x.paidByUid]
-                              ? t("money.paidByName", { name: names[x.paidByUid] as string })
-                              : t("money.paidByOther")}
+                            : t("money.paidByName", {
+                                name: names[x.paidByUid] || t("members.former"),
+                              })}
                         </Text>
                       </View>
                       <Text variant="bodyStrong">{amount}</Text>
