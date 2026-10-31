@@ -1,4 +1,5 @@
-import { renderRouter, screen } from "expo-router/testing-library";
+import { Pressable, Text } from "react-native";
+import { render, renderRouter, screen } from "expo-router/testing-library";
 
 import { inaccessibleControls } from "../test-utils/a11y";
 import { json, mockApi, routes } from "../test-utils/api";
@@ -66,8 +67,21 @@ describe("Screen reader sweep", () => {
   it.each(screens)("%s has a role and a name on every control", async (url) => {
     mockApi(api);
     await renderRouter(routes, { initialUrl: url });
-    await screen.findByTestId.length; // keep screen referenced
-    await new Promise((r) => setTimeout(r, 50));
+    await screen.findAllByRole("button");
+    expect(inaccessibleControls()).toEqual([]);
+  });
+});
+
+describe("Sweep helper", () => {
+  it("flags a touchable with no role or name, and passes a proper button", async () => {
+    await render(<Pressable onPress={() => undefined} />);
+    expect(inaccessibleControls()).toHaveLength(1);
+    await screen.unmount();
+    await render(
+      <Pressable accessibilityRole="button" onPress={() => undefined}>
+        <Text>Go</Text>
+      </Pressable>,
+    );
     expect(inaccessibleControls()).toEqual([]);
   });
 });
