@@ -175,7 +175,7 @@ paths:
       description: |
         Always lists all five in the same order. A stamp is earned once and
         stays earned. Earning all five is what the "extra week of Plus"
-        reward will look at (no ticket yet).
+        reward (VOY-222) will look at.
       responses:
         "200":
           description: The stamps.
