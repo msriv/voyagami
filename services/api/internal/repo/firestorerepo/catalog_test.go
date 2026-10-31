@@ -22,8 +22,9 @@ func TestCatalogNearbyAndGet(t *testing.T) {
 			"location": map[string]any{"lat": lat + dLat, "lng": lng + dLng},
 			"geohash":  geohash.Encode(lat+dLat, lng+dLng, geohash.MaxPrecision),
 			"group":    group, "categories": []string{"x"},
-			"photos":     []map[string]any{{"url": "https://img.example/a.jpg", "attribution": "A", "source": "wikimedia", "licence": "CC0"}},
-			"provenance": map[string]any{"name": map[string]any{"source": "osm", "licence": "ODbL"}},
+			"openingHours": []map[string]any{{"day": "fri", "open": "22:00", "close": "02:00"}},
+			"photos":       []map[string]any{{"url": "https://img.example/a.jpg", "attribution": "A", "source": "wikimedia", "licence": "CC0"}},
+			"provenance":   map[string]any{"name": map[string]any{"source": "osm", "licence": "ODbL"}},
 		}
 		if _, err := c.Collection(placesCollection).Doc(id).Set(ctx, doc); err != nil {
 			t.Fatal(err)
@@ -75,7 +76,7 @@ func TestCatalogNearbyAndGet(t *testing.T) {
 
 	// Detail carries photos and sources.
 	p, err := s.Get(ctx, "c-a")
-	if err != nil || len(p.Photos) != 1 || p.Photos[0].Licence != "CC0" || p.Provenance["name"].Licence != "ODbL" || p.Name["en"] != "c-a" {
+	if err != nil || len(p.Photos) != 1 || p.Photos[0].Licence != "CC0" || p.Provenance["name"].Licence != "ODbL" || p.Name["en"] != "c-a" || len(p.Hours) != 1 || p.Hours[0].Day != "fri" || p.Hours[0].Close != "02:00" {
 		t.Fatalf("get: %+v %v", p, err)
 	}
 	if _, err := s.Get(ctx, "missing"); !errors.Is(err, repo.ErrNotFound) {

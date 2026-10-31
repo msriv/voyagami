@@ -52,6 +52,11 @@ type catalogDoc struct {
 		Source      string `firestore:"source"`
 		Licence     string `firestore:"licence"`
 	} `firestore:"photos"`
+	Hours []struct {
+		Day   string `firestore:"day"`
+		Open  string `firestore:"open"`
+		Close string `firestore:"close"`
+	} `firestore:"openingHours"`
 	Provenance map[string]struct {
 		Source   string `firestore:"source"`
 		Licence  string `firestore:"licence"`
@@ -68,6 +73,9 @@ func (d catalogDoc) place(id string) model.CatalogPlace {
 		ID: id, Name: d.Name, Lat: d.Location.Lat, Lng: d.Location.Lng, Address: d.Address.Formatted,
 		Group: model.PlaceGroup(d.Group), Categories: d.Categories, CountryCode: d.CountryCode, TimeZone: d.TimeZone,
 		Rating: d.Rating, Reviews: d.Reviews, PriceLevel: d.PriceLevel, Tags: d.Tags,
+	}
+	for _, h := range d.Hours {
+		p.Hours = append(p.Hours, model.OpeningPeriod{Day: h.Day, Open: h.Open, Close: h.Close})
 	}
 	for _, ph := range d.Photos {
 		p.Photos = append(p.Photos, model.PlacePhoto{URL: ph.URL, Attribution: ph.Attribution, Source: ph.Source, Licence: ph.Licence})
