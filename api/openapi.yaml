@@ -12,6 +12,8 @@ info:
 servers:
   - url: /
 tags:
+  - name: experiences
+    description: Things to do, with partner hand-off.
   - name: system
     description: Process health.
   - name: auth
@@ -1366,6 +1368,122 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Recap"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/experiences:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: listExperiences
+      tags: [experiences]
+      summary: Things to do near the trip, with partner hand-off links
+      description: |
+        Catalogue places in the "do" group near the trip's centre, nearest
+        first, each with one hand-off link per configured experience partner.
+        Opening a link leaves the app; nothing is booked or paid here. To put
+        one in the itinerary, add it as a stop of kind catalog with the
+        `placeId` and the time the person picks. The list is empty when the
+        trip has no stop with a position. Links are empty when no partner is
+        set up. Needs a bearer token and membership.
+      responses:
+        "200":
+          description: The experiences.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExperienceList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/experiences/clicks:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      operationId: recordExperienceClick
+      tags: [experiences]
+      summary: Count a tap on an experience link
+      description: |
+        Same as the stay clicks: only a count per partner and day is kept.
+        Needs a bearer token and membership.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StayClick"
+      responses:
+        "204":
+          description: Counted.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/trips/{tripId}/recap/video:
+    parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      operationId: createRecapVideo
+      tags: [trips]
+      summary: Start making the recap video
+      description: |
+        Queues a 9:16 MP4 render. Free trips get at most 30 seconds with the
+        Voyagami watermark; a trip with Plus or a Trip Pass (anyone in the
+        crew) gets the full length with no watermark. If a render is already
+        queued or running for the trip, that job is returned instead of a new
+        one. A push notification is sent when the video is ready. Needs a
+        bearer token and an editor or owner role.
+      responses:
+        "202":
+          description: The job.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecapVideo"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    get:
+      operationId: getRecapVideo
+      tags: [trips]
+      summary: The latest recap video job
+      description: |
+        Poll for progress. Answers 404 when no video was ever requested.
+        Needs a bearer token and membership.
+      responses:
+        "200":
+          description: The latest job.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecapVideo"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":
@@ -3192,6 +3310,71 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/StayLink"
+    ExperienceLink:
+      type: object
+      required: [partnerId, name, url]
+      properties:
+        partnerId:
+          type: string
+        name:
+          type: string
+          description: The partner's name, shown on the button.
+        url:
+          type: string
+          format: uri
+    Experience:
+      type: object
+      required: [placeId, name, distanceMeters, links]
+      properties:
+        placeId:
+          type: string
+          description: A catalogue place id. Add it as a stop of kind catalog.
+        name:
+          type: string
+        distanceMeters:
+          type: integer
+        photo:
+          $ref: "#/components/schemas/CatalogPlacePhoto"
+        links:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExperienceLink"
+    ExperienceList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Experience"
+    RecapVideo:
+      type: object
+      required: [id, state, progress, maxSeconds, watermark, createdAt]
+      properties:
+        id:
+          type: string
+        state:
+          type: string
+          enum: [queued, rendering, ready, failed]
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        maxSeconds:
+          type: integer
+          description: Longest the video may be, or -1 for no cap.
+        watermark:
+          type: boolean
+        url:
+          type: string
+          format: uri
+          description: Short-lived download link. Set when the state is ready.
+        error:
+          type: string
+          description: Plain-English reason. Set when the state is failed.
+        createdAt:
+          type: string
+          format: date-time
     StayClick:
       type: object
       required: [partnerId]
