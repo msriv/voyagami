@@ -121,6 +121,11 @@ export default function PlansScreen() {
 
         <Text variant="caption">{t("plans.alwaysFree")}</Text>
         <Button label={t("plans.restore")} variant="ghost" onPress={restore} />
+        <Button
+          label={t("manageSub.title")}
+          variant="ghost"
+          onPress={() => router.push("/manage-subscription")}
+        />
         {notice ? <Text accessibilityLiveRegion="polite">{notice}</Text> : null}
       </ScrollView>
     </SafeAreaView>

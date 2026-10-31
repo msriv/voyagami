@@ -91,3 +91,15 @@ describe("Plans", () => {
     expect(screen.getByLabelText("Dark mode: Free, Not included. Plus, Included.")).toBeTruthy();
   });
 });
+
+describe("Manage subscription", () => {
+  it("shows the plan, how to cancel, and opens the store page", async () => {
+    mockApi(entitlements("plus"));
+    await renderRouter(routes, { initialUrl: "/manage-subscription" });
+    expect(await screen.findByText(/Plus is on/)).toBeTruthy();
+    expect(screen.getByText(/so you change or cancel it there/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Open the store's subscription page" })).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Restore purchases" }));
+    await waitFor(() => expect(screen.getByText(/not switched on/)).toBeTruthy());
+  });
+});
