@@ -684,6 +684,55 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/places/nearby": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Catalogue places near a point
+         * @description Places from our own catalogue (not Google), nearest first. Pass the
+         *     `nextCursor` of a page as `cursor` to get the next one. Any signed-in
+         *     person can read.
+         */
+        get: operations["listNearbyPlaces"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/places/{placeId}": {
+        parameters: {
+            query?: {
+                /** @description Preferred name language (BCP 47). */
+                lang?: string;
+            };
+            header?: never;
+            path: {
+                placeId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * One catalogue place with photos and sources
+         * @description Photos carry their attribution and licence, and `sources` says where
+         *     each field came from. The app must show the attribution wherever it
+         *     shows the photo. Any signed-in person can read.
+         */
+        get: operations["getCatalogPlace"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/places/resolve": {
         parameters: {
             query?: never;
@@ -1425,6 +1474,48 @@ export interface components {
         };
         StayClick: {
             partnerId: string;
+        };
+        /** @enum {string} */
+        PlaceGroup: "see" | "eat" | "stay" | "do" | "shop" | "nightlife";
+        CatalogPlacePhoto: {
+            /** Format: uri */
+            url: string;
+            /** @description Author and credit line. Show it with the photo. */
+            attribution: string;
+            source: string;
+            licence: string;
+        };
+        CatalogPlaceSource: {
+            field: string;
+            source: string;
+            licence: string;
+            sourceId?: string;
+        };
+        CatalogPlace: {
+            id: string;
+            /** @description In the requested language when we have it. */
+            name: string;
+            /** Format: double */
+            lat: number;
+            /** Format: double */
+            lng: number;
+            address?: string;
+            group: components["schemas"]["PlaceGroup"];
+            categories: string[];
+            countryCode?: string;
+            timeZone?: string;
+            photos: components["schemas"]["CatalogPlacePhoto"][];
+            sources: components["schemas"]["CatalogPlaceSource"][];
+            /**
+             * Format: double
+             * @description From the search point. Only in the nearby list.
+             */
+            distanceMeters?: number;
+        };
+        CatalogPlaceList: {
+            places: components["schemas"]["CatalogPlace"][];
+            /** @description Present when more places follow. */
+            nextCursor?: string;
         };
         /** @enum {string} */
         StampKind: "createTrip" | "inviteCrew" | "addPlaces" | "logExpense" | "writeJournal";
@@ -3225,6 +3316,68 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    listNearbyPlaces: {
+        parameters: {
+            query: {
+                lat: number;
+                lng: number;
+                /** @description Search radius. Defaults to 2000, at most 20000. */
+                radiusMeters?: number;
+                group?: components["schemas"]["PlaceGroup"];
+                /** @description Page size. Defaults to 20, at most 50. */
+                limit?: number;
+                cursor?: string;
+                /** @description Preferred name language (BCP 47). Falls back to English, then any name. */
+                lang?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of places. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogPlaceList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            503: components["responses"]["Unavailable"];
+        };
+    };
+    getCatalogPlace: {
+        parameters: {
+            query?: {
+                /** @description Preferred name language (BCP 47). */
+                lang?: string;
+            };
+            header?: never;
+            path: {
+                placeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The place. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogPlace"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
             503: components["responses"]["Unavailable"];
         };
     };

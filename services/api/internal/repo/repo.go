@@ -295,3 +295,12 @@ type Feed interface {
 	// means the watch broke and the caller should reconnect.
 	Watch(ctx context.Context, tripID string, emit func(model.Change)) error
 }
+
+// PlaceCatalog reads the shared places catalogue. Only the places pipeline writes it.
+type PlaceCatalog interface {
+	// Get returns the place, or ErrNotFound.
+	Get(ctx context.Context, id string) (model.CatalogPlace, error)
+	// Nearby returns up to q.Limit places within q.Radius metres, nearest first,
+	// and whether more follow.
+	Nearby(ctx context.Context, q model.NearbyQuery) (places []model.NearbyPlace, more bool, err error)
+}

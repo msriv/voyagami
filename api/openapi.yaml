@@ -1093,6 +1093,107 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /v1/places/nearby:
+    get:
+      operationId: listNearbyPlaces
+      tags: [places]
+      summary: Catalogue places near a point
+      description: |
+        Places from our own catalogue (not Google), nearest first. Pass the
+        `nextCursor` of a page as `cursor` to get the next one. Any signed-in
+        person can read.
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+            minimum: -90
+            maximum: 90
+        - name: lng
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+            minimum: -180
+            maximum: 180
+        - name: radiusMeters
+          in: query
+          description: Search radius. Defaults to 2000, at most 20000.
+          schema:
+            type: integer
+            minimum: 50
+            maximum: 20000
+        - name: group
+          in: query
+          schema:
+            $ref: "#/components/schemas/PlaceGroup"
+        - name: limit
+          in: query
+          description: Page size. Defaults to 20, at most 50.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: lang
+          in: query
+          description: Preferred name language (BCP 47). Falls back to English, then any name.
+          schema:
+            type: string
+            maxLength: 16
+      responses:
+        "200":
+          description: A page of places.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogPlaceList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/places/{placeId}:
+    parameters:
+      - name: placeId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: lang
+        in: query
+        description: Preferred name language (BCP 47).
+        schema:
+          type: string
+          maxLength: 16
+    get:
+      operationId: getCatalogPlace
+      tags: [places]
+      summary: One catalogue place with photos and sources
+      description: |
+        Photos carry their attribution and licence, and `sources` says where
+        each field came from. The app must show the attribution wherever it
+        shows the photo. Any signed-in person can read.
+      responses:
+        "200":
+          description: The place.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogPlace"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/places/resolve:
     post:
       operationId: resolvePlaceLink
@@ -2376,6 +2477,85 @@ components:
       properties:
         partnerId:
           type: string
+    PlaceGroup:
+      type: string
+      enum: [see, eat, stay, do, shop, nightlife]
+    CatalogPlacePhoto:
+      type: object
+      required: [url, attribution, source, licence]
+      properties:
+        url:
+          type: string
+          format: uri
+        attribution:
+          type: string
+          description: Author and credit line. Show it with the photo.
+        source:
+          type: string
+        licence:
+          type: string
+    CatalogPlaceSource:
+      type: object
+      required: [field, source, licence]
+      properties:
+        field:
+          type: string
+        source:
+          type: string
+        licence:
+          type: string
+        sourceId:
+          type: string
+    CatalogPlace:
+      type: object
+      required: [id, name, lat, lng, group, categories, photos, sources]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          description: In the requested language when we have it.
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+        address:
+          type: string
+        group:
+          $ref: "#/components/schemas/PlaceGroup"
+        categories:
+          type: array
+          items:
+            type: string
+        countryCode:
+          type: string
+        timeZone:
+          type: string
+        photos:
+          type: array
+          items:
+            $ref: "#/components/schemas/CatalogPlacePhoto"
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/CatalogPlaceSource"
+        distanceMeters:
+          type: number
+          format: double
+          description: From the search point. Only in the nearby list.
+    CatalogPlaceList:
+      type: object
+      required: [places]
+      properties:
+        places:
+          type: array
+          items:
+            $ref: "#/components/schemas/CatalogPlace"
+        nextCursor:
+          type: string
+          description: Present when more places follow.
     StampKind:
       type: string
       enum: [createTrip, inviteCrew, addPlaces, logExpense, writeJournal]

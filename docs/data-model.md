@@ -213,19 +213,24 @@ Server-owned. `inviteId` is a hash of the secret in the link, so the link can be
 
 The shared catalogue (one pilot city, Hanoi, until P1). Read by any signed-in user. Written only by the places pipeline (VOY-43).
 
-| Field                 | Type                                      | Notes                                                                                                             |
-| --------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `name`                | `{ [lang]: string }`                      | Names by BCP 47 language.                                                                                         |
-| `location`            | `{ lat, lng }`                            |                                                                                                                   |
-| `address`             | map?                                      |                                                                                                                   |
-| `categories`          | string[]                                  | Open taxonomy ID plus our grouping for "top 5 per category".                                                      |
-| `countryCode`         | string                                    |                                                                                                                   |
-| `openingHours`        | map?                                      | Local times with the place's `timeZone`.                                                                          |
-| `timeZone`            | string                                    |                                                                                                                   |
-| `photos`              | `{ url, attribution, source, licence }[]` | Attribution is shown wherever the photo is.                                                                       |
-| `provenance`          | `{ [field]: Provenance }`                 | Source and licence for **every** field above (Foursquare Open Source Places, OSM, Wikidata).                      |
-| `googlePlaceId`       | string?                                   | The only Google data kept. Details are fetched live for display and are not stored past the allowed cache window. |
-| `wikidataId`, `osmId` | string?                                   | For joining sources.                                                                                              |
+| Field                                     | Type                                      | Notes                                                                                                             |
+| ----------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `name`                                    | `{ [lang]: string }`                      | Names by BCP 47 language.                                                                                         |
+| `location`                                | `{ lat, lng }`                            |                                                                                                                   |
+| `address`                                 | map?                                      |                                                                                                                   |
+| `categories`                              | string[]                                  | Open taxonomy IDs from the source.                                                                                |
+| `group`                                   | string                                    | One of our six: `see`, `eat`, `stay`, `do`, `shop`, `nightlife`. "Top 5 per category" works on this.              |
+| `geohash`                                 | string                                    | 9-character geohash of `location`, written by the pipeline. The nearby query reads prefix ranges of it.           |
+| `rating`, `reviews`, `priceLevel`, `tags` | number, integer, integer, string[]        | Optional ranking inputs (rating 0 to 5, price 1 to 4, interest tags such as `food`).                              |
+| `countryCode`                             | string                                    |                                                                                                                   |
+| `openingHours`                            | map?                                      | Local times with the place's `timeZone`.                                                                          |
+| `timeZone`                                | string                                    |                                                                                                                   |
+| `photos`                                  | `{ url, attribution, source, licence }[]` | Attribution is shown wherever the photo is.                                                                       |
+| `provenance`                              | `{ [field]: Provenance }`                 | Source and licence for **every** field above (Foursquare Open Source Places, OSM, Wikidata).                      |
+| `googlePlaceId`                           | string?                                   | The only Google data kept. Details are fetched live for display and are not stored past the allowed cache window. |
+| `wikidataId`, `osmId`                     | string?                                   | For joining sources.                                                                                              |
+
+Read API (VOY-180): `GET /v1/places/nearby?lat&lng&radiusMeters&group&limit&cursor&lang` returns catalogue places nearest first (default 2 km, at most 20 km; 20 per page, at most 50). `GET /v1/places/{placeId}` returns one place with `photos` (each with attribution, source and licence) and `sources` (the provenance per field). The nearby query covers the circle with up to nine geohash cells, keeps places inside it and pages by `(distance, id)`; it needs the `places` index on `group` + `geohash` in `firestore.indexes.json`. Any signed-in person can read. Names come back in `lang` when we have it, then English, then any.
 
 ### `trips/{tripId}/days/{date}`
 

@@ -85,6 +85,7 @@ type handlers struct {
 	stayPartners  []stays.Partner
 	stayClicks    StayClicks
 	staysOn       bool
+	catalog       repo.PlaceCatalog
 	jobsSecret    string
 	feed          repo.Feed
 	presence      repo.Presence

@@ -40,6 +40,14 @@
         { "fieldPath": "date", "order": "ASCENDING" },
         { "fieldPath": "authorUid", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "places",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "group", "order": "ASCENDING" },
+        { "fieldPath": "geohash", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": [
