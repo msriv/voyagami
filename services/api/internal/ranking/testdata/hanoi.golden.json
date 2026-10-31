@@ -1,0 +1,202 @@
+{
+  "places": [
+    {
+      "ID": "pho-thin",
+      "Name": "Pho Thin",
+      "Kind": "noodle shop",
+      "Tags": [
+        "food"
+      ],
+      "Lat": 21.0294,
+      "Lng": 105.8352,
+      "HasCoord": true,
+      "Rating": 4.5,
+      "Reviews": 1800,
+      "PriceLevel": 1,
+      "CrewSaves": 45,
+      "MustSee": false,
+      "Completeness": 0.9,
+      "OpensMin": 360,
+      "ClosesMin": 1260
+    },
+    {
+      "ID": "bun-cha",
+      "Name": "Bun Cha Huong Lien",
+      "Kind": "noodle shop",
+      "Tags": [
+        "food"
+      ],
+      "Lat": 21.0166,
+      "Lng": 105.8553,
+      "HasCoord": true,
+      "Rating": 4.4,
+      "Reviews": 4200,
+      "PriceLevel": 1,
+      "CrewSaves": 120,
+      "MustSee": false,
+      "Completeness": 0.95,
+      "OpensMin": 540,
+      "ClosesMin": 1200
+    },
+    {
+      "ID": "temple-lit",
+      "Name": "Temple of Literature",
+      "Kind": "temple",
+      "Tags": [
+        "history",
+        "culture"
+      ],
+      "Lat": 21.0285,
+      "Lng": 105.8355,
+      "HasCoord": true,
+      "Rating": 4.6,
+      "Reviews": 21000,
+      "PriceLevel": 1,
+      "CrewSaves": 0,
+      "MustSee": true,
+      "Completeness": 1,
+      "OpensMin": 480,
+      "ClosesMin": 1020
+    },
+    {
+      "ID": "one-pillar",
+      "Name": "One Pillar Pagoda",
+      "Kind": "temple",
+      "Tags": [
+        "history",
+        "culture"
+      ],
+      "Lat": 21.0359,
+      "Lng": 105.8337,
+      "HasCoord": true,
+      "Rating": 4.3,
+      "Reviews": 9000,
+      "PriceLevel": 0,
+      "CrewSaves": 0,
+      "MustSee": false,
+      "Completeness": 0.8,
+      "OpensMin": 0,
+      "ClosesMin": 0
+    },
+    {
+      "ID": "night-market",
+      "Name": "Weekend Night Market",
+      "Kind": "market",
+      "Tags": [
+        "food",
+        "nightlife",
+        "shopping"
+      ],
+      "Lat": 21.0353,
+      "Lng": 105.8517,
+      "HasCoord": true,
+      "Rating": 4,
+      "Reviews": 6500,
+      "PriceLevel": 1,
+      "CrewSaves": 60,
+      "MustSee": false,
+      "Completeness": 0.7,
+      "OpensMin": 1080,
+      "ClosesMin": 1380
+    },
+    {
+      "ID": "new-cafe",
+      "Name": "Opening Soon Cafe",
+      "Kind": "cafe",
+      "Tags": [
+        "food",
+        "slow mornings"
+      ],
+      "Lat": 21.0301,
+      "Lng": 105.8421,
+      "HasCoord": true,
+      "Rating": 5,
+      "Reviews": 2,
+      "PriceLevel": 3,
+      "CrewSaves": 0,
+      "MustSee": false,
+      "Completeness": 0.4,
+      "OpensMin": 0,
+      "ClosesMin": 0
+    },
+    {
+      "ID": "far-pagoda",
+      "Name": "Perfume Pagoda",
+      "Kind": "temple",
+      "Tags": [
+        "history",
+        "nature"
+      ],
+      "Lat": 20.6,
+      "Lng": 105.74,
+      "HasCoord": true,
+      "Rating": 4.5,
+      "Reviews": 5000,
+      "PriceLevel": 0,
+      "CrewSaves": 0,
+      "MustSee": true,
+      "Completeness": 0.9,
+      "OpensMin": 0,
+      "ClosesMin": 0
+    }
+  ],
+  "style": {
+    "Interests": [
+      "food",
+      "history"
+    ],
+    "Spend": 1
+  },
+  "Anchor": [
+    21.0285,
+    105.8542
+  ],
+  "Minute": 720,
+  "ranking": [
+    {
+      "id": "bun-cha",
+      "score": 0.785,
+      "reasons": [
+        "popularity",
+        "quality"
+      ]
+    },
+    {
+      "id": "temple-lit",
+      "score": 0.7065,
+      "reasons": [
+        "quality",
+        "style"
+      ]
+    },
+    {
+      "id": "pho-thin",
+      "score": 0.7397,
+      "reasons": [
+        "quality",
+        "popularity"
+      ]
+    },
+    {
+      "id": "new-cafe",
+      "score": 0.4745,
+      "reasons": [
+        "distance"
+      ]
+    },
+    {
+      "id": "far-pagoda",
+      "score": 0.5227,
+      "reasons": [
+        "quality"
+      ]
+    },
+    {
+      "id": "one-pillar",
+      "score": 0.5134,
+      "reasons": [
+        "quality"
+      ]
+    }
+  ]
+}
