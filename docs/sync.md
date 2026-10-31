@@ -26,6 +26,16 @@ Keys are the screen's whole payload as the API returned it: `trips`, `stops:{tri
 
 **Migrations.** `PRAGMA user_version` holds the schema version (now 1). The documents are a cache of server data, so a layout change that cannot be migrated in place drops the table and the next read refills it. Nothing is lost that the server does not hold; writes made offline live in the queue (VOY-167), which has its own table and must be migrated, not dropped.
 
+## Write queue (VOY-167)
+
+`apps/mobile/src/local/queue.ts` keeps writes made without a connection, in order, in the local store (`queue`; refused ones go to `queue-failed`).
+
+- **What is queued.** Only calls the server can safely see twice. Today: creating an expense. The phone makes the expense ID (`newId()`, one per form), and the server answers a repeat of the same ID from the same person with the stored expense instead of adding another. Add a call to the queue only after the server dedupes it the same way.
+- **How.** The API client's offline hook sees the network error on such a call, queues it, and answers 201 with a `x-voyagami-queued` header so the screen carries on as if it saved.
+- **Replay.** `useWriteQueue` sends due entries when the person signs in, every 15 seconds, and when the app returns to the front. Entries go in order and a waiting entry blocks the ones behind it. A network error, 5xx, 401, 408 or 429 retries after 2s, 4s, 8s... up to 5 minutes. Any other answer (the server said no) moves the entry to `queue-failed` so a status screen can show it (VOY-170).
+- **Merge rules.** A replayed write is an ordinary API call, so the rules in "Concurrent edit rules" apply as if it was made at replay time.
+- **Sign-out** clears the store, queue included. Unsent writes of the person who signs out are dropped.
+
 ## Live changes (change feed)
 
 `GET /v1/trips/{id}/events` is a server-sent event stream for one trip. It tells the app what changed so it can refetch, and carries no content.
