@@ -2,6 +2,7 @@ package firestorerepo
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -81,7 +82,7 @@ func (s *Stamps) List(ctx context.Context, uid string) ([]model.EarnedStamp, err
 	var out []model.EarnedStamp
 	for {
 		snap, err := iter.Next()
-		if err == iterator.Done {
+		if errors.Is(err, iterator.Done) {
 			return out, nil
 		}
 		if err != nil {
