@@ -258,6 +258,8 @@ export const en = {
   },
   trip: {
     passActive: "Trip Pass active. It covers the whole crew on this trip.",
+    passBoughtBy: "Trip Pass from {{name}}. It covers the whole crew on this trip.",
+    passEnds: "Works until {{date}}.",
     plusActive: "Plus covers the whole crew on this trip.",
     passSuggest: "A {{name}} Trip Pass fits this trip. See plans",
     readOnly:
@@ -516,6 +518,7 @@ export const en = {
   },
   crew: {
     title: "Crew",
+    passNote: "This trip has a Trip Pass. It covers everyone in the crew, whoever bought it.",
     chat: "Trip chat",
     live: "Live locations",
     polls: "Polls",
