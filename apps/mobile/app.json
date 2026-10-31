@@ -29,7 +29,8 @@
         {
           "locationWhenInUsePermission": "Voyagami shares where you are with your crew only while you choose to."
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true

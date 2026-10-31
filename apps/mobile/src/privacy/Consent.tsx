@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 
+import { useAuth } from "@/auth";
 import { loadConsents, saveConsents } from "@/auth/tokenStore";
 
 export const CONSENTS = ["location", "notifications", "photos", "analytics"] as const;
@@ -35,7 +36,32 @@ export function useConsent(): ConsentApi {
 
 /** Keeps the person's privacy choices on this phone, so they can be changed any time. */
 export function ConsentProvider({ children }: { children: ReactNode }) {
+  const { api: server, status } = useAuth();
   const [choices, setChoices] = useState<Choices>(DEFAULTS);
+
+  // A choice already on the server wins, so a new phone starts from what the person chose before.
+  useEffect(() => {
+    if (status !== "signedIn") return;
+    let alive = true;
+    void server
+      .unwrap(server.GET("/v1/me/consents"))
+      .then((saved) => {
+        if (!alive) return;
+        setChoices((c) => {
+          const next = { ...c };
+          for (const k of CONSENTS) {
+            if (saved[k] === "granted") next[k] = true;
+            if (saved[k] === "denied") next[k] = false;
+          }
+          void saveConsents(JSON.stringify(next)).catch(() => undefined);
+          return next;
+        });
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [server, status]);
 
   useEffect(() => {
     let alive = true;
@@ -49,13 +75,20 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const set = useCallback((kind: ConsentKind, on: boolean) => {
-    setChoices((c) => {
-      const next = { ...c, [kind]: on };
-      void saveConsents(JSON.stringify(next)).catch(() => undefined);
-      return next;
-    });
-  }, []);
+  const set = useCallback(
+    (kind: ConsentKind, on: boolean) => {
+      setChoices((c) => {
+        const next = { ...c, [kind]: on };
+        void saveConsents(JSON.stringify(next)).catch(() => undefined);
+        return next;
+      });
+      // The phone keeps the choice even if the server can't be reached right now.
+      void server
+        .PATCH("/v1/me/consents", { body: { [kind]: on ? "granted" : "denied" } })
+        .catch(() => undefined);
+    },
+    [server],
+  );
 
   const api = useMemo(() => ({ choices, set }), [choices, set]);
   return <Consent.Provider value={api}>{children}</Consent.Provider>;
