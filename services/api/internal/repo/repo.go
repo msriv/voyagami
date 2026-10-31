@@ -102,6 +102,26 @@ type Support interface {
 	Add(ctx context.Context, m model.SupportMessage) (string, error)
 }
 
+// RecapVideos is the queue of recap video renders.
+type RecapVideos interface {
+	// Enqueue stores a new queued job. If the trip already has a queued or
+	// running job it returns that one instead and created is false.
+	Enqueue(ctx context.Context, v model.RecapVideo) (job model.RecapVideo, created bool, err error)
+	// Latest returns the trip's newest job, or ErrNotFound.
+	Latest(ctx context.Context, tripID string) (model.RecapVideo, error)
+	// Claim takes the oldest queued job, or one stuck rendering since before
+	// staleBefore, marks it rendering and counts an attempt. ok is false when
+	// there is nothing to do.
+	Claim(ctx context.Context, now, staleBefore time.Time) (job model.RecapVideo, ok bool, err error)
+	// Progress records how far a running job is.
+	Progress(ctx context.Context, id string, percent int) error
+	// Finish marks the job ready with the stored object's name.
+	Finish(ctx context.Context, id, object string) error
+	// Fail ends an attempt. With requeue the job goes back to queued; without
+	// it the job is failed with the plain-English message.
+	Fail(ctx context.Context, id, message string, requeue bool) error
+}
+
 // Sponsored holds the sponsored card inventory and what people did with it.
 type Sponsored interface {
 	// Live returns the cards that run at now. The inventory is small and kept by hand.

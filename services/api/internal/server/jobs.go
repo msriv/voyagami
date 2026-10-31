@@ -37,6 +37,9 @@ func (h *handlers) mountJobs(mux *http.ServeMux) {
 	if h.trialJob != nil {
 		h.mountJob(mux, "trial-reminders", "reached", "trial reminders failed", h.trialJob)
 	}
+	if h.recapJob != nil {
+		h.mountJob(mux, "recap-videos", "rendered", "recap videos failed", h.recapJob)
+	}
 	if h.deletionJob != nil {
 		h.mountJob(mux, "account-deletions", "purged", "account deletions failed", h.deletionJob)
 	}

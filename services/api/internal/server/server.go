@@ -19,6 +19,7 @@ import (
 	"github.com/msriv/voyagami/services/api/internal/importer"
 	"github.com/msriv/voyagami/services/api/internal/places"
 	"github.com/msriv/voyagami/services/api/internal/rates"
+	"github.com/msriv/voyagami/services/api/internal/recapvideo"
 	"github.com/msriv/voyagami/services/api/internal/repo"
 	"github.com/msriv/voyagami/services/api/internal/stays"
 )
@@ -47,7 +48,7 @@ func NewHandler(logger *slog.Logger, verifier auth.Verifier, opts ...Option) htt
 	if h.billing != nil && h.billingSecret != "" {
 		h.mountBilling(mux)
 	}
-	if (h.trialJob != nil || h.deletionJob != nil) && h.jobsSecret != "" {
+	if (h.trialJob != nil || h.deletionJob != nil || h.recapJob != nil) && h.jobsSecret != "" {
 		h.mountJobs(mux)
 	}
 	if h.eventRows != nil && h.jobsSecret != "" {
@@ -100,6 +101,9 @@ type handlers struct {
 	stayPartners  []stays.Partner
 	stayClicks    StayClicks
 	staysOn       bool
+	recapVideos   repo.RecapVideos
+	recapRender   recapvideo.Renderer
+	recapJob      TrialReminderJob
 	expPartners   []stays.Partner
 	expClicks     StayClicks
 	expOn         bool
