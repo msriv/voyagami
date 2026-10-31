@@ -2206,6 +2206,14 @@ components:
           description: Name the person chose, if any.
         travelStyle:
           $ref: "#/components/schemas/TravelStyle"
+        notifications:
+          type: object
+          description: >-
+            Push settings. Keys are `all` and the event kinds memberJoined,
+            stopAdded, pollCreated, expenseAdded and meetPoint. A missing key
+            means on. `all: false` mutes everything.
+          additionalProperties:
+            type: boolean
         homeRegion:
           type: string
           pattern: "^[A-Z]{2}$"
@@ -2272,6 +2280,14 @@ components:
           maxLength: 80
         travelStyle:
           $ref: "#/components/schemas/TravelStyle"
+        notifications:
+          type: object
+          description: >-
+            Push settings. Keys are `all` and the event kinds memberJoined,
+            stopAdded, pollCreated, expenseAdded and meetPoint. A missing key
+            means on. `all: false` mutes everything.
+          additionalProperties:
+            type: boolean
         homeRegion:
           type: string
           pattern: "^[A-Z]{2}$"
