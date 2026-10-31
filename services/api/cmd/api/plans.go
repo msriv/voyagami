@@ -70,10 +70,28 @@ func (p planSource) Trip(ctx context.Context, tripID string) (entitlements.Trip,
 			break
 		}
 	}
-	if t.Pass, err = p.billing.HasPass(ctx, tripID); err != nil {
+	has, err := p.billing.HasPass(ctx, tripID)
+	if err != nil {
 		return entitlements.Trip{}, err
 	}
+	t.Pass = has && passCovers(trip.Dates.End, time.Now())
 	return t, nil
+}
+
+// passGrace is how long a Trip Pass keeps working after the trip's last day,
+// for jet lag, late expenses and the journal.
+const passGrace = 2 * 24 * time.Hour
+
+// passCovers reports whether a Trip Pass bought for a trip with this end date
+// (YYYY-MM-DD) is still running at now. A trip with no end date, or one that
+// cannot be read, keeps its pass. A pass belongs to one trip, so overlapping
+// trips never share it.
+func passCovers(end string, now time.Time) bool {
+	day, err := time.Parse("2006-01-02", end)
+	if end == "" || err != nil {
+		return true
+	}
+	return now.Before(day.Add(24*time.Hour + passGrace))
 }
 
 // upcomingOwned counts the trips the person owns that are still to come. Trips

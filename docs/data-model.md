@@ -156,7 +156,7 @@ Server-owned. The person can read their own. Never trust this document for enfor
 
 Billing (VOY-189): `POST /v1/billing/revenuecat` applies RevenueCat events. `plus` also holds `billingIssue`; `billing.lastEventAt` is the newest event applied, and older events change nothing. `billingEvents/{eventId}` records each event so a replay is skipped. A subscription whose `expiresAt` has passed does not count, even if the expiry event never arrived. A cancellation keeps Plus until `expiresAt`; a refund ends it at once. A paid renewal after a trial clears the trial.
 
-`tripPasses/{transactionId}` is `{ tripId, purchasedBy, productId, purchasedAt, refundedAt? }`, written by the webhook. A trip has a pass while one of its passes has no `refundedAt`. A pass does not expire yet. A product is a Trip Pass when its ID contains `trip_pass` (shortcut until the store products exist, VOY-190).
+`tripPasses/{transactionId}` is `{ tripId, purchasedBy, productId, purchasedAt, refundedAt? }`, written by the webhook. A trip has a pass while one of its passes has no `refundedAt`. A pass works until two days after the trip's last day (`Dates.End`, UTC); a trip with no end date keeps it. A pass covers one trip, so overlapping trips never share one. A product is a Trip Pass when its ID contains `trip_pass` (shortcut until the store products exist, VOY-190).
 
 ### `trips/{tripId}`
 
