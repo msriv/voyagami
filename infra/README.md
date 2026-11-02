@@ -93,6 +93,14 @@ The scheduler jobs read `jobs-secret` through Terraform, so that one value is al
 
 Each environment gets (in `modules/app-stack/monitoring.tf`): an uptime check on `/health` every 5 minutes, alerts for "API down" (10 minutes), more than 5 server errors in 5 minutes, and p95 latency over 2 s for 10 minutes, plus a dashboard named after the service (requests by status, p95 latency, instances, CPU). Alerts email the account that ran `apply.sh`; set `ALERT_EMAIL=...` before running it to use another address. Google sends a confirmation email the first time.
 
+## Analytics (VOY-229)
+
+`modules/analytics`, part of every environment: topic `analytics-events` (the API gets `ANALYTICS_TOPIC`), a BigQuery subscription into `analytics.events` (asia-south1, partitioned by day, raw rows kept 14 months), a dead-letter topic and subscription (7 days), and scheduled queries that rebuild `daily_counts`, `activation_funnel`, `paywall_daily` and `weekly_retention` at 01:00 UTC and purge deleted accounts' rows at 00:30. Staging's dataset is `staging_analytics`. See docs/analytics.md.
+
+If the first apply fails on the BigQuery Data Transfer service agent ("does not exist"), Google is still creating it: wait a minute and run `apply.sh` again.
+
+The Looker Studio report is made by hand (no Terraform for it): Looker Studio, Create, Data source, BigQuery, project, `analytics`, pick a rollup table.
+
 ## Backups (prod)
 
 `backups = true` in `envs/prod`: Firestore point-in-time recovery (7 days) and a daily backup kept 14 days, and versioning on the media bucket (old versions removed after 30 days). Dev and staging have none. Restore steps live in the VOY-74 runbook.

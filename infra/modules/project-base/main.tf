@@ -9,6 +9,8 @@ module "apis" {
   apis = [
     "aiplatform.googleapis.com",
     "artifactregistry.googleapis.com",
+    "bigquery.googleapis.com",
+    "bigquerydatatransfer.googleapis.com",
     "billingbudgets.googleapis.com",
     "cloudbuild.googleapis.com",
     "cloudresourcemanager.googleapis.com",
