@@ -1,200 +1,93 @@
-module "apis" {
-  source     = "../../modules/project-apis"
-  project_id = var.project_id
-
-  apis = [
-    "aiplatform.googleapis.com",
-    "artifactregistry.googleapis.com",
-    "cloudbuild.googleapis.com",
-    "cloudresourcemanager.googleapis.com",
-    "fcm.googleapis.com",
-    "firestore.googleapis.com",
-    "iam.googleapis.com",
-    "iamcredentials.googleapis.com",
-    "identitytoolkit.googleapis.com",
-    "logging.googleapis.com",
-    "maps-android-backend.googleapis.com",
-    "maps-ios-backend.googleapis.com",
-    "monitoring.googleapis.com",
-    "places.googleapis.com",
-    "pubsub.googleapis.com",
-    "run.googleapis.com",
-    "secretmanager.googleapis.com",
-    "serviceusage.googleapis.com",
-    "storage.googleapis.com",
-    "sts.googleapis.com",
-  ]
-}
-
-module "github_wif" {
-  source            = "../../modules/github-wif"
+module "base" {
+  source            = "../../modules/project-base"
   project_id        = var.project_id
+  region            = var.region
   github_repository = var.github_repository
   state_bucket      = var.state_bucket
-
-  # Deploy roles arrive with the Cloud Run, Firestore and Pub/Sub tickets
-  # (VOY-89, VOY-90). Start small; widen only when a ticket needs it.
-  ci_roles = [
-    "roles/viewer",
-    "roles/run.developer",
-  ]
-
-  depends_on = [module.apis]
+  billing_account   = var.billing_account
+  budget_amount     = var.budget_amount
 }
 
-module "artifact_registry" {
-  source        = "../../modules/artifact-registry"
-  project_id    = var.project_id
-  location      = var.region
-  repository_id = "voyagami"
-  description   = "Voyagami container images (dev)"
+module "stack" {
+  source                   = "../../modules/app-stack"
+  project_id               = var.project_id
+  region                   = var.region
+  env                      = "dev"
+  ci_service_account_email = module.base.ci_service_account_email
 
-  depends_on = [module.apis]
+  depends_on = [module.base]
 }
 
-# Runtime identity of the API. Starts with logging only; VOY-90 adds Firestore,
-# Pub/Sub and Secret Manager access as those resources appear.
-module "api_runtime" {
-  source       = "../../modules/service-account"
-  project_id   = var.project_id
-  account_id   = "api-runtime"
-  display_name = "API runtime (Cloud Run)"
-
-  roles = [
-    "roles/logging.logWriter",
-  ]
-
-  depends_on = [module.apis]
+# Dev was one flat root until VOY-225. These keep the live resources in place.
+moved {
+  from = module.apis
+  to   = module.base.module.apis
 }
-
-module "api" {
-  source                = "../../modules/cloud-run"
-  project_id            = var.project_id
-  region                = var.region
-  name                  = "voyagami-api"
-  service_account_email = module.api_runtime.email
-  min_instances         = 0
-  allow_unauthenticated = true
-
-  env = {
-    GCP_PROJECT     = var.project_id
-    VERTEX_LOCATION = "us-central1" # booking import calls Gemini here; documents leave the home region
-  }
-
-  # Signs sign-in tokens, so they survive restarts and are shared by instances.
-  # Add the value first with infra/scripts/seed-auth-secret.sh (see README).
-  secret_env = {
-    AUTH_SECRET = "auth-secret"
-  }
-
-  depends_on = [module.apis, google_secret_manager_secret_iam_member.api_secrets]
+moved {
+  from = module.github_wif
+  to   = module.base.module.github_wif
 }
-
-# What CI needs to push an image and deploy the service.
-resource "google_artifact_registry_repository_iam_member" "ci_push" {
-  project    = var.project_id
-  location   = var.region
-  repository = module.artifact_registry.repository_id
-  role       = "roles/artifactregistry.writer"
-  member     = "serviceAccount:${module.github_wif.ci_service_account_email}"
+moved {
+  from = module.artifact_registry
+  to   = module.base.module.artifact_registry
 }
-
-resource "google_service_account_iam_member" "ci_act_as_runtime" {
-  service_account_id = module.api_runtime.name
-  role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:${module.github_wif.ci_service_account_email}"
+moved {
+  from = google_artifact_registry_repository_iam_member.ci_push
+  to   = module.base.google_artifact_registry_repository_iam_member.ci_push
 }
-
-module "firestore" {
-  source      = "../../modules/firestore"
-  project_id  = var.project_id
-  location_id = var.region
-
-  depends_on = [module.apis]
+moved {
+  from = module.api_runtime
+  to   = module.stack.module.api_runtime
 }
-
-module "topics" {
-  source     = "../../modules/pubsub-topics"
-  project_id = var.project_id
-  topics     = ["notifications", "recap", "place-ingest"]
-
-  depends_on = [module.apis]
+moved {
+  from = module.api
+  to   = module.stack.module.api
 }
-
-module "media_bucket" {
-  source     = "../../modules/storage-bucket"
-  project_id = var.project_id
-  name       = "${var.project_id}-media"
-  location   = var.region
-
-  # Dev only: lets a throwaway dev project be torn down cleanly.
-  force_destroy = true
-
-  depends_on = [module.apis]
+moved {
+  from = google_service_account_iam_member.ci_act_as_runtime
+  to   = module.stack.google_service_account_iam_member.ci_act_as_runtime
 }
-
-module "secrets" {
-  source     = "../../modules/secrets"
-  project_id = var.project_id
-
-  # Empty containers. Add the value with:
-  #   printf '%s' "$KEY" | gcloud secrets versions add google-maps-server-key --data-file=-
-  # auth-secret gets a random value from infra/scripts/seed-auth-secret.sh.
-  # revenuecat-webhook-secret stays out of secret_env above until it has a value
-  # (see "RevenueCat webhook" in infra/README.md). Same for jobs-secret ("Scheduled jobs").
-  secret_ids = ["google-maps-server-key", "auth-secret", "revenuecat-webhook-secret", "jobs-secret"]
-
-  depends_on = [module.apis]
+moved {
+  from = module.firestore
+  to   = module.stack.module.firestore
 }
-
-# What the API runtime account may touch. Least privilege, resource by resource.
-resource "google_project_iam_member" "api_firestore" {
-  project = var.project_id
-  role    = "roles/datastore.user"
-  member  = "serviceAccount:${module.api_runtime.email}"
+moved {
+  from = module.topics
+  to   = module.stack.module.topics
 }
-
-# Lets the API call Gemini on Vertex (booking import) with its own identity.
-resource "google_project_iam_member" "api_vertex" {
-  project = var.project_id
-  role    = "roles/aiplatform.user"
-  member  = "serviceAccount:${module.api_runtime.email}"
+moved {
+  from = module.media_bucket
+  to   = module.stack.module.media_bucket
 }
-
-# Lets the API send push messages through Firebase Cloud Messaging.
-resource "google_project_iam_member" "api_fcm" {
-  project = var.project_id
-  role    = "roles/firebasecloudmessaging.admin"
-  member  = "serviceAccount:${module.api_runtime.email}"
+moved {
+  from = module.secrets
+  to   = module.stack.module.secrets
 }
-
-resource "google_pubsub_topic_iam_member" "api_publish" {
-  for_each = module.topics.topic_ids
-
-  project = var.project_id
-  topic   = each.value
-  role    = "roles/pubsub.publisher"
-  member  = "serviceAccount:${module.api_runtime.email}"
+moved {
+  from = google_project_iam_member.api_firestore
+  to   = module.stack.google_project_iam_member.api_firestore
 }
-
-resource "google_storage_bucket_iam_member" "api_media" {
-  bucket = module.media_bucket.name
-  role   = "roles/storage.objectUser"
-  member = "serviceAccount:${module.api_runtime.email}"
+moved {
+  from = google_project_iam_member.api_vertex
+  to   = module.stack.google_project_iam_member.api_vertex
 }
-
-resource "google_secret_manager_secret_iam_member" "api_secrets" {
-  for_each = module.secrets.secret_ids
-
-  project   = var.project_id
-  secret_id = each.value
-  role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${module.api_runtime.email}"
+moved {
+  from = google_project_iam_member.api_fcm
+  to   = module.stack.google_project_iam_member.api_fcm
 }
-
-# Signed upload and download URLs are signed with the runtime account's own key.
-resource "google_service_account_iam_member" "api_sign_urls" {
-  service_account_id = module.api_runtime.name
-  role               = "roles/iam.serviceAccountTokenCreator"
-  member             = "serviceAccount:${module.api_runtime.email}"
+moved {
+  from = google_pubsub_topic_iam_member.api_publish
+  to   = module.stack.google_pubsub_topic_iam_member.api_publish
+}
+moved {
+  from = google_storage_bucket_iam_member.api_media
+  to   = module.stack.google_storage_bucket_iam_member.api_media
+}
+moved {
+  from = google_secret_manager_secret_iam_member.api_secrets
+  to   = module.stack.google_secret_manager_secret_iam_member.api_secrets
+}
+moved {
+  from = google_service_account_iam_member.api_sign_urls
+  to   = module.stack.google_service_account_iam_member.api_sign_urls
 }

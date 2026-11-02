@@ -18,3 +18,15 @@ variable "state_bucket" {
   type    = string
   default = "voyagami-dev-512208-tfstate"
 }
+
+variable "billing_account" {
+  description = "Billing account ID. apply.sh passes it; empty means no budget."
+  type        = string
+  default     = ""
+}
+
+variable "budget_amount" {
+  description = "Monthly budget alert, in the billing account's currency."
+  type        = number
+  default     = 5000
+}
