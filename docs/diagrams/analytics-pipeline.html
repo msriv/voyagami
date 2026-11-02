@@ -1,49 +1,226 @@
-<!-- Source for analytics-pipeline.png. Re-render: node docs/diagrams/render.js -->
-<!doctype html><html><head><meta charset="utf-8"><style>
-body{margin:0;background:#F4F0E6;font-family:Helvetica,Arial,sans-serif;color:#14161B}
-.wrap{width:1400px;padding:36px 40px;box-sizing:border-box}
-h1{font-size:28px;margin:0 0 4px;color:#2D3E8C}
-.sub{color:#5B6070;font-size:15px;margin-bottom:28px}
-.row{display:flex;align-items:stretch;gap:0}
-.box{background:#fff;border:2px solid #2D3E8C;border-radius:12px;padding:14px 16px;width:190px;box-sizing:border-box}
-.box h3{margin:0 0 6px;font-size:16px;color:#2D3E8C}
-.box p{margin:0;font-size:12.5px;line-height:1.45;color:#14161B}
-.tag{display:inline-block;font-size:11px;background:#D3E4C5;border-radius:6px;padding:2px 6px;margin-bottom:6px}
-.arrow{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;min-width:58px;font-size:11px;color:#5B6070;text-align:center}
-.arrow::after{content:"";display:block;width:100%;height:0;border-top:2px solid #E5482F;margin-top:4px;position:relative}
-.arrow span{padding:0 4px}
-.lane{margin-top:26px;display:flex;gap:18px}
-.note{background:#fff;border:1.5px dashed #5B6070;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.45;flex:1}
-.note b{color:#2D3E8C}
-.gcp{border:2px dashed #2D3E8C;border-radius:16px;padding:30px 14px 14px;position:relative;display:flex;flex:1;align-items:stretch}
-.gcp .lbl{position:absolute;top:6px;left:14px;font-size:12px;color:#2D3E8C;font-weight:bold}
-.server{margin-top:14px;display:flex;align-items:center;gap:10px;font-size:12.5px}
-.server .box{width:220px;border-color:#E5482F}
-.server .box h3{color:#E5482F}
-</style></head><body><div class="wrap">
-<h1>Voyagami analytics pipeline</h1>
-<div class="sub">GCP-native only. One project per environment (voyagami-dev, voyagami-prod), region asia-south1. No third-party analytics SDK.</div>
-<div class="row">
-  <div class="box"><span class="tag">Expo app</span><h3>track()</h3><p>Only after the person turns on "Help improve the app". Queues up to 100 events offline, sends batches of 1 to 50.</p></div>
-  <div class="arrow"><span>POST /v1/events<br>HTTPS + session token</span></div>
-  <div class="gcp"><div class="lbl">GCP project · asia-south1</div>
-    <div class="box"><span class="tag">Cloud Run</span><h3>Go API</h3><p>Checks consent, drops unknown names, strips personal data (analytics.Clean). Adds uid, platform, app version.</p></div>
-    <div class="arrow"><span>publish JSON</span></div>
-    <div class="box"><span class="tag">Pub/Sub</span><h3>analytics-events</h3><p>Topic with a JSON schema. BigQuery subscription writes rows directly: no code, no Dataflow. Failed rows go to analytics-events-dlq.</p></div>
-    <div class="arrow"><span>BigQuery<br>subscription</span></div>
-    <div class="box"><span class="tag">BigQuery</span><h3>analytics.events</h3><p>Raw events, partitioned by day, clustered by name. Scheduled queries build daily_counts, funnel, paywall tables every night.</p></div>
-  </div>
-  <div class="arrow"><span>reads rollups</span></div>
-  <div class="box"><span class="tag">Looker Studio</span><h3>Weekly review</h3><p>Activation funnel, retention, paywall per moment. Free, Google sign-in, shared only with Mihir.</p></div>
-</div>
-<div class="server" style="margin-left:250px">
-  <div class="box"><span class="tag">Cloud Run</span><h3>Server-side events</h3><p>RevenueCat webhook (trial_started, paid, renewed, refunded) and jobs publish to the same topic.</p></div>
-  <div style="color:#5B6070">publishes to analytics-events (same schema) ↗</div>
-</div>
-<div class="lane">
-  <div class="note"><b>Privacy.</b> No phone, email, place, coordinates or free text: enforced in the API before publish. Events carry the user id only. Consent off stops sending and drops the queue.</div>
-  <div class="note"><b>Deletion.</b> The account purge job runs DELETE FROM analytics.events WHERE uid = @uid. Raw table partitions expire after 14 months; daily rollups have no uid and are kept.</div>
-  <div class="note"><b>Cost.</b> Pub/Sub, BigQuery storage and queries stay inside the free tiers at our volume. Looker Studio is free. Budget alert already set on the project.</div>
-  <div class="note"><b>Infra as code.</b> Terraform: topic + schema + DLQ, BigQuery dataset/table/views, subscription, scheduled queries, IAM. Mihir applies in Cloud Shell; dashboard is made by hand.</div>
-</div>
-</div></body></html>
+<!-- Source for analytics-pipeline.png. Re-render: open in Chromium at 2x and screenshot the .wrap element to analytics-pipeline.png -->
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        margin: 0;
+        background: #f4f0e6;
+        font-family: Helvetica, Arial, sans-serif;
+        color: #14161b;
+      }
+      .wrap {
+        width: 1400px;
+        padding: 36px 40px;
+        box-sizing: border-box;
+      }
+      h1 {
+        font-size: 28px;
+        margin: 0 0 4px;
+        color: #2d3e8c;
+      }
+      .sub {
+        color: #5b6070;
+        font-size: 15px;
+        margin-bottom: 28px;
+      }
+      .row {
+        display: flex;
+        align-items: stretch;
+        gap: 0;
+      }
+      .box {
+        background: #fff;
+        border: 2px solid #2d3e8c;
+        border-radius: 12px;
+        padding: 14px 16px;
+        width: 190px;
+        box-sizing: border-box;
+      }
+      .box h3 {
+        margin: 0 0 6px;
+        font-size: 16px;
+        color: #2d3e8c;
+      }
+      .box p {
+        margin: 0;
+        font-size: 12.5px;
+        line-height: 1.45;
+        color: #14161b;
+      }
+      .tag {
+        display: inline-block;
+        font-size: 11px;
+        background: #d3e4c5;
+        border-radius: 6px;
+        padding: 2px 6px;
+        margin-bottom: 6px;
+      }
+      .arrow {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-width: 58px;
+        font-size: 11px;
+        color: #5b6070;
+        text-align: center;
+      }
+      .arrow::after {
+        content: "";
+        display: block;
+        width: 100%;
+        height: 0;
+        border-top: 2px solid #e5482f;
+        margin-top: 4px;
+        position: relative;
+      }
+      .arrow span {
+        padding: 0 4px;
+      }
+      .lane {
+        margin-top: 26px;
+        display: flex;
+        gap: 18px;
+      }
+      .note {
+        background: #fff;
+        border: 1.5px dashed #5b6070;
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-size: 12.5px;
+        line-height: 1.45;
+        flex: 1;
+      }
+      .note b {
+        color: #2d3e8c;
+      }
+      .gcp {
+        border: 2px dashed #2d3e8c;
+        border-radius: 16px;
+        padding: 30px 14px 14px;
+        position: relative;
+        display: flex;
+        flex: 1;
+        align-items: stretch;
+      }
+      .gcp .lbl {
+        position: absolute;
+        top: 6px;
+        left: 14px;
+        font-size: 12px;
+        color: #2d3e8c;
+        font-weight: bold;
+      }
+      .server {
+        margin-top: 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 12.5px;
+      }
+      .server .box {
+        width: 220px;
+        border-color: #e5482f;
+      }
+      .server .box h3 {
+        color: #e5482f;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Voyagami analytics pipeline</h1>
+      <div class="sub">
+        GCP-native only. One project per environment (voyagami-dev, voyagami-prod), region
+        asia-south1. No third-party analytics SDK.
+      </div>
+      <div class="row">
+        <div class="box">
+          <span class="tag">Expo app</span>
+          <h3>track()</h3>
+          <p>
+            Only after the person turns on "Help improve the app". Queues up to 100 events offline,
+            sends batches of 1 to 50.
+          </p>
+        </div>
+        <div class="arrow">
+          <span>POST /v1/events<br />HTTPS + session token</span>
+        </div>
+        <div class="gcp">
+          <div class="lbl">GCP project · asia-south1</div>
+          <div class="box">
+            <span class="tag">Cloud Run</span>
+            <h3>Go API</h3>
+            <p>
+              Checks consent, drops unknown names, strips personal data (analytics.Clean). Adds uid,
+              platform, app version.
+            </p>
+          </div>
+          <div class="arrow"><span>publish JSON</span></div>
+          <div class="box">
+            <span class="tag">Pub/Sub</span>
+            <h3>analytics-events</h3>
+            <p>
+              Topic with a JSON schema. BigQuery subscription writes rows directly: no code, no
+              Dataflow. Failed rows go to analytics-events-dlq.
+            </p>
+          </div>
+          <div class="arrow">
+            <span>BigQuery<br />subscription</span>
+          </div>
+          <div class="box">
+            <span class="tag">BigQuery</span>
+            <h3>analytics.events</h3>
+            <p>
+              Raw events, partitioned by day, clustered by name. Scheduled queries build
+              daily_counts, funnel, paywall tables every night.
+            </p>
+          </div>
+        </div>
+        <div class="arrow"><span>reads rollups</span></div>
+        <div class="box">
+          <span class="tag">Looker Studio</span>
+          <h3>Weekly review</h3>
+          <p>
+            Activation funnel, retention, paywall per moment. Free, Google sign-in, shared only with
+            Mihir.
+          </p>
+        </div>
+      </div>
+      <div class="server" style="margin-left: 250px">
+        <div class="box">
+          <span class="tag">Cloud Run</span>
+          <h3>Server-side events</h3>
+          <p>
+            RevenueCat webhook (trial_started, paid, renewed, refunded) and jobs publish to the same
+            topic.
+          </p>
+        </div>
+        <div style="color: #5b6070">publishes to analytics-events (same schema) ↗</div>
+      </div>
+      <div class="lane">
+        <div class="note">
+          <b>Privacy.</b> No phone, email, place, coordinates or free text: enforced in the API
+          before publish. Events carry the user id only. Consent off stops sending and drops the
+          queue.
+        </div>
+        <div class="note">
+          <b>Deletion.</b> The account purge job runs DELETE FROM analytics.events WHERE uid = @uid.
+          Raw table partitions expire after 14 months; daily rollups have no uid and are kept.
+        </div>
+        <div class="note">
+          <b>Cost.</b> Pub/Sub, BigQuery storage and queries stay inside the free tiers at our
+          volume. Looker Studio is free. Budget alert already set on the project.
+        </div>
+        <div class="note">
+          <b>Infra as code.</b> Terraform: topic + schema + DLQ, BigQuery dataset/table/views,
+          subscription, scheduled queries, IAM. Mihir applies in Cloud Shell; dashboard is made by
+          hand.
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

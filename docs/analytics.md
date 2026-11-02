@@ -56,7 +56,7 @@ It scans stored events (capped at 100,000), which is fine while Mihir is the onl
 
 ![Analytics pipeline](diagrams/analytics-pipeline.png)
 
-The API will publish checked events to a Pub/Sub topic `analytics-events`. A BigQuery subscription writes them straight into `analytics.events` (asia-south1, partitioned by day), nightly scheduled queries build rollups, and a Looker Studio report reads the rollups. Server events (store webhooks) publish to the same topic. The diagram source is `diagrams/analytics-pipeline.html`; re-render with `node docs/diagrams/render.js`.
+The API will publish checked events to a Pub/Sub topic `analytics-events`. A BigQuery subscription writes them straight into `analytics.events` (asia-south1, partitioned by day), nightly scheduled queries build rollups, and a Looker Studio report reads the rollups. Server events (store webhooks) publish to the same topic. The diagram source is `diagrams/analytics-pipeline.html`; the comment at its top says how to re-render.
 
 ## Not done yet
 
