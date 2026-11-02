@@ -42,6 +42,49 @@ func (h *handlers) mountBilling(mux *http.ServeMux) {
 			writeError(w, r, http.StatusInternalServerError, codeInternal, "Something went wrong.")
 			return
 		}
+		uid := ev.UID
+		if ev.Anonymous() {
+			uid = ""
+		}
+		for _, name := range billingEventNames(ev) {
+			h.serverEvent(r.Context(), uid, name, billingProps(ev))
+		}
 		w.WriteHeader(http.StatusNoContent)
 	})
+}
+
+// billingEventNames maps a store notification to analytics events (VOY-224).
+// "paid" marks any money taken; the funnel counts each person's first one.
+func billingEventNames(ev billing.Event) []string {
+	switch ev.Type {
+	case "INITIAL_PURCHASE":
+		switch {
+		case ev.IsTripPass():
+			return []string{"trip_pass_bought", "paid"}
+		case ev.PeriodType == "TRIAL":
+			return []string{"trial_started"}
+		default:
+			return []string{"subscription_started", "paid"}
+		}
+	case "RENEWAL":
+		return []string{"subscription_renewed", "paid"}
+	case "CANCELLATION":
+		if ev.Refunded() {
+			return []string{"purchase_refunded"}
+		}
+		return []string{"subscription_cancelled"}
+	}
+	return nil
+}
+
+func billingProps(ev billing.Event) map[string]any {
+	plan := "plus"
+	if ev.IsTripPass() {
+		plan = "pass"
+	}
+	p := map[string]any{"product": ev.ProductID, "plan": plan}
+	if ev.TripID != "" {
+		p["tripId"] = ev.TripID
+	}
+	return p
 }

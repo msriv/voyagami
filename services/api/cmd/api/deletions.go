@@ -5,6 +5,10 @@ import (
 	"log/slog"
 	"time"
 
+	"cloud.google.com/go/firestore"
+
+	"github.com/msriv/voyagami/services/api/internal/analytics"
+	"github.com/msriv/voyagami/services/api/internal/config"
 	"github.com/msriv/voyagami/services/api/internal/repo"
 )
 
@@ -15,6 +19,7 @@ const purgeBatch = 50
 type accountPurge struct {
 	deletions repo.Deletions
 	logger    *slog.Logger
+	events    analytics.Sink // nil means no analytics rows to remove
 	now       func() time.Time
 }
 
@@ -35,7 +40,33 @@ func (p accountPurge) Run(ctx context.Context) (int, error) {
 			return done, err
 		}
 		done++
+		p.markPurged(ctx, uid, now)
 		p.logger.Info("account purged", "count", done) // no user id: it names a person
 	}
 	return done, nil
+}
+
+// markPurged tells analytics to remove the person's rows: the nightly purge
+// query deletes every row of a uid that has an account_purged row (VOY-229).
+// It is sent whatever the consent was, since rows may predate a withdrawal.
+// An anonymous account_deleted keeps the count.
+func (p accountPurge) markPurged(ctx context.Context, uid string, now time.Time) {
+	if p.events == nil {
+		return
+	}
+	ev := []analytics.Event{{Name: "account_purged", At: now}}
+	rows := append(analytics.Records(ev, uid, analytics.Context{}, analytics.SourceServer, now),
+		analytics.Records([]analytics.Event{{Name: "account_deleted", At: now}}, "", analytics.Context{}, analytics.SourceServer, now)...)
+	if err := p.events.Add(ctx, rows); err != nil {
+		// The account is gone either way. Its rows expire with their partitions.
+		p.logger.Error("analytics purge marker failed", "error", err)
+	}
+}
+
+// newAnalyticsSink publishes to ANALYTICS_TOPIC, or only logs counts without it.
+func newAnalyticsSink(ctx context.Context, cfg config.Config, project string, logger *slog.Logger) (analytics.Sink, error) {
+	if cfg.AnalyticsTopic == "" || project == "" || project == firestore.DetectProjectID {
+		return analytics.LogSink{Logger: logger}, nil
+	}
+	return analytics.NewPubSub(ctx, project, cfg.AnalyticsTopic)
 }

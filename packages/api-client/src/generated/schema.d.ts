@@ -1958,6 +1958,18 @@ export interface components {
         };
         EventBatch: {
             events: components["schemas"]["Event"][];
+            context?: components["schemas"]["EventContext"];
+        };
+        /** @description What the app says about itself, the same for every event in the batch. Short identifiers only; anything else is dropped. */
+        EventContext: {
+            /** @description Random id, new after 30 minutes in the background. */
+            sessionId?: string;
+            /** @description ios or android. */
+            platform?: string;
+            osVersion?: string;
+            appVersion?: string;
+            /** @description BCP 47 language the app is shown in. */
+            appLanguage?: string;
         };
         EventReceipt: {
             accepted: number;

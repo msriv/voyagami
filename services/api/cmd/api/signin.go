@@ -68,6 +68,10 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 	bill := firestorerepo.NewBilling(client)
 	consents := firestorerepo.NewConsents(client)
 	deletions := firestorerepo.NewDeletions(client)
+	sink, err := newAnalyticsSink(ctx, cfg, project, logger)
+	if err != nil {
+		return signInDeps{}, err
+	}
 	deps := signInDeps{
 		verifier: signin.NewVerifier(keys),
 		options: []server.Option{
@@ -85,6 +89,7 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 			server.WithDevices(devices),
 			server.WithSponsored(firestorerepo.NewSponsored(client)),
 			server.WithConsents(consents),
+			server.WithEvents(sink),
 			server.WithDeletions(deletions),
 			server.WithExport(export.Sources{
 				Users: users, Consents: consents, Trips: trips, Stops: firestorerepo.NewStops(client),
@@ -121,8 +126,7 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 	deps.options = append(deps.options, server.WithExperiences(expPartners, firestorerepo.NewStayClicks(client)))
 	if cfg.JobsSecret != "" {
 		deps.options = append(deps.options, server.WithJobs(newTrialReminders(cfg, logger, users, devices, firestorerepo.NewEntitlements(client)), cfg.JobsSecret),
-			server.WithDeletionJob(accountPurge{deletions: deletions, logger: logger}, cfg.JobsSecret),
-			server.WithAnalyticsReport(firestorerepo.NewEvents(client), cfg.JobsSecret))
+			server.WithDeletionJob(accountPurge{deletions: deletions, logger: logger, events: sink}, cfg.JobsSecret))
 	} else {
 		logger.Warn("JOBS_SECRET is not set, so trial reminders and account deletions do not run")
 	}

@@ -1459,7 +1459,23 @@ type Event struct {
 
 // EventBatch defines model for EventBatch.
 type EventBatch struct {
-	Events []Event `json:"events"`
+	// Context What the app says about itself, the same for every event in the batch. Short identifiers only; anything else is dropped.
+	Context *EventContext `json:"context,omitempty"`
+	Events  []Event       `json:"events"`
+}
+
+// EventContext What the app says about itself, the same for every event in the batch. Short identifiers only; anything else is dropped.
+type EventContext struct {
+	// AppLanguage BCP 47 language the app is shown in.
+	AppLanguage *string `json:"appLanguage,omitempty"`
+	AppVersion  *string `json:"appVersion,omitempty"`
+	OsVersion   *string `json:"osVersion,omitempty"`
+
+	// Platform ios or android.
+	Platform *string `json:"platform,omitempty"`
+
+	// SessionId Random id, new after 30 minutes in the background.
+	SessionId *string `json:"sessionId,omitempty"`
 }
 
 // EventReceipt defines model for EventReceipt.
