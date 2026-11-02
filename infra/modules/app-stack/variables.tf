@@ -39,3 +39,9 @@ variable "alert_email" {
   type        = string
   default     = ""
 }
+
+variable "backups" {
+  description = "Firestore point-in-time recovery and daily backups, and media bucket versioning. Prod only."
+  type        = bool
+  default     = false
+}
