@@ -52,7 +52,13 @@ curl -H "Authorization: Bearer $JOBS_SECRET" "$API_URL/v1/jobs/analytics-report?
 
 It scans stored events (capped at 100,000), which is fine while Mihir is the only user. It holds no phone number, place or text, only counts.
 
+## Planned pipeline (VOY-223)
+
+![Analytics pipeline](diagrams/analytics-pipeline.png)
+
+The API will publish checked events to a Pub/Sub topic `analytics-events`. A BigQuery subscription writes them straight into `analytics.events` (asia-south1, partitioned by day), nightly scheduled queries build rollups, and a Looker Studio report reads the rollups. Server events (store webhooks) publish to the same topic. The diagram source is `diagrams/analytics-pipeline.html`; re-render with `node docs/diagrams/render.js`.
+
 ## Not done yet
 
-- A chart dashboard. Turn on the BigQuery export of Firestore (needs Mihir) when the JSON stops being enough.
+- The pipeline above (VOY-223). Until then events stay in Firestore and the JSON report below is the review.
 - Deleting an account does not yet remove its events. They carry the id but no contact details. Add it to the purge when events move to BigQuery.
