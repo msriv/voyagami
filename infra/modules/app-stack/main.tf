@@ -69,6 +69,7 @@ module "firestore" {
   project_id  = var.project_id
   name        = var.firestore_database
   location_id = var.region
+  backups     = var.backups
 }
 
 module "topics" {
@@ -84,6 +85,7 @@ module "media_bucket" {
   name          = "${var.project_id}-${var.prefix}media"
   location      = var.region
   force_destroy = var.env == "dev" # lets a throwaway dev project be torn down cleanly
+  versioning    = var.backups
 }
 
 resource "google_project_iam_member" "api_firestore" {

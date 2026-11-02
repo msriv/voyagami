@@ -22,3 +22,9 @@ variable "force_destroy" {
   type        = bool
   default     = false
 }
+
+variable "versioning" {
+  description = "Keep old versions of files for 30 days."
+  type        = bool
+  default     = false
+}

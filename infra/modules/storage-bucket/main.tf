@@ -15,6 +15,23 @@ resource "google_storage_bucket" "this" {
     max_age_seconds = 3600
   }
 
+  versioning {
+    enabled = var.versioning
+  }
+
+  # With versioning on, replaced or deleted files are kept 30 days, then removed.
+  dynamic "lifecycle_rule" {
+    for_each = var.versioning ? [1] : []
+    content {
+      condition {
+        days_since_noncurrent_time = 30
+      }
+      action {
+        type = "Delete"
+      }
+    }
+  }
+
   lifecycle_rule {
     condition {
       age = 1
