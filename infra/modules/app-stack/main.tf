@@ -47,6 +47,7 @@ module "api" {
     APP_ENV            = var.env
     GCP_PROJECT        = var.project_id
     FIRESTORE_DATABASE = var.firestore_database
+    ANALYTICS_TOPIC    = module.analytics.topic_name
     VERTEX_LOCATION    = "us-central1" # booking import calls Gemini here; documents leave the home region
   }
 
@@ -180,4 +181,12 @@ resource "google_cloud_scheduler_job" "jobs" {
       Authorization = "Bearer ${data.google_secret_manager_secret_version.jobs.secret_data}"
     }
   }
+}
+
+module "analytics" {
+  source          = "../analytics"
+  project_id      = var.project_id
+  region          = var.region
+  prefix          = var.prefix
+  publisher_email = module.api_runtime.email
 }
