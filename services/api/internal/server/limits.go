@@ -52,6 +52,7 @@ func (h *handlers) overLimit(ctx context.Context, uid, tripID string, f entitlem
 	if h.plans.Check(user, trip, f).Allowed {
 		return nil, nil
 	}
+	h.limitReached(ctx, uid, f, h.entitlementsFor(user, trip).Plan)
 	e := limitBody(ctx, f, message)
 	return &e, nil
 }

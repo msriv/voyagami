@@ -1,64 +1,54 @@
 # Product analytics
 
-We keep our own small event pipeline: the app sends batches to `POST /v1/events` and the server stores counts. No third-party analytics tool is used, so nothing leaves our own project and no paid account is needed. The weekly review reads the stored counts.
+Events go from the app to the API, which checks them and publishes them to Pub/Sub. A BigQuery subscription writes them into `analytics.events`; nightly scheduled queries build rollup tables that a Looker Studio report reads. Everything stays in our own Google Cloud project. No third-party analytics SDK.
+
+![Analytics pipeline](diagrams/analytics-pipeline.png)
+
+- Event list, properties, context and funnels: [the VOY-224 sheet](https://docs.google.com/spreadsheets/d/1vyrppzTQZqM03b-aFLito65Yf6gXGaU1cXuUFrU7iQM/edit). The allow-list in code is `analytics.Names` (services/api) and `apps/mobile/src/analytics/events.ts`; keep the three in step.
+- Infrastructure: `infra/modules/analytics` (VOY-229). The diagram source is `diagrams/analytics-pipeline.html`.
 
 ## Rules
 
 - The app sends nothing until the person turns on **Help improve the app** in Privacy. Turning it off stops sending at once and drops anything still waiting.
 - Events carry a name, a time and a few short properties. Never a phone number, a place, a trip name or any free text.
-- Properties are short fixed words (like a paywall moment), numbers or booleans.
-- The server drops any name not on the list below.
+- Properties are short fixed words, ids, numbers or booleans.
+- The server drops any name not on the list.
 
-## Events
-
-| Name                | When                                                  | Properties                |
-| ------------------- | ----------------------------------------------------- | ------------------------- |
-| `app_open`          | The app opens, or a person signs in with analytics on | none                      |
-| `trip_created`      | A trip is created none                                |
-| `invite_sent`       | An invite is shared                                   | none                      |
-| `crew_joined`       | A person joins a trip by invite                       | none                      |
-| `expense_added`     | An expense is saved none                              |
-| `trial_started`     | A free trial begins (server)                          | none                      |
-| `paid`              | A purchase completes (server)                         | `plan` (`plus` or `pass`) |
-| `paywall_shown`     | The paywall opens                                     | `moment`                  |
-| `paywall_dismissed` | "Not now" or close                                    | `moment`                  |
-| `paywall_converted` | "Try Plus" is tapped                                  | `moment`                  |
-
-## Funnel
-
-install (first `app_open`), sign-in, first trip, invite sent, crew joined, first expense, trial start, paid. Each step is the first time its event appears for a person. `trial_started` and `paid` are sent by the server from store notifications, not by the app.
-
-## Weekly review
-
-Count events per week by name and divide each funnel step by the one before it. Paywall conversion is `paywall_converted` over `paywall_shown`, per `moment`.
-
-## Server checks
-
-`POST /v1/events` (VOY-75) checks each batch before storing it in the `analyticsEvents` collection.
+## Server checks (`POST /v1/events`)
 
 - Kept only for people whose `analytics` consent is `granted` (`GET /v1/me/consents`). Without it the whole batch is dropped and the reply says so.
 - A batch has 1 to 50 events. An event older than 7 days or more than 5 minutes in the future is dropped.
 - At most 10 properties per event, with `camelCase` names. A value is an identifier (letters, digits, `_ . : -`, up to 64 characters), a number or a boolean. Free text has spaces, so it cannot get in.
-- A property whose name contains `phone`, `email`, `name`, `address`, `lat`, `lng`, `lon`, `location`, `text`, `note`, `message` or `token` is dropped.
-- Each stored event has the person's id so funnels can count people, and nothing else about them.
+- A property whose name contains `phone`, `email`, `name`, `address`, `lat`, `lng`, `lon`, `location`, `text`, `note`, `message` or `token` is dropped. It is a substring match, so `platform` or `latency` cannot be property names either.
+- The batch's `context` (sessionId, platform, osVersion, appVersion, appLanguage) must be identifiers too; anything else is blanked. The server adds the person's plan and home country.
+
+## Rows
+
+One row per event in `analytics.events`, partitioned by day and kept 14 months. Columns: `eventId, name, eventTime, receivedTime, uid, sessionId, platform, osVersion, appVersion, appLanguage, plan, homeRegion, source, props`. `props` is JSON text: `JSON_VALUE(props, '$.moment')`. Without `ANALYTICS_TOPIC` (local dev) the API only logs how many events arrived.
+
+## Server events
+
+The API itself records: `trial_started`, `subscription_started`, `trip_pass_bought`, `paid`, `subscription_renewed`, `subscription_cancelled`, `purchase_refunded` (store notifications), `limit_reached` (the entitlements service said no) and `ask_draft_created`. With the person's analytics consent these carry their id and properties; without it they are counted with neither (decided 2026-11-02, so revenue counts are complete).
+
+## Account deletion
+
+When an account is purged, the API publishes an `account_purged` row with that id and an anonymous `account_deleted`. The nightly purge query deletes every row of an id that has an `account_purged` row, the marker included.
 
 ## Weekly review
 
-`GET /v1/jobs/analytics-report?days=28` returns counts as JSON: per event the number of events and of different people, the funnel (people who did each step in the period; steps are not forced into order), and the paywall outcome per moment. It takes the same bearer secret as the scheduled jobs and has no app screen:
+Rollup tables, rebuilt at 01:00 UTC, no ids in them:
 
-```sh
-curl -H "Authorization: Bearer $JOBS_SECRET" "$API_URL/v1/jobs/analytics-report?days=7"
-```
+| Table               | What                                                                                                                                         |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `daily_counts`      | events and people per day, name and platform                                                                                                 |
+| `activation_funnel` | per signup week, people who ever reached each step: install, sign-in, first trip, invite sent, crew joined, first expense, trial start, paid |
+| `paywall_daily`     | shown, dismissed and converted per day and moment                                                                                            |
+| `weekly_retention`  | people opening the app N weeks after their first week                                                                                        |
 
-It scans stored events (capped at 100,000), which is fine while Mihir is the only user. It holds no phone number, place or text, only counts.
+Connect Looker Studio to these tables (see infra/README.md). The old `GET /v1/jobs/analytics-report` is gone.
 
-## Planned pipeline (VOY-223)
+## Defaults chosen for the open questions (2026-11-02)
 
-![Analytics pipeline](diagrams/analytics-pipeline.png)
-
-The API will publish checked events to a Pub/Sub topic `analytics-events`. A BigQuery subscription writes them straight into `analytics.events` (asia-south1, partitioned by day), nightly scheduled queries build rollups, and a Looker Studio report reads the rollups. Server events (store webhooks) publish to the same topic. The diagram source is `diagrams/analytics-pipeline.html`; the comment at its top says how to re-render.
-
-## Not done yet
-
-- The pipeline above (VOY-223). Until then events stay in Firestore and the JSON report below is the review.
-- Deleting an account does not yet remove its events. They carry the id but no contact details. Add it to the purge when events move to BigQuery.
+- Billing events without consent: counted without id.
+- `screen_viewed`: on every route (cheap in BigQuery).
+- Raw rows kept 14 months; rollups kept.

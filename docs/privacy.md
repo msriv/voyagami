@@ -30,6 +30,6 @@ A daily job (`POST /v1/jobs/account-deletions`, same secret as the other jobs, s
 - every trip the person was alone on, with everything in it;
 - on shared trips: their journal entries and live location. Their member record stays as someone who left, with no name, photo or payment details, so expenses and comments still make sense. If they owned the trip, the member who joined first becomes the owner.
 
-Expenses they paid, comments, votes and stops they added stay on shared trips; they point to a person who no longer exists, so the app shows "Former member" for an empty name. Product events and support messages from them are not removed yet (they carry the id but no contact details).
+Expenses they paid, comments, votes and stops they added stay on shared trips; they point to a person who no longer exists, so the app shows "Former member" for an empty name. Their product events are deleted by the nightly analytics purge (docs/analytics.md). Support messages are not removed yet (they carry the id but no contact details).
 
 The Plus subscription itself lives in the store; deleting the account does not cancel it, which is why the 409 exists.

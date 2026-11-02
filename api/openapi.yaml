@@ -3177,6 +3177,25 @@ components:
           maxItems: 50
           items:
             $ref: "#/components/schemas/Event"
+        context:
+          $ref: "#/components/schemas/EventContext"
+    EventContext:
+      type: object
+      description: What the app says about itself, the same for every event in the batch. Short identifiers only; anything else is dropped.
+      properties:
+        sessionId:
+          type: string
+          description: Random id, new after 30 minutes in the background.
+        platform:
+          type: string
+          description: ios or android.
+        osVersion:
+          type: string
+        appVersion:
+          type: string
+        appLanguage:
+          type: string
+          description: BCP 47 language the app is shown in.
     EventReceipt:
       type: object
       required: [accepted, dropped]

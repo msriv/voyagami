@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/msriv/voyagami/services/api/internal/analytics"
 	"github.com/msriv/voyagami/services/api/internal/repo"
 )
 
@@ -37,5 +38,24 @@ func TestAccountPurgeRun(t *testing.T) {
 	f.purged = nil
 	if n, err := p.Run(context.Background()); err != nil || n != 3 {
 		t.Errorf("retry finishes the rest: n=%d err=%v", n, err)
+	}
+}
+
+type rowsFake struct{ rows []analytics.Record }
+
+func (f *rowsFake) Add(_ context.Context, r []analytics.Record) error {
+	f.rows = append(f.rows, r...)
+	return nil
+}
+
+func TestAccountPurgeMarksAnalytics(t *testing.T) {
+	ev := &rowsFake{}
+	p := accountPurge{deletions: &purgeFake{due: []string{"u1"}}, logger: slog.New(slog.DiscardHandler), events: ev}
+	if _, err := p.Run(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if len(ev.rows) != 2 || ev.rows[0].Name != "account_purged" || ev.rows[0].UID != "u1" ||
+		ev.rows[1].Name != "account_deleted" || ev.rows[1].UID != "" {
+		t.Fatalf("want a purge marker for u1 and an anonymous count: %+v", ev.rows)
 	}
 }

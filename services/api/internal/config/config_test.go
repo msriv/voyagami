@@ -24,8 +24,8 @@ func TestLoad(t *testing.T) {
 		},
 		{
 			name: "all set",
-			env:  map[string]string{"APP_ENV": "staging", "PORT": "9000", "LOG_LEVEL": "debug", "SHUTDOWN_TIMEOUT": "5s", "REQUEST_TIMEOUT": "1m", "AUTH_SECRET": strings.Repeat("s", 32), "GCP_PROJECT": "p", "FIRESTORE_DATABASE": "staging"},
-			want: Config{Env: "staging", Port: 9000, LogLevel: slog.LevelDebug, ShutdownTimeout: 5 * time.Second, RequestTimeout: time.Minute, AuthSecret: strings.Repeat("s", 32), GCPProject: "p", FirestoreDatabase: "staging"},
+			env:  map[string]string{"APP_ENV": "staging", "PORT": "9000", "LOG_LEVEL": "debug", "SHUTDOWN_TIMEOUT": "5s", "REQUEST_TIMEOUT": "1m", "AUTH_SECRET": strings.Repeat("s", 32), "GCP_PROJECT": "p", "FIRESTORE_DATABASE": "staging", "ANALYTICS_TOPIC": "t"},
+			want: Config{Env: "staging", Port: 9000, LogLevel: slog.LevelDebug, ShutdownTimeout: 5 * time.Second, RequestTimeout: time.Minute, AuthSecret: strings.Repeat("s", 32), GCPProject: "p", FirestoreDatabase: "staging", AnalyticsTopic: "t"},
 		},
 		{
 			name: "dev plan override",

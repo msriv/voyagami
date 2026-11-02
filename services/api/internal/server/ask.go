@@ -124,6 +124,13 @@ func (h *handlers) CreateAskDraft(ctx context.Context, req api.CreateAskDraftReq
 	if err != nil {
 		return nil, err
 	}
+	places := 0
+	for _, d := range out.Days {
+		places += len(d.Items)
+	}
+	h.serverEvent(ctx, id.UserID, "ask_draft_created", map[string]any{
+		"tripId": req.TripId, "places": float64(places), "durationMs": float64(time.Since(start).Milliseconds()),
+	})
 	return h.withRemaining(ctx, id.UserID, api.CreateAskDraft200JSONResponse(out), total), nil
 }
 
