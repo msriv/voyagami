@@ -1,6 +1,6 @@
 # infra
 
-Terraform, one root per environment under `envs/`. Only `dev` exists in the D phases (VOY-8). Reusable pieces live in `modules/`.
+Terraform, one root per environment under `envs/` (`dev`, `staging`, `prod`). Reusable pieces live in `modules/`.
 
 ## Projects
 
@@ -16,7 +16,9 @@ Prod has its own project because Firebase Auth users, push (FCM), IAM, quotas an
 ## Layout
 
 ```
-envs/dev/                    root for dev (state in gs://voyagami-dev-512208-tfstate)
+envs/dev/                    dev (state in gs://voyagami-dev-512208-tfstate, prefix dev)
+envs/staging/                staging inside the dev project, names prefixed staging- (same bucket, prefix staging)
+envs/prod/                   production project (state in gs://voyagami-prod-tfstate)
 modules/project-base/        one per GCP project: APIs, CI identity (workload identity), Artifact Registry, budget alert
 modules/app-stack/           one running copy of the app: Cloud Run API, runtime account, Firestore, Pub/Sub, bucket, secrets, scheduler jobs
 modules/<small modules>/     building blocks used by the two above
@@ -52,6 +54,19 @@ After the first apply, store two outputs as GitHub repository variables (Setting
 - `ci_service_account_email` as `GCP_CI_SERVICE_ACCOUNT`
 
 The first Cloud Run service starts on Google's placeholder image; deploying the API replaces the image and Terraform ignores that change.
+
+### Order and what each environment needs
+
+1. `infra/scripts/apply.sh dev` (staging reuses dev's APIs, registry and CI identity).
+2. `infra/scripts/apply.sh staging`. It has its own Firestore database (`staging`), so the API reads `FIRESTORE_DATABASE`. Its Maps key secret is `staging-google-maps-server-key`; the dev key can be reused.
+3. Production, once:
+
+   ```sh
+   gcloud projects create voyagami-prod --name voyagami-prod     # take another ID if it is taken
+   gcloud billing projects link voyagami-prod --billing-account <ID from: gcloud billing accounts list>
+   ```
+
+   If the ID differs, change `project_id` in `envs/prod/variables.tf` and the bucket in `envs/prod/versions.tf`. Then add Firebase to the project in the Firebase console (Phone sign-in on) and run `infra/scripts/apply.sh prod`. Prod runs one warm API instance (`min_instances = 1`). The prod CI outputs go into GitHub variables for the prod deploy job (VOY-14).
 
 ### Moving dev from the old flat root (once)
 

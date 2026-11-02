@@ -53,7 +53,11 @@ func buildSignIn(ctx context.Context, cfg config.Config, logger *slog.Logger) (s
 	if project == "" {
 		project = firestore.DetectProjectID
 	}
-	client, err := firestore.NewClient(ctx, project)
+	database := cfg.FirestoreDatabase
+	if database == "" {
+		database = firestore.DefaultDatabaseID
+	}
+	client, err := firestore.NewClientWithDatabase(ctx, project, database)
 	if err != nil {
 		return signInDeps{}, fmt.Errorf("firestore (set GCP_PROJECT): %w", err)
 	}
