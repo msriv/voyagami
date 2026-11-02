@@ -23,6 +23,9 @@ type Config struct {
 	// GCPProject is the Firestore project. Empty means detect it from the
 	// environment (Cloud Run) or use the emulator's project.
 	GCPProject string
+	// FirestoreDatabase is the Firestore database ID. Empty means "(default)";
+	// staging shares the dev project with its own database.
+	FirestoreDatabase string
 	// DevPlan forces every account onto "free" or "plus" so plan gates can be
 	// tried in dev. Empty means no override. Rejected outside dev.
 	DevPlan string
@@ -92,6 +95,7 @@ func Load(getenv func(string) string) (Config, error) {
 	}
 
 	cfg.GCPProject = getenv("GCP_PROJECT")
+	cfg.FirestoreDatabase = getenv("FIRESTORE_DATABASE")
 	cfg.AuthSecret = getenv("AUTH_SECRET")
 	cfg.VertexLocation = getenv("VERTEX_LOCATION")
 	cfg.VertexModel = getenv("VERTEX_MODEL")

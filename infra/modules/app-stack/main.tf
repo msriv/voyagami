@@ -44,9 +44,10 @@ module "api" {
   allow_unauthenticated = true
 
   env = {
-    APP_ENV         = var.env
-    GCP_PROJECT     = var.project_id
-    VERTEX_LOCATION = "us-central1" # booking import calls Gemini here; documents leave the home region
+    APP_ENV            = var.env
+    GCP_PROJECT        = var.project_id
+    FIRESTORE_DATABASE = var.firestore_database
+    VERTEX_LOCATION    = "us-central1" # booking import calls Gemini here; documents leave the home region
   }
 
   # Cloud Run cannot start a revision whose secret has no value, so apply.sh
@@ -89,6 +90,15 @@ resource "google_project_iam_member" "api_firestore" {
   project = var.project_id
   role    = "roles/datastore.user"
   member  = "serviceAccount:${module.api_runtime.email}"
+
+  # A named database (staging) shares the project with dev: only its own database.
+  dynamic "condition" {
+    for_each = var.firestore_database == "(default)" ? [] : [1]
+    content {
+      title      = "only-${var.firestore_database}"
+      expression = "resource.name == \"projects/${var.project_id}/databases/${var.firestore_database}\""
+    }
+  }
 }
 
 # Lets the API call Gemini on Vertex (booking import) with its own identity.
