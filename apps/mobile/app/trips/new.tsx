@@ -62,7 +62,7 @@ export default function NewTripScreen() {
     if (problem || !first || !dates) return;
     setBusy(true);
     try {
-      await api.unwrap(
+      const created = await api.unwrap(
         api.POST("/v1/trips", {
           body: {
             title: name.trim() || t("newTrip.defaultName", { place: first.name }),
@@ -73,7 +73,7 @@ export default function NewTripScreen() {
           },
         }),
       );
-      track("trip_created");
+      track("trip_created", { tripId: created.id, destinations: stops.length, source: "home" });
       router.replace("/");
     } catch (e) {
       reportError("create-trip", e);

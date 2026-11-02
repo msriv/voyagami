@@ -19,6 +19,7 @@ import { displayTime, isValidTime, planMove, stopsOn, type Move, type Stop } fro
 import type { Trip } from "@/trips/summary";
 import { Button, Card, Chip, IconButton, Input, Sheet, Text } from "@/ui";
 import { Icon } from "@/ui/icons";
+import { track } from "@/analytics/track";
 
 type State =
   | { kind: "loading" }
@@ -165,6 +166,7 @@ export default function ItineraryScreen() {
           body: plan.body,
         }),
       );
+      track("itinerary_reordered", { tripId: id });
       setState((s) =>
         s.kind === "ready"
           ? { ...s, stops: s.stops.map((x) => (x.id === saved.id ? saved : x)) }
@@ -185,6 +187,7 @@ export default function ItineraryScreen() {
           params: { path: { tripId: id, stopId: stop.id } },
         }),
       );
+      track("place_removed", { tripId: id });
       setState({ kind: "ready", trip, stops: stops.filter((s) => s.id !== stop.id) });
       setEditing(undefined);
     } catch (e) {

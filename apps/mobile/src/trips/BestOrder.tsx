@@ -11,6 +11,7 @@ import { colors as tokens } from "@/theme";
 import { Icon } from "@/ui/icons";
 
 import { applyOrder, stopsOn, type Stop } from "./stops";
+import { track } from "@/analytics/track";
 
 type Suggestion = components["schemas"]["BestOrder"];
 
@@ -77,6 +78,7 @@ export function BestOrder({ tripId, date, stops, onStops }: Props) {
           body: { stopIds: ids },
         }),
       );
+      track("best_order_applied", { tripId, stops: ids.length });
       return true;
     } catch (e) {
       onStops(before);

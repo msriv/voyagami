@@ -11,6 +11,7 @@ import { useTheme } from "@/theme";
 import { daysInRange } from "@/trips/dates";
 import { Button, Card, IconButton, Input, Text } from "@/ui";
 import { Icon } from "@/ui/icons";
+import { track } from "@/analytics/track";
 
 type Draft = components["schemas"]["AskDraft"];
 
@@ -82,6 +83,7 @@ export default function AskScreen() {
           added += 1;
         }
       }
+      track("ask_draft_accepted", { tripId: id, kept: added });
       setNote(t("ask.added", { count: added }));
       setPicked(new Set());
     } catch {

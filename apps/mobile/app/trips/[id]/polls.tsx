@@ -12,6 +12,7 @@ import { useTripChanges } from "@/trips/useTripChanges";
 import type { Trip } from "@/trips/summary";
 import { Button, Card, Chip, IconButton, Input, Sheet, Text } from "@/ui";
 import { Icon } from "@/ui/icons";
+import { track } from "@/analytics/track";
 
 type Poll = components["schemas"]["Poll"];
 
@@ -113,6 +114,7 @@ export default function PollsScreen() {
           }),
         ),
       );
+      track("poll_voted", { tripId: id });
     } catch (e) {
       if (e instanceof ApiError && e.status === 409) void load();
       else fail(e);
@@ -151,6 +153,7 @@ export default function PollsScreen() {
           body: { question: question.trim(), options: options.map((label) => ({ label })), multi },
         }),
       );
+      track("poll_created", { tripId: id, options: options.length });
       setCreating(false);
       setQuestion("");
       setLabels(["", ""]);

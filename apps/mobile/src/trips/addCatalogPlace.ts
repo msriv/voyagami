@@ -1,4 +1,5 @@
 import type { ApiClient } from "@voyagami/api-client";
+import { track } from "@/analytics/track";
 
 const STOP_CATEGORY = {
   see: "sights",
@@ -23,6 +24,7 @@ export async function addCatalogPlace(
   tripId: string,
   place: CatalogPlaceLike,
   date?: string,
+  source: "search" | "picks" = "picks",
 ): Promise<boolean> {
   let day = date;
   if (!day) {
@@ -45,5 +47,6 @@ export async function addCatalogPlace(
       },
     }),
   );
+  track("place_added", { tripId, source, placeGroup: place.group });
   return true;
 }

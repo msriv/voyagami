@@ -9,6 +9,7 @@ import { useAuth, withDetail } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { Button, Chip, Text } from "@/ui";
+import { trackOnceOn } from "@/analytics/track";
 
 const interests = [
   "mountains",
@@ -52,6 +53,7 @@ export default function StyleScreen() {
           },
         }),
       );
+      trackOnceOn("onboarding_step_completed", { step: "style", skipped: picked.length === 0 });
       router.replace("/onboarding/connect");
     } catch (e) {
       setError(

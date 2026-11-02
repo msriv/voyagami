@@ -12,6 +12,7 @@ import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { Button, Card, Chip, IconButton, Input, Text } from "@/ui";
 import { Icon } from "@/ui/icons";
+import { track } from "@/analytics/track";
 
 type Candidate = components["schemas"]["BookingCandidate"];
 
@@ -58,6 +59,7 @@ export default function ImportBookingScreen() {
           body: { text: text.trim() },
         }),
       );
+      track("booking_imported", { tripId: id, success: candidates.length > 0, inputType: "paste" });
       if (candidates.length === 0) setError(t("importBooking.nothing"));
       else {
         setFound(candidates);

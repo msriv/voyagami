@@ -20,6 +20,7 @@ import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { useProfile } from "@/profile";
 import { Button, Card, Chip, Input, Sheet, Text } from "@/ui";
+import { trackOnceOn } from "@/analytics/track";
 
 const maxShown = 40;
 
@@ -68,7 +69,10 @@ export default function RegionScreen() {
       await profile.reload();
       // Changing it later from Profile goes back; first run carries on to the next step.
       if (onboarded) router.back();
-      else router.replace("/onboarding/style");
+      else {
+        trackOnceOn("onboarding_step_completed", { step: "region", skipped: false });
+        router.replace("/onboarding/style");
+      }
     } catch (e) {
       setError(
         withDetail(

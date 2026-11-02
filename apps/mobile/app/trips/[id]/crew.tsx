@@ -111,7 +111,7 @@ export default function CrewScreen() {
         }),
       );
       // The token is shown only now, so it goes straight to the share sheet.
-      track("invite_sent");
+      track("invite_sent", { tripId: id, channel: "share_sheet", role });
       await Share.share({
         message: t("crew.shareMessage", {
           trip: trip.title,
@@ -151,6 +151,7 @@ export default function CrewScreen() {
           body: { role: next },
         }),
       );
+      track("crew_role_changed", { tripId: id, role: next });
       setState({
         ...state,
         members: members.map((m) => (m.uid === saved.uid ? saved : m)),

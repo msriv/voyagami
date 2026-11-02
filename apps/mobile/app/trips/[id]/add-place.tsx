@@ -11,6 +11,7 @@ import { useTheme } from "@/theme";
 import { parsePin } from "@/trips/stops";
 import { Button, Chip, IconButton, Input, Text } from "@/ui";
 import { Icon } from "@/ui/icons";
+import { track } from "@/analytics/track";
 
 const categories = [
   "food",
@@ -122,6 +123,11 @@ export default function AddPlaceScreen() {
           },
         }),
       );
+      track("place_added", {
+        tripId: id,
+        source: "custom",
+        ...(category ? { placeGroup: category } : null),
+      });
       router.back();
     } catch (e) {
       setError(

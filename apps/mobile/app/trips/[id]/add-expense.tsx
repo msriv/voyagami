@@ -157,7 +157,12 @@ export default function AddExpenseScreen() {
       await api.unwrap(
         api.POST("/v1/trips/{tripId}/expenses", { params: { path: { tripId: id } }, body }),
       );
-      track("expense_added");
+      track("expense_added", {
+        tripId: id,
+        split: "equal",
+        participants: sharedBy.length,
+        foreignCurrency: Boolean(foreign),
+      });
       router.back();
     } catch (e) {
       if (e instanceof NetworkError) {

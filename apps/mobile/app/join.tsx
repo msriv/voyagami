@@ -35,7 +35,7 @@ export default function JoinScreen() {
       const trip = await api.unwrap(
         api.POST("/v1/invites/join", { body: { token: token.trim() } }),
       );
-      track("crew_joined");
+      track("crew_joined", { tripId: trip.id, via: params.token ? "link" : "code" });
       router.replace(`/trips/${trip.id}`);
     } catch (e) {
       setError(

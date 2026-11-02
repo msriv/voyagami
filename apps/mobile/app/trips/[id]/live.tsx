@@ -15,6 +15,7 @@ import { useTheme } from "@/theme";
 import type { Trip } from "@/trips/summary";
 import { Button, Card, Chip, IconButton, Input, Sheet, Text } from "@/ui";
 import { Icon } from "@/ui/icons";
+import { track } from "@/analytics/track";
 
 type Shared = components["schemas"]["SharedLocation"];
 type Meet = components["schemas"]["MeetPoint"];
@@ -152,6 +153,7 @@ export default function LiveScreen() {
           },
         }),
       );
+      track("live_location_started", { tripId: id, mode: "live", durationMin: 60 });
       await load();
     } catch (e) {
       setError(t(e instanceof NetworkError ? "live.errors.offline" : "live.errors.generic"));
@@ -187,6 +189,7 @@ export default function LiveScreen() {
           body: { name, place: { name } },
         }),
       );
+      track("live_location_started", { tripId: id, mode: "meet_point", durationMin: 0 });
       setProposing(false);
       setWhere("");
       await load();

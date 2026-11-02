@@ -13,6 +13,7 @@ import { useTheme } from "@/theme";
 import { isValidTime } from "@/trips/stops";
 import { Button, Card, IconButton, Input, Text } from "@/ui";
 import { Icon } from "@/ui/icons";
+import { track } from "@/analytics/track";
 
 type Experience = components["schemas"]["Experience"];
 type Link = Experience["links"][number];
@@ -85,6 +86,7 @@ export default function ExperiencesScreen() {
           },
         }),
       );
+      track("place_added", { tripId: id, source: "picks", placeGroup: "do" });
       setNote(t("experiences.added", { name: item.name }));
       setAdding(undefined);
       setTime("");
