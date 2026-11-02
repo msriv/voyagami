@@ -16,58 +16,63 @@ Prod has its own project because Firebase Auth users, push (FCM), IAM, quotas an
 ## Layout
 
 ```
-envs/dev/              root for the dev project (remote state in gs://voyagami-dev-512208-tfstate)
-modules/project-apis/  enables Google APIs
-modules/github-wif/    workload identity pool + CI service account for GitHub Actions
-modules/artifact-registry/  Docker image repository
-modules/service-account/    service account with a minimal role list
-modules/firestore/         Firestore database (location cannot change later)
-modules/pubsub-topics/     Pub/Sub topics
-modules/storage-bucket/    private bucket with CORS for signed URLs
-modules/secrets/           empty Secret Manager secrets (values added by hand or by scripts/seed-auth-secret.sh)
-modules/cloud-run/     Cloud Run service (scale to zero, image owned by deploys)
-scripts/               one-time bootstrap helpers
+envs/dev/                    root for dev (state in gs://voyagami-dev-512208-tfstate)
+modules/project-base/        one per GCP project: APIs, CI identity (workload identity), Artifact Registry, budget alert
+modules/app-stack/           one running copy of the app: Cloud Run API, runtime account, Firestore, Pub/Sub, bucket, secrets, scheduler jobs
+modules/<small modules>/     building blocks used by the two above
+scripts/apply.sh             the one command that sets up or updates an environment
+scripts/bootstrap-state.sh   state bucket (called by apply.sh)
+scripts/deploy-api-dev.sh    builds and deploys the API image
 ```
 
-## First-time setup (once, by a human, in Cloud Shell)
+Every name in `app-stack` takes a prefix, so staging can live inside `voyagami-dev` with a `staging-` prefix.
 
-Claude Code web cannot hold Google credentials, and the repo forbids long-lived keys, so the first `apply` runs in [Cloud Shell](https://shell.cloud.google.com) signed in as the project Owner. After that, CI applies through workload identity and no one needs a key.
+## Setting up or updating an environment (one command)
+
+Claude Code web cannot hold Google credentials, and the repo forbids long-lived keys, so `apply` runs in [Cloud Shell](https://shell.cloud.google.com) signed in as the project Owner:
 
 ```sh
-git clone https://github.com/msriv/voyagami && cd voyagami
-gcloud config set project voyagami-dev-512208
-infra/scripts/bootstrap-state.sh               # creates the state bucket
-cd infra/envs/dev
-terraform init
-terraform plan
-terraform apply
+git clone https://github.com/msriv/voyagami && cd voyagami    # or: git pull
+infra/scripts/apply.sh dev
 ```
 
-`apply` enables the APIs and creates the workload identity pool, the `ci-deployer` service account and its GitHub binding. It prints two outputs for GitHub Actions (`google-github-actions/auth`):
+`apply.sh` is safe to re-run. It:
 
-- `workload_identity_provider`
-- `ci_service_account_email`
+1. creates the state bucket if it is missing;
+2. enables the APIs and creates the empty secrets;
+3. gives `auth-secret`, `jobs-secret` and `revenuecat-webhook-secret` a random value if they have none (values go straight to Secret Manager, never through Terraform);
+4. stops if `google-maps-server-key` is empty and prints how to add it (an API key only a person can create);
+5. runs `terraform apply` for everything else (you confirm with `yes`).
 
-Store them as GitHub repository variables `GCP_WORKLOAD_IDENTITY_PROVIDER` and `GCP_CI_SERVICE_ACCOUNT` (Settings, Secrets and variables, Actions, Variables). They are not sensitive.
+The budget alert is created on the project's own billing account, which the script looks up. If you made a budget by hand before, delete it in Billing, Budgets so you don't get two emails.
 
-## Applying later changes
+After the first apply, store two outputs as GitHub repository variables (Settings, Secrets and variables, Actions, Variables). They are not sensitive:
 
-Run `terraform plan` then `terraform apply` in `infra/envs/dev` from Cloud Shell, as for the first apply. The first Cloud Run service starts on Google's placeholder image; deploying the API replaces the image and Terraform ignores that change.
+- `workload_identity_provider` as `GCP_WORKLOAD_IDENTITY_PROVIDER`
+- `ci_service_account_email` as `GCP_CI_SERVICE_ACCOUNT`
 
-## Sign-in secret (AUTH_SECRET)
+The first Cloud Run service starts on Google's placeholder image; deploying the API replaces the image and Terraform ignores that change.
 
-Sign-in tokens are signed with `AUTH_SECRET`, read by Cloud Run from the Secret Manager secret `auth-secret`. Without it each process invents a secret and everyone is signed out on every restart or deploy. The value never goes through Terraform, so it stays out of state. `GCP_PROJECT` is set on the service too.
+### Moving dev from the old flat root (once)
 
-First time (in Cloud Shell, in this order, because Cloud Run cannot start a revision that points at a secret with no value):
+VOY-225 moved dev into the two modules. `moved` blocks in `envs/dev/main.tf` keep every live resource; the first plan should show moves, a few in-place changes (`APP_ENV`, `PLACES_API_KEY`, `JOBS_SECRET` and `REVENUECAT_WEBHOOK_SECRET` on the service, the registry description) and new resources (budget, scheduler jobs), and **no destroys**. If it shows a destroy, stop and say so.
 
-```sh
-cd infra/envs/dev
-terraform apply -target=module.secrets -target=google_secret_manager_secret_iam_member.api_secrets
-../../scripts/seed-auth-secret.sh
-terraform apply
-```
+If you created the `trial-reminders` or `account-deletions` scheduler jobs by hand, delete them first (`gcloud scheduler jobs delete trial-reminders --location=asia-south1`), or Terraform fails with "already exists".
 
-To rotate: `openssl rand -hex 32 | tr -d '\n' | gcloud secrets versions add auth-secret --data-file=-`, then deploy the API again (Cloud Run reads `latest` when a revision starts). Everyone signs in again, and the old version can be disabled.
+## Secrets
+
+All values live in Secret Manager. Cloud Run reads `latest` when a revision starts.
+
+| Secret                      | API variable                            | Filled by                                    |
+| --------------------------- | --------------------------------------- | -------------------------------------------- |
+| `auth-secret`               | `AUTH_SECRET` (signs sign-in tokens)    | `apply.sh`, random                           |
+| `jobs-secret`               | `JOBS_SECRET` (bearer for `/v1/jobs/*`) | `apply.sh`, random                           |
+| `revenuecat-webhook-secret` | `REVENUECAT_WEBHOOK_SECRET`             | `apply.sh`, random                           |
+| `google-maps-server-key`    | `PLACES_API_KEY`                        | you (API key restricted to Places API (New)) |
+
+To rotate one: `openssl rand -hex 32 | tr -d '\n' | gcloud secrets versions add <secret> --data-file=-`, then deploy the API again (and re-run `apply.sh` for `jobs-secret`, so the scheduler gets the new value). Rotating `auth-secret` signs everyone out.
+
+The scheduler jobs read `jobs-secret` through Terraform, so that one value is also in the (private, versioned) state bucket.
 
 ## Booking import (Vertex AI)
 
@@ -75,47 +80,18 @@ The booking import endpoint calls Gemini on Vertex with the API's own service ac
 
 ## RevenueCat webhook
 
-RevenueCat tells the API about purchases at `POST /v1/billing/revenuecat`. It sends a shared secret in the `Authorization` header, which the API reads from `REVENUECAT_WEBHOOK_SECRET`. Until that is set, the route is off and purchases do not reach plans. This needs the RevenueCat sandbox project from VOY-85. In Cloud Shell:
-
-```sh
-cd infra/envs/dev
-terraform apply -target=module.secrets          # creates the empty secret
-SECRET="$(openssl rand -hex 32)"
-printf '%s' "$SECRET" | gcloud secrets versions add revenuecat-webhook-secret --data-file=-
-echo "Bearer $SECRET"                           # paste this as the webhook Authorization value in RevenueCat
-```
-
-Then add `REVENUECAT_WEBHOOK_SECRET = "revenuecat-webhook-secret"` to `secret_env` in `envs/dev/main.tf`, run `terraform apply`, and point the RevenueCat webhook at `<api url>/v1/billing/revenuecat`. The app must set the RevenueCat user ID to the account ID, and set a `tripId` attribute before a Trip Pass purchase.
+RevenueCat tells the API about purchases at `POST /v1/billing/revenuecat` with a shared secret in the `Authorization` header. `apply.sh` prints the value to paste (`Bearer <revenuecat-webhook-secret>`). In RevenueCat (sandbox project from VOY-85), point the webhook at `<api url>/v1/billing/revenuecat` and paste that value. The app must set the RevenueCat user ID to the account ID, and set a `tripId` attribute before a Trip Pass purchase.
 
 ## Scheduled jobs
 
-`POST /v1/jobs/trial-reminders` sends the "your trial ends in 2 days" push. Cloud Scheduler calls it every 3 hours with `Authorization: Bearer <secret>`; the API reads the secret from `JOBS_SECRET`. Until that is set the route is off. Running it twice is harmless: each end date is reminded once. In Cloud Shell:
+Terraform creates the Cloud Scheduler jobs (in `modules/app-stack`), each calling the API with `Authorization: Bearer <jobs-secret>`. Running a job twice is harmless.
 
-```sh
-cd infra/envs/dev
-terraform apply -target=module.secrets          # creates the empty secret
-SECRET="$(openssl rand -hex 32)"
-printf '%s' "$SECRET" | gcloud secrets versions add jobs-secret --data-file=-
-```
+| Job                 | Schedule (UTC) | Does                                             |
+| ------------------- | -------------- | ------------------------------------------------ |
+| `trial-reminders`   | every 3 hours  | "your trial ends in 2 days" push                 |
+| `account-deletions` | 03:00 daily    | deletes accounts whose 30 days are over (VOY-72) |
 
-Then add `JOBS_SECRET = "jobs-secret"` to `secret_env` in `envs/dev/main.tf`, run `terraform apply`, and create the job:
-
-```sh
-gcloud services enable cloudscheduler.googleapis.com
-gcloud scheduler jobs create http trial-reminders --location=asia-south1 \
-  --schedule="0 */3 * * *" --http-method=POST \
-  --uri="$(terraform output -raw api_url)/v1/jobs/trial-reminders" \
-  --headers="Authorization=Bearer $SECRET"
-```
-
-`POST /v1/jobs/account-deletions` deletes the accounts whose 30 days are over (VOY-72). It uses the same secret. Create its job once a day:
-
-```sh
-gcloud scheduler jobs create http account-deletions --location=asia-south1 \
-  --schedule="0 3 * * *" --http-method=POST \
-  --uri="$(terraform output -raw api_url)/v1/jobs/account-deletions" \
-  --headers="Authorization=Bearer $SECRET"
-```
+`/v1/jobs/recap-videos` gets its job when a renderer exists (docs/recap-video.md).
 
 ## Deploying the API (dev)
 
@@ -124,5 +100,6 @@ gcloud scheduler jobs create http account-deletions --location=asia-south1 \
 ## Rules
 
 - Never commit state, `.tfvars` or keys.
-- `ci-deployer` starts with `roles/viewer`. Each ticket that needs more (Cloud Run, Firestore, Pub/Sub) adds only its own roles in `envs/dev/main.tf`.
-- Region defaults to `asia-south1`. Change it in `envs/dev/variables.tf` before the first `apply` if you want another.
+- `ci-deployer` starts with `roles/viewer` and `roles/run.developer` (`ci_roles` in `modules/project-base`). Widen only when a ticket needs it.
+- Anything that can be Terraform is Terraform. What cannot (creating a project, API keys, store and partner accounts) is a `needs-human` ticket.
+- Region defaults to `asia-south1`. Change it in `envs/<env>/variables.tf` before the first `apply` if you want another.

@@ -24,6 +24,7 @@ jobs:
       js: ${{ steps.filter.outputs.js }}
       api: ${{ steps.filter.outputs.api }}
       rules: ${{ steps.filter.outputs.rules }}
+      infra: ${{ steps.filter.outputs.infra }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -51,6 +52,9 @@ jobs:
               - 'api/**'
               - 'infra/scripts/deploy-api-dev.sh'
               - '.golangci.yml'
+              - '.github/workflows/ci.yml'
+            infra:
+              - 'infra/**'
               - '.github/workflows/ci.yml'
             rules:
               - 'firebase.json'
@@ -178,12 +182,36 @@ jobs:
         if: steps.rules.outputs.present == 'true'
         run: pnpm exec firebase emulators:exec --only firestore --project demo-voyagami "pnpm --filter @voyagami/rules-tests run test:emulator"
 
+  # Format and validate every Terraform root. No cloud credentials: the backend
+  # is skipped, so this catches syntax and wiring, not what apply would change.
+  terraform:
+    name: Terraform
+    needs: changes
+    if: needs.changes.outputs.infra == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+      - run: terraform fmt -check -recursive infra
+      - name: Validate each environment
+        run: |
+          for d in infra/envs/*/; do
+            echo "== $d"
+            terraform -chdir="$d" init -backend=false -input=false >/dev/null
+            terraform -chdir="$d" validate
+          done
+      - name: Shell scripts parse
+        run: for f in infra/scripts/*.sh; do bash -n "$f"; done
+
   # The single required status check. It always runs, so path filters never
   # leave a required check pending, and it fails if any needed job failed.
   ci:
     name: CI
     if: always()
-    needs: [changes, mobile, api, rules]
+    needs: [changes, mobile, api, rules, terraform]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
