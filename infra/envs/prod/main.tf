@@ -16,6 +16,7 @@ module "stack" {
   region                   = var.region
   env                      = "prod"
   min_instances            = 1 # no cold starts for real users
+  alert_email              = var.alert_email
   ci_service_account_email = module.base.ci_service_account_email
 
   depends_on = [module.base]
