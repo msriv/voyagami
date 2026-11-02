@@ -9,5 +9,6 @@ module "stack" {
   env                      = "staging"
   prefix                   = "staging-"
   firestore_database       = "staging"
+  alert_email              = var.alert_email
   ci_service_account_email = var.ci_service_account_email
 }

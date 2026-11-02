@@ -26,3 +26,9 @@ variable "budget_amount" {
   type        = number
   default     = 10000
 }
+
+variable "alert_email" {
+  description = "Alert emails. apply.sh passes the signed-in gcloud account; never committed."
+  type        = string
+  default     = ""
+}

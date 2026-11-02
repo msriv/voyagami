@@ -31,6 +31,9 @@ billing="$(gcloud billing projects describe "$PROJECT_ID" --format 'value(billin
 export TF_VAR_billing_account="$billing"
 [ -n "$billing" ] || echo "warning: no billing account found, skipping the budget alert"
 
+# Alerts go to the signed-in account unless ALERT_EMAIL says otherwise.
+export TF_VAR_alert_email="${ALERT_EMAIL:-$(gcloud config get-value account 2>/dev/null)}"
+
 terraform init -input=false
 
 # 2. APIs and empty secret containers first, so values can be added.

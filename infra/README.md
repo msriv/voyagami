@@ -89,6 +89,10 @@ To rotate one: `openssl rand -hex 32 | tr -d '\n' | gcloud secrets versions add 
 
 The scheduler jobs read `jobs-secret` through Terraform, so that one value is also in the (private, versioned) state bucket.
 
+## Monitoring
+
+Each environment gets (in `modules/app-stack/monitoring.tf`): an uptime check on `/health` every 5 minutes, alerts for "API down" (10 minutes), more than 5 server errors in 5 minutes, and p95 latency over 2 s for 10 minutes, plus a dashboard named after the service (requests by status, p95 latency, instances, CPU). Alerts email the account that ran `apply.sh`; set `ALERT_EMAIL=...` before running it to use another address. Google sends a confirmation email the first time.
+
 ## Booking import (Vertex AI)
 
 The booking import endpoint calls Gemini on Vertex with the API's own service account, so there is no key. `terraform apply` grants `roles/aiplatform.user` and sets `VERTEX_LOCATION` (`us-central1`; Gemini may not be offered in `asia-south1`). Pasted booking text and PDFs are sent to that region. Without the apply, the endpoint answers 503. Redeploy the API after the apply.

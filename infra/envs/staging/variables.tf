@@ -20,3 +20,9 @@ variable "ci_service_account_email" {
   type        = string
   default     = "ci-deployer@voyagami-dev-512208.iam.gserviceaccount.com"
 }
+
+variable "alert_email" {
+  description = "Alert emails. apply.sh passes the signed-in gcloud account; never committed."
+  type        = string
+  default     = ""
+}

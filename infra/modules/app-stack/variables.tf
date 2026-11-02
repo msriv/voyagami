@@ -33,3 +33,9 @@ variable "ci_service_account_email" {
   description = "CI account that deploys the API (from project-base)."
   type        = string
 }
+
+variable "alert_email" {
+  description = "Where alerts go. apply.sh passes the signed-in gcloud account. Empty means no emails."
+  type        = string
+  default     = ""
+}
