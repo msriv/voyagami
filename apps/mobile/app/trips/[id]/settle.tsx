@@ -12,6 +12,7 @@ import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { Button, Card, IconButton, Text } from "@/ui";
 import { Icon } from "@/ui/icons";
+import { track } from "@/analytics/track";
 
 type Balances = components["schemas"]["Balances"];
 type Settlement = components["schemas"]["Settlement"];
@@ -106,6 +107,7 @@ export default function SettleScreen() {
           body: { fromUid, toUid, amountMinor, method: "manual" },
         }),
       );
+      track("settle_up_recorded", { tripId: id, method: "other" });
       await load();
     } catch (e) {
       setError(t(e instanceof NetworkError ? "settle.errors.offline" : "settle.errors.generic"));

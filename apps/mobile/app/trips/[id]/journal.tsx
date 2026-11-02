@@ -16,6 +16,7 @@ import { stopsOn, type Stop } from "@/trips/stops";
 import type { Trip } from "@/trips/summary";
 import { Button, Card, Chip, IconButton, Input, Text } from "@/ui";
 import { Icon } from "@/ui/icons";
+import { track } from "@/analytics/track";
 
 type Entry = components["schemas"]["JournalEntry"];
 
@@ -78,6 +79,7 @@ function DayEntry({
           },
         }),
       );
+      track("journal_entry_added", { tripId, photos: 0 });
       onChange(entry);
       setSaved(true);
     } catch (e) {

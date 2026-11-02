@@ -9,6 +9,7 @@ import { reporter } from "@/logging/remoteLog";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { Button, Text } from "@/ui";
+import { trackOnceOn } from "@/analytics/track";
 
 type Ask = "contacts" | "location" | "notifications";
 
@@ -47,6 +48,13 @@ export default function ConnectScreen() {
   }
 
   async function finish() {
+    trackOnceOn("onboarding_step_completed", {
+      step: "connect",
+      skipped: !Object.values(allowed).some(Boolean),
+    });
+    trackOnceOn("onboarding_completed", {
+      stepsSkipped: Object.values(allowed).some(Boolean) ? 0 : 1,
+    });
     await finishOnboarding();
     router.replace("/");
   }

@@ -10,6 +10,7 @@ import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { Card, Chip, IconButton, Text } from "@/ui";
 import { Icon } from "@/ui/icons";
+import { track } from "@/analytics/track";
 
 const KINDS = ["memberJoined", "stopAdded", "pollCreated", "expenseAdded", "meetPoint"] as const;
 
@@ -41,6 +42,7 @@ export default function NotificationSettingsScreen() {
       setError(undefined);
       try {
         await api.unwrap(api.PATCH("/v1/me", { body: { notifications: next } }));
+        track("notification_setting_changed", { kind: key, enabled: next[key] !== false });
       } catch (e) {
         setSettings(before);
         setError(

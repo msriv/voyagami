@@ -8,6 +8,7 @@ import { signInErrorKey, useAuth, withDetail } from "@/auth";
 import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { Button, Input, Text } from "@/ui";
+import { trackOnceOn } from "@/analytics/track";
 
 const resendSeconds = 30;
 
@@ -45,6 +46,7 @@ export default function CodeScreen() {
           },
         }),
       );
+      trackOnceOn("sign_in", { isNewUser: session.isNewUser });
       await signIn({ accessToken: session.accessToken, refreshToken: session.refreshToken });
     } catch (e) {
       setError(withDetail(t(`signIn.errors.${signInErrorKey(e)}`), e));

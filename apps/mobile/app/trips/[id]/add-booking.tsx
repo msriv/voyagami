@@ -14,6 +14,7 @@ import type { Trip } from "@/trips/summary";
 import { zonedToUtc } from "@/trips/zoned";
 import { Button, Chip, IconButton, Input, Text } from "@/ui";
 import { Icon } from "@/ui/icons";
+import { track } from "@/analytics/track";
 
 const kinds = ["flight", "stay", "train", "bus", "activity", "other"] as const;
 type Kind = (typeof kinds)[number];
@@ -72,6 +73,7 @@ export default function AddBookingScreen() {
           },
         }),
       );
+      track("booking_added", { tripId: id, kind });
       router.back();
     } catch (e) {
       setError(

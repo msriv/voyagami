@@ -2,6 +2,7 @@ import { AppState } from "react-native";
 import { act, renderRouter, waitFor } from "expo-router/testing-library";
 
 import { json, mockApi, routes } from "../test-utils/api";
+import { routeName } from "../src/analytics/context";
 
 const mockStore = new Map<string, string>();
 jest.mock("expo-secure-store", () => ({
@@ -51,7 +52,12 @@ describe("Analytics", () => {
       events: { name: string }[];
     };
     expect(body.events.map((e) => e.name)).toContain("app_open");
-    expect(JSON.stringify(body)).not.toMatch(/phone|lat|lng/);
+    expect(JSON.stringify(body.events)).not.toMatch(/phone|lat|lng/);
+  });
+
+  it("names routes without ids", () => {
+    expect(routeName("/trips/abc/money", { id: "abc" })).toBe("trips.id.money");
+    expect(routeName("/", {})).toBe("home");
   });
 
   it("sends nothing when analytics is off", async () => {

@@ -10,6 +10,7 @@ import { useTranslation } from "@/i18n";
 import { useTheme } from "@/theme";
 import { Button, IconButton, Input, Text } from "@/ui";
 import { Icon } from "@/ui/icons";
+import { trackOnceOn } from "@/analytics/track";
 
 export default function SignInScreen() {
   const { t } = useTranslation();
@@ -32,6 +33,7 @@ export default function SignInScreen() {
     setError(undefined);
     try {
       await api.unwrap(api.POST("/v1/auth/otp/request", { body: { phone: e164 } }));
+      trackOnceOn("sign_in_started", { method: "phone_otp" });
       setPendingPhone(e164);
       router.push("/code");
     } catch (e) {

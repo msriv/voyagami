@@ -14,6 +14,7 @@ import { useTripChanges } from "@/trips/useTripChanges";
 import type { Trip } from "@/trips/summary";
 import { Button, Card, IconButton, Input, Sheet, Text } from "@/ui";
 import { Icon } from "@/ui/icons";
+import { track } from "@/analytics/track";
 
 type Comment = components["schemas"]["Comment"];
 
@@ -124,6 +125,7 @@ export default function CommentsScreen() {
           body: { targetType, targetId, body },
         }),
       );
+      track("comment_added", { tripId: id, target: targetType });
       setDraft("");
       await load();
     } catch (e) {
